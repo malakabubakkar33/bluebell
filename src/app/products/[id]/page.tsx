@@ -262,44 +262,44 @@ export default function ProductDetailPage({
         </nav>
 
         {/* Dedicated Product View Card */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-blue-500/5 p-6 sm:p-8 lg:p-10 mb-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm sm:shadow-xl sm:shadow-blue-500/5 p-4 sm:p-6 lg:p-10 mb-8 sm:mb-12 overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-start">
             
             {/* LEFT COLUMN: Multi-Pose Interactive Gallery (6 cols) */}
-            <div className="lg:col-span-6 flex flex-col space-y-4">
+            <div className="lg:col-span-6 flex flex-col space-y-3 sm:space-y-4 w-full min-w-0">
               {/* Main Image Showcase */}
-              <div className="relative aspect-square bg-gradient-to-br from-slate-50 via-white to-blue-50/30 rounded-3xl border border-slate-100 p-8 flex items-center justify-center overflow-hidden group shadow-inner">
+              <div className="relative aspect-square bg-gradient-to-br from-slate-50 via-white to-blue-50/30 rounded-2xl sm:rounded-3xl border border-slate-100 p-4 sm:p-8 flex items-center justify-center overflow-hidden group shadow-inner">
                 {/* Badges */}
-                <div className="absolute top-5 left-5 z-10 flex flex-col gap-2">
+                <div className="absolute top-3.5 left-3.5 sm:top-5 sm:left-5 z-10 flex flex-col gap-1.5 sm:gap-2">
                   {product.badge && (
-                    <span className="bg-brand-600 text-white text-[11px] font-black tracking-wider uppercase px-3.5 py-1.5 rounded-full shadow-md shadow-brand-500/20">
+                    <span className="bg-brand-600 text-white text-[10px] sm:text-[11px] font-black tracking-wider uppercase px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full shadow-md shadow-brand-500/20">
                       {product.badge}
                     </span>
                   )}
-                  <span className="bg-emerald-600 text-white text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
+                  <span className="bg-emerald-600 text-white text-[9px] sm:text-[10px] font-black tracking-wider uppercase px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow-sm">
                     PTA APPROVED
                   </span>
                 </div>
 
                 {/* Wishlist & Share buttons */}
-                <div className="absolute top-5 right-5 z-10 flex items-center gap-2">
+                <div className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 z-10 flex items-center gap-1.5 sm:gap-2">
                   <button
                     onClick={handleShare}
                     type="button"
                     title="Share product link"
-                    className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md text-slate-500 hover:text-brand-600 flex items-center justify-center shadow-md transition-all hover:scale-105"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 backdrop-blur-md text-slate-500 hover:text-brand-600 flex items-center justify-center shadow-md transition-all hover:scale-105"
                   >
-                    {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
+                    {copiedLink ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                   </button>
                   <button
                     onClick={() => toggleWishlist(product.id)}
                     type="button"
                     aria-label="Wishlist"
-                    className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all hover:scale-105 ${
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-md transition-all hover:scale-105 ${
                       inWish ? 'bg-rose-50 text-rose-500' : 'bg-white/90 backdrop-blur-md text-slate-400 hover:text-rose-500'
                     }`}
                   >
-                    <Heart className={`w-5 h-5 ${inWish ? 'fill-rose-500' : ''}`} />
+                    <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${inWish ? 'fill-rose-500' : ''}`} />
                   </button>
                 </div>
 
@@ -308,7 +308,7 @@ export default function ProductDetailPage({
                   <img
                     src={selectedImage}
                     alt={product.name}
-                    className="max-h-[360px] sm:max-h-[420px] w-auto object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-[0_16px_24px_rgba(2,132,199,0.18)]"
+                    className="max-h-[260px] xs:max-h-[320px] sm:max-h-[420px] w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-[0_16px_24px_rgba(2,132,199,0.18)]"
                   />
                 </div>
               </div>
@@ -316,18 +316,18 @@ export default function ProductDetailPage({
               {/* Multi-Pose Thumbnails (Front, Back, Side Angles) */}
               {allImages.length > 1 && (
                 <div>
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2 block">
+                  <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5 block">
                     Product Poses & Angles ({allImages.length} Views):
                   </span>
-                  <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
+                  <div className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
                     {allImages.map((img, i) => (
                       <button
                         key={i}
                         type="button"
                         onClick={() => setSelectedImage(img)}
-                        className={`relative w-20 h-20 rounded-2xl bg-white border-2 p-2 flex-shrink-0 transition-all flex items-center justify-center ${
+                        className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-white border-2 p-1.5 sm:p-2 flex-shrink-0 transition-all flex items-center justify-center ${
                           selectedImage === img
-                            ? 'border-brand-600 ring-4 ring-brand-500/20 shadow-md scale-105'
+                            ? 'border-brand-600 ring-2 sm:ring-4 ring-brand-500/20 shadow-md scale-105'
                             : 'border-slate-200 hover:border-slate-300 opacity-70 hover:opacity-100'
                         }`}
                       >
@@ -336,7 +336,7 @@ export default function ProductDetailPage({
                           alt={`Pose ${i + 1}`}
                           className="w-full h-full object-contain"
                         />
-                        <span className="absolute bottom-1 right-1 text-[9px] font-black bg-slate-900/80 text-white px-1 rounded">
+                        <span className="absolute bottom-1 right-1 text-[8px] sm:text-[9px] font-black bg-slate-900/80 text-white px-1 rounded">
                           {i === 0 ? 'Front' : i === 1 ? 'Back' : `P${i + 1}`}
                         </span>
                       </button>
@@ -346,16 +346,16 @@ export default function ProductDetailPage({
               )}
 
               {/* Quick Verified Highlights */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100 text-emerald-800">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-3 pt-1">
+                <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-emerald-50/60 border border-emerald-100 text-emerald-800">
+                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0" />
                   <div className="text-xs">
                     <p className="font-bold">100% Original Sealed</p>
                     <p className="text-[10px] text-emerald-600">Factory packed unit</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-blue-50/60 border border-blue-100 text-blue-800">
-                  <Award className="w-5 h-5 text-brand-600 flex-shrink-0" />
+                <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-blue-50/60 border border-blue-100 text-blue-800">
+                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600 flex-shrink-0" />
                   <div className="text-xs">
                     <p className="font-bold">PTA Tax Paid</p>
                     <p className="text-[10px] text-blue-600">Sims work permanently</p>
@@ -624,8 +624,8 @@ export default function ProductDetailPage({
         </div>
 
         {/* Technical Features & Specifications Tabs */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-blue-500/5 p-6 sm:p-8 lg:p-10 mb-12">
-          <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200 pb-px overflow-x-auto scrollbar-none">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xl shadow-blue-500/5 p-4 sm:p-8 lg:p-10 mb-12">
+          <div className="flex items-center gap-4 sm:gap-8 border-b border-slate-200 pb-px overflow-x-auto scrollbar-none -mx-2 px-2 sm:mx-0 sm:px-0">
             <button
               onClick={() => setActiveTab('features')}
               className={`pb-4 text-sm font-extrabold uppercase tracking-wider transition-all whitespace-nowrap relative ${
@@ -827,7 +827,7 @@ export default function ProductDetailPage({
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

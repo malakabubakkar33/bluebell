@@ -159,7 +159,7 @@ export default function AuthRegisterPage() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Muhammad Usman"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
                 />
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function AuthRegisterPage() {
                     onChange={(e) => handlePhoneChange(e.target.value)}
                     placeholder="+92 300 1234567"
                     required
-                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
                   />
                 </div>
               </div>
@@ -213,7 +213,7 @@ export default function AuthRegisterPage() {
                       }
                     }}
                     placeholder="+92 300 1234567"
-                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
                   />
                 </div>
               </div>
@@ -233,7 +233,7 @@ export default function AuthRegisterPage() {
                   placeholder="name@example.com"
                   required
                   autoComplete="email"
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
                 />
               </div>
             </div>
@@ -249,7 +249,7 @@ export default function AuthRegisterPage() {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Peshawar, Lahore..."
-                  className="w-full px-3.5 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white font-medium"
+                  className="w-full px-3.5 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white font-medium"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -263,7 +263,7 @@ export default function AuthRegisterPage() {
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="House/Street/Town Address"
-                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white font-medium"
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white font-medium"
                   />
                 </div>
               </div>
@@ -283,7 +283,7 @@ export default function AuthRegisterPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 6 characters"
                     required
-                    className="w-full pl-10 pr-10 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white font-medium"
+                    className="w-full pl-10 pr-10 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white font-medium"
                   />
                   <button
                     type="button"
@@ -307,7 +307,7 @@ export default function AuthRegisterPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat password"
                     required
-                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white font-medium"
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white font-medium"
                   />
                 </div>
               </div>

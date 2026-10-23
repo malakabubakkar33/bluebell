@@ -160,7 +160,7 @@ export default function AuthLoginPage() {
                   placeholder="name@example.com"
                   required
                   autoComplete="email"
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
                 />
               </div>
             </div>
@@ -192,7 +192,7 @@ export default function AuthLoginPage() {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  className="w-full pl-10 pr-11 py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
+                  className="w-full pl-10 pr-11 py-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-base sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
                 />
                 <button
                   type="button"
@@ -312,7 +312,7 @@ export default function AuthLoginPage() {
                   onChange={(e) => setForgotEmail(e.target.value)}
                   placeholder="name@example.com"
                   required
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:border-sky-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-sm font-medium text-slate-800 focus:outline-none focus:border-sky-500"
                 />
               </div>
 

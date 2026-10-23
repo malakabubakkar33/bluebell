@@ -183,7 +183,7 @@ export default function CustomerAccountPage() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:border-sky-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white"
                     />
                   </div>
 
@@ -195,7 +195,7 @@ export default function CustomerAccountPage() {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:border-sky-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white"
                     />
                   </div>
 
@@ -207,7 +207,7 @@ export default function CustomerAccountPage() {
                       type="tel"
                       value={formData.whatsapp}
                       onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:border-sky-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white"
                     />
                   </div>
 
@@ -219,7 +219,7 @@ export default function CustomerAccountPage() {
                       type="text"
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:border-sky-500 focus:bg-white"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white"
                     />
                   </div>
 
@@ -232,7 +232,7 @@ export default function CustomerAccountPage() {
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       placeholder="Street, House No, Area"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:border-sky-500 focus:bg-white resize-none"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white resize-none"
                     />
                   </div>
 

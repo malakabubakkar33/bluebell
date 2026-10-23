@@ -99,14 +99,23 @@ export const Header: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
-
-  // Auto-hover dropdown states
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
   const [activeHoverMenu, setActiveHoverMenu] = useState<MegaKey | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Lock body scroll when mobile search modal is open
+  // Responsive screen detection for drawer animation direction
   useEffect(() => {
-    if (isMobileSearchOpen) {
+    const checkScreen = () => {
+      setIsMobileScreen(window.innerWidth < 768);
+    };
+    checkScreen();
+    window.addEventListener('resize', checkScreen, { passive: true });
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
+
+  // Lock body scroll when mobile search modal or drawer is open
+  useEffect(() => {
+    if (isMobileSearchOpen || isSideNavOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -114,7 +123,20 @@ export const Header: React.FC = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isMobileSearchOpen]);
+  }, [isMobileSearchOpen, isSideNavOpen]);
+
+  // Close drawer and modals on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsSideNavOpen(false);
+        setIsMobileSearchOpen(false);
+        setIsSearchOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Scroll detection state:
   // - When at top of page (scrollY <= 15): social bar and header both show
@@ -358,7 +380,7 @@ export const Header: React.FC = () => {
                           if (e.key === 'Escape') setIsSearchOpen(false);
                         }}
                         placeholder="Search for iPhone 16, Samsung S24, iPad, Apple Watch..."
-                        className="w-full bg-[#F4F9FF] border border-[#C7E5FF] rounded-full py-2.5 pl-5 pr-20 text-sm text-[#102A56] placeholder-[#8394AB] focus:outline-none focus:border-[#0756C9] focus:ring-4 focus:ring-[#0756C9]/10 shadow-xs transition-all"
+                        className="w-full bg-[#F4F9FF] border border-[#C7E5FF] rounded-full py-2.5 pl-5 pr-20 text-base sm:text-sm text-[#102A56] placeholder-[#8394AB] focus:outline-none focus:border-[#0756C9] focus:ring-4 focus:ring-[#0756C9]/10 shadow-xs transition-all"
                       />
 
                       <div className="absolute right-1.5 flex items-center gap-1">
@@ -732,7 +754,7 @@ export const Header: React.FC = () => {
       {/* ======================================================== */}
       <AnimatePresence>
         {isSideNavOpen && (
-          <div className="fixed inset-0 z-50 flex justify-start">
+          <div className={`fixed inset-0 z-50 flex ${isMobileScreen ? 'justify-end' : 'justify-start'}`}>
             {/* Dark Frosted Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -743,13 +765,19 @@ export const Header: React.FC = () => {
               className="fixed inset-0 bg-[#061838]/60 backdrop-blur-sm"
             />
 
-            {/* Slide-In Panel from LEFT side matching hamburger button */}
+            {/* Slide-In Panel from the SAME side where the active hamburger button is positioned:
+                - On Desktop/Tablet: Hamburger is on LEFT -> Drawer slides in from LEFT
+                - On Mobile: Hamburger is on RIGHT -> Drawer slides in from RIGHT
+            */}
             <motion.div
-              initial={{ x: '-100%' }}
+              key={isMobileScreen ? 'drawer-right' : 'drawer-left'}
+              initial={{ x: isMobileScreen ? '100%' : '-100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
+              exit={{ x: isMobileScreen ? '100%' : '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="relative w-[85vw] max-w-[300px] bg-white/95 backdrop-blur-2xl shadow-2xl h-full flex flex-col justify-between z-10 border-r border-[#DFEBF8] rounded-r-3xl overflow-y-auto"
+              className={`relative w-[85vw] max-w-[320px] bg-white/95 backdrop-blur-2xl shadow-2xl h-full flex flex-col justify-between z-10 overflow-y-auto ${
+                isMobileScreen ? 'border-l border-[#DFEBF8] rounded-l-3xl' : 'border-r border-[#DFEBF8] rounded-r-3xl'
+              }`}
             >
               {/* Drawer Top Header */}
               <div>
@@ -908,7 +936,7 @@ export const Header: React.FC = () => {
                     }
                   }}
                   placeholder="Search iPhone, Samsung, iPad..."
-                  className="w-full bg-[#F4F9FF] border border-[#C7E5FF] rounded-2xl py-3 pl-10 pr-10 text-sm text-[#102A56] placeholder-[#8394AB] focus:outline-none focus:border-[#0756C9] focus:ring-4 focus:ring-[#0756C9]/10 shadow-inner"
+                  className="w-full bg-[#F4F9FF] border border-[#C7E5FF] rounded-2xl py-3 pl-10 pr-10 text-base text-[#102A56] placeholder-[#8394AB] focus:outline-none focus:border-[#0756C9] focus:ring-4 focus:ring-[#0756C9]/10 shadow-inner"
                 />
                 {searchQuery.length > 0 && (
                   <button

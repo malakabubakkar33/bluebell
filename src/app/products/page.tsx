@@ -94,7 +94,7 @@ function ProductsContent() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="iPhone 16, Galaxy S24, iPad..."
-            className="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-8 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all"
+            className="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-3.5 pr-8 text-base sm:text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all"
           />
           {searchQuery && (
             <button

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
@@ -16,6 +16,12 @@ const inter = Inter({
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bluebells.pk';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#0756C9',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

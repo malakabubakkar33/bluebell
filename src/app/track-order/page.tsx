@@ -99,7 +99,7 @@ function TrackOrderContent() {
             value={orderQuery}
             onChange={(e) => setOrderQuery(e.target.value)}
             placeholder="Enter Order ID (e.g. BB-98241 or BB-98242)"
-            className="flex-1 px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none"
+            className="flex-1 px-4 py-2.5 text-base sm:text-xs text-slate-900 placeholder-slate-400 focus:outline-none"
           />
           <button
             type="submit"

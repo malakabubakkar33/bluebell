@@ -62,3 +62,30 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* =========================================================================
+   MOBILE INPUT AUTO-ZOOM PREVENTION (iOS Safari & Mobile Browsers)
+   iOS Safari automatically zooms the page when focusing any input with
+   computed font-size < 16px. Enforcing 16px on mobile prevents auto-zoom
+   while preserving natural manual pinch-to-zoom for accessibility.
+   ========================================================================= */
+@media screen and (max-width: 767px) {
+  input,
+  select,
+  textarea,
+  input:focus,
+  select:focus,
+  textarea:focus,
+  input:active,
+  select:active,
+  textarea:active,
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"] {
+    font-size: 16px !important;
+  }
+}
+

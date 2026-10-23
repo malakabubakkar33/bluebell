@@ -168,7 +168,7 @@ export const CartDrawer: React.FC = () => {
                       name="fullName"
                       required
                       placeholder="e.g. Muhammad Usman"
-                      className="w-full p-2.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 text-base sm:text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
                     />
                   </div>
 
@@ -178,7 +178,7 @@ export const CartDrawer: React.FC = () => {
                       name="phone"
                       required
                       placeholder="+92 300 1234567"
-                      className="w-full p-2.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 text-base sm:text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
                     />
                   </div>
 
@@ -188,7 +188,7 @@ export const CartDrawer: React.FC = () => {
                       name="city"
                       required
                       placeholder="Islamabad / Lahore / Karachi"
-                      className="w-full p-2.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 text-base sm:text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
                     />
                   </div>
 
@@ -199,7 +199,7 @@ export const CartDrawer: React.FC = () => {
                       required
                       rows={2}
                       placeholder="Street, House No, Sector/Area"
-                      className="w-full p-2.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 text-base sm:text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -303,7 +303,7 @@ export const CartDrawer: React.FC = () => {
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="Coupon (Try BLUEBELL10)"
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl py-2 pl-8 pr-3 focus:outline-none focus:border-brand-500"
+                    className="w-full text-base sm:text-xs bg-slate-50 border border-slate-200 rounded-xl py-2 pl-8 pr-3 focus:outline-none focus:border-brand-500"
                   />
                   <Tag className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                 </div>
