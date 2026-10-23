@@ -198,7 +198,7 @@ export const Header: React.FC = () => {
         }`}
       >
         {/* 1. TOP UTILITY BAR (Frosted Glass Type) */}
-        <div className="bg-white border-b border-[#DFEBF8] text-xs text-[#102A56] px-4 sm:px-8 py-2 transition-colors">
+        <div className="bg-white/75 backdrop-blur-xl border-b border-white/50 text-xs text-[#102A56] px-4 sm:px-8 py-1.5 sm:py-2 transition-colors">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
             <div className="flex items-center gap-2 font-medium text-slate-700">
               <Truck className="w-4 h-4 text-[#0878F9]" />
@@ -233,7 +233,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* 2. MAIN HEADER BAR (Pure Frosted Glasstype Backdrop) */}
-        <div className="bg-white border-b border-[#DFEBF8] shadow-xs transition-all duration-300">
+        <div className="bg-white/85 backdrop-blur-2xl border-b border-white/60 shadow-xs transition-all duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between gap-4 sm:gap-8">
             {/* Brand Logo */}
             <BrandLogo variant="header" />
@@ -345,17 +345,42 @@ export const Header: React.FC = () => {
               {/* Mobile 2-Line Hamburger Menu Trigger */}
               <button
                 onClick={() => setIsSideNavOpen(true)}
-                className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-xl bg-white/70 text-slate-800 border border-white/60 p-2 gap-1.5"
+                className="md:hidden flex flex-col justify-center items-center w-9 h-9 rounded-xl bg-[#F2F8FF] text-[#102A56] border border-[#DFEBF8] p-1.5 gap-1 shadow-xs cursor-pointer"
                 aria-label="Toggle navigation drawer"
               >
-                <span className="w-5 h-[2.5px] bg-slate-800 rounded-full" />
-                <span className="w-3.5 h-[2.5px] bg-brand-500 rounded-full" />
+                <span className="w-4 h-[2px] bg-[#102A56] rounded-full" />
+                <span className="w-2.5 h-[2px] bg-[#0878F9] rounded-full" />
+                <span className="w-4 h-[2px] bg-[#102A56] rounded-full" />
               </button>
             </div>
           </div>
 
+          {/* Mobile Search Bar (Compact Glassy for Mobile View) */}
+          <div className="md:hidden px-4 pb-2.5 pt-0.5">
+            <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSearchSubmit(e);
+                }}
+                placeholder="Search iPhone, Samsung, iPad..."
+                className="w-full bg-white/90 backdrop-blur-md border border-[#DFEBF8] rounded-full py-1.5 pl-4 pr-10 text-xs text-[#102A56] placeholder-[#8394AB] focus:outline-none focus:border-[#0878F9] shadow-xs"
+              />
+              <button
+                type="submit"
+                aria-label="Search"
+                className="absolute right-1 w-6 h-6 rounded-full bg-[#0878F9] text-white flex items-center justify-center shadow-xs cursor-pointer"
+              >
+                <Search className="w-3 h-3" />
+              </button>
+            </form>
+          </div>
+
           {/* 3. CATEGORY NAVIGATION BAR (Positioned Slightly Lower with Floating Glass Shelf & 2-Line Hamburger) */}
-          <div className="border-t border-[#DFEBF8] mt-0 py-2 hidden md:block bg-white relative">
+          <div className="border-t border-slate-200/50 mt-0 py-2 hidden md:block bg-white/80 backdrop-blur-xl relative">
             <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between">
               <div className="flex items-center gap-7">
                 {/* A. SLEEK 2-LINE HAMBURGER ICON BUTTON (Replaces bulky button) */}

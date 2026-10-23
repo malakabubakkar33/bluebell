@@ -262,7 +262,7 @@ export const HeroBanner: React.FC = () => {
         <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-6 sm:py-10 lg:py-14 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-10 lg:px-16 py-4 sm:py-10 lg:py-14 relative z-10">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={slide.id}
@@ -271,33 +271,33 @@ export const HeroBanner: React.FC = () => {
             initial="enter"
             animate="center"
             exit="exit"
-            className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center"
+            className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-center"
           >
             {/* Left Column: Heading, Specs, Price, Shop Now, Trust */}
-            <div className="lg:col-span-7 space-y-4 text-center lg:text-left order-1">
+            <div className="lg:col-span-7 space-y-3 sm:space-y-4 text-center lg:text-left order-1">
               {/* Badge: "Latest & Best" matching reference */}
               <div className="flex items-center justify-center lg:justify-start">
-                <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[#0878F9] text-white shadow-sm shadow-[#0878F9]/20">
+                <span className="px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider bg-[#0878F9] text-white shadow-xs">
                   {slide.tag}
                 </span>
               </div>
 
               {/* Main Heading: "iPhone 18 Pro Max" with "18" in bright blue */}
-              <div className="space-y-1.5">
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#102A56] tracking-tight leading-[1.1]">
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-[#102A56] tracking-tight leading-[1.15]">
                   <span>{slide.titlePrefix}</span>
                   <span className="text-[#0878F9]">{slide.titleHighlight}</span>
                   {slide.titleSuffix && <span>{slide.titleSuffix}</span>}
                 </h1>
-                <p className="text-sm sm:text-base text-[#536780] font-medium max-w-xl mx-auto lg:mx-0">
+                <p className="text-xs sm:text-base text-[#536780] font-medium max-w-xl mx-auto lg:mx-0 line-clamp-2 sm:line-clamp-none">
                   {slide.subtitle}
                 </p>
               </div>
 
               {/* Mobile-Only Product Image */}
-              <div className="block lg:hidden my-3">
-                <Link href={slide.link} className="relative block group max-w-[280px] sm:max-w-sm mx-auto">
-                  <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-white/80 p-2 border border-[#DFEBF8] shadow-md flex items-center justify-center">
+              <div className="block lg:hidden my-2">
+                <Link href={slide.link} className="relative block group max-w-[240px] sm:max-w-sm mx-auto">
+                  <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-white/75 backdrop-blur-md p-1.5 border border-white/80 shadow-md flex items-center justify-center">
                     <img
                       src={slide.image}
                       alt={`${slide.brand} ${slide.titleHighlight}`}
@@ -309,20 +309,20 @@ export const HeroBanner: React.FC = () => {
               </div>
 
               {/* Three Compact Spec Highlights matching reference */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 max-w-md sm:max-w-xl mx-auto lg:mx-0 pt-1">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-3 max-w-sm sm:max-w-xl mx-auto lg:mx-0 pt-0.5">
                 {slide.specs.slice(0, 3).map((spec, i) => (
                   <div
                     key={i}
-                    className="p-2.5 rounded-xl bg-white border border-[#DFEBF8] shadow-xs flex items-center gap-2.5 text-left"
+                    className="p-1.5 sm:p-2.5 rounded-xl bg-white/80 backdrop-blur-sm border border-[#DFEBF8] shadow-xs flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-1 sm:gap-2.5"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-[#F2F8FF] border border-[#DFEBF8] flex items-center justify-center flex-shrink-0">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-[#F2F8FF] border border-[#DFEBF8] flex items-center justify-center flex-shrink-0">
                       {getSpecIcon((spec as any).icon || (i === 0 ? 'cpu' : i === 1 ? 'camera' : 'screen'))}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-[#102A56] truncate">
+                      <p className="text-[10px] sm:text-xs font-bold text-[#102A56] truncate">
                         {spec.label}
                       </p>
-                      <p className="text-[10px] text-[#8394AB] font-medium truncate">
+                      <p className="text-[8px] sm:text-[10px] text-[#8394AB] font-medium truncate">
                         {spec.desc}
                       </p>
                     </div>
@@ -331,27 +331,27 @@ export const HeroBanner: React.FC = () => {
               </div>
 
               {/* Price & Primary CTA matching reference */}
-              <div className="pt-2 flex flex-row items-center justify-center lg:justify-start gap-5 sm:gap-6">
+              <div className="pt-1 sm:pt-2 flex flex-row items-center justify-center lg:justify-start gap-4 sm:gap-6">
                 <div className="text-left">
-                  <span className="text-[10px] sm:text-xs font-bold text-[#8394AB] uppercase tracking-wider block">
+                  <span className="text-[9px] sm:text-xs font-bold text-[#8394AB] uppercase tracking-wider block">
                     Starting From
                   </span>
-                  <span className="text-xl sm:text-3xl font-black text-[#102A56] font-mono">
+                  <span className="text-base sm:text-2xl lg:text-3xl font-black text-[#102A56] font-mono">
                     {slide.price}
                   </span>
                 </div>
 
                 <Link
                   href={slide.link}
-                  className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#0878F9] hover:bg-[#0665D0] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#0878F9]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-full bg-[#0878F9] hover:bg-[#0665D0] text-white font-extrabold text-xs sm:text-sm shadow-md shadow-[#0878F9]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                 >
                   <span>Shop Now</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Link>
               </div>
 
               {/* 3 Compact Trust Indicators matching reference */}
-              <div className="pt-3 border-t border-[#DFEBF8]/80 flex items-center justify-center lg:justify-start gap-4 sm:gap-6 text-[10px] sm:text-xs font-semibold text-[#536780]">
+              <div className="pt-2 sm:pt-3 border-t border-[#DFEBF8]/80 flex items-center justify-center lg:justify-start gap-3 sm:gap-6 text-[9px] sm:text-xs font-semibold text-[#536780]">
                 <div className="flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-[#0878F9]" />
                   <span>100% Original Products</span>
