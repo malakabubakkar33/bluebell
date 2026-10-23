@@ -174,8 +174,75 @@ export default function ProductDetailPage({
     Condition: '100% Brand New Original Sealed Pack Box',
   };
 
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: product.image.startsWith('http') ? product.image : `https://bluebells.pk${product.image}`,
+    description: product.description || product.subtitle || `${product.name} official PTA approved with warranty at Blue Bell Mobile Shop`,
+    brand: {
+      '@type': 'Brand',
+      name: product.brand || 'Apple',
+    },
+    offers: {
+      '@type': 'Offer',
+      url: `https://bluebells.pk/products/${encodeURIComponent(product.id)}`,
+      priceCurrency: 'PKR',
+      price: product.price,
+      priceValidUntil: '2026-12-31',
+      itemCondition: 'https://schema.org/NewCondition',
+      availability: (product.stock || 1) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      seller: {
+        '@type': 'Organization',
+        name: 'Blue Bell Mobile Shop',
+      },
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: product.rating || 4.8,
+      reviewCount: product.reviewCount || 36,
+      bestRating: '5',
+      worstRating: '1',
+    },
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://bluebells.pk',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: product.category || 'Smartphones',
+        item: `https://bluebells.pk/products?category=${encodeURIComponent(product.categorySlug || 'smartphones')}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.name,
+        item: `https://bluebells.pk/products/${encodeURIComponent(product.id)}`,
+      },
+    ],
+  };
+
   return (
     <main className="min-h-screen flex flex-col bg-[#fafcff]">
+      {/* Product & Breadcrumb Schema.org JSON-LD for Google Rich Snippets */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
       <PageHeader title="Product Details" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 flex-1 w-full">

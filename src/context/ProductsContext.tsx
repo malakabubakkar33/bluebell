@@ -7,6 +7,7 @@ import { PRODUCTS, CATEGORIES } from '@/lib/data/mockData';
 export interface BannerItem {
   id: number | string;
   image: string;
+  mobileImage?: string;
   title: string;
   titlePrefix?: string;
   titleHighlight?: string;
