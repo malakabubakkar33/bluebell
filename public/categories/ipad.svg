@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="ipadFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="50%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <linearGradient id="ipadScreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="50%" stop-color="#0B132B" />
+      <stop offset="100%" stop-color="#1E1B4B" />
+    </linearGradient>
+    <linearGradient id="liquidRetina" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F43F5E" />
+      <stop offset="40%" stop-color="#8B5CF6" />
+      <stop offset="80%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+    <filter id="ipadShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#8B5CF6" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <g filter="url(#ipadShadow)">
+    <!-- Apple Pencil snapped to top -->
+    <rect x="34" y="11" width="52" height="3" rx="1.5" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="0.5" />
+    <polygon points="34,12.5 31,12.5 34,11.5" fill="#E2E8F0" />
+    
+    <!-- iPad Aluminum Unibody -->
+    <rect x="22" y="17" width="76" height="92" rx="10" fill="url(#ipadFrame)" stroke="#64748B" stroke-width="0.8" />
+    
+    <!-- Screen Glass -->
+    <rect x="26" y="21" width="68" height="84" rx="8" fill="url(#ipadScreen)" />
+    
+    <!-- Colorful Liquid Retina wallpaper bloom -->
+    <circle cx="60" cy="63" r="28" fill="url(#liquidRetina)" opacity="0.8" filter="blur(6px)" />
+    <path d="M 32 75 Q 60 40 88 70 L 88 98 L 26 98 Z" fill="url(#liquidRetina)" opacity="0.6" />
+    
+    <!-- Front FaceID camera dot -->
+    <circle cx="60" cy="23.5" r="1.2" fill="#000000" />
+    <circle cx="60.3" cy="23.3" r="0.5" fill="#38BDF8" opacity="0.8" />
+    
+    <!-- Home bar -->
+    <rect x="52" y="100" width="16" height="1.8" rx="0.9" fill="#FFFFFF" opacity="0.6" />
+  </g>
+</svg>

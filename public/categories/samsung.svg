@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="samFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="50%" stop-color="#475569" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="samScreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090A0F" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#1E1E2F" />
+    </linearGradient>
+    <linearGradient id="samGeo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" />
+      <stop offset="50%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+    <filter id="samShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#6366F1" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <g filter="url(#samShadow)">
+    <!-- Titanium Body with Ultra sharp corners -->
+    <rect x="34" y="9" width="52" height="102" rx="4" fill="url(#samFrame)" stroke="#64748B" stroke-width="0.8" />
+    
+    <!-- Screen Glass -->
+    <rect x="36" y="11" width="48" height="98" rx="2" fill="url(#samScreen)" />
+    
+    <!-- Samsung Galaxy AI Prism Mineral Wallpaper -->
+    <polygon points="36,40 60,65 36,95" fill="url(#samGeo)" opacity="0.8" />
+    <polygon points="60,65 84,45 84,85" fill="url(#samGeo)" opacity="0.65" />
+    <polygon points="36,40 60,65 84,45 60,25" fill="#C084FC" opacity="0.5" />
+    
+    <!-- Top Center Infinity-O Punch Hole Camera -->
+    <circle cx="60" cy="16" r="2" fill="#000000" stroke="#334155" stroke-width="0.5" />
+    <circle cx="60.5" cy="15.8" r="0.6" fill="#38BDF8" opacity="0.8" />
+
+    <!-- Sleek S-Pen Silhouette next to phone -->
+    <rect x="90" y="25" width="3" height="70" rx="1.5" fill="#3B82F6" stroke="#1D4ED8" stroke-width="0.5" />
+    <polygon points="90,95 93,95 91.5,102" fill="#2563EB" />
+    
+    <!-- Subtle glass reflection streak -->
+    <path d="M 37 12 L 80 12 Q 37 60 37 105 Z" fill="#FFFFFF" opacity="0.06" />
+  </g>
+</svg>

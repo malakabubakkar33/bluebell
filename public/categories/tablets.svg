@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="tabFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+    <linearGradient id="tabScreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#0369A1" />
+    </linearGradient>
+    <filter id="tabShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#0284C7" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <g filter="url(#tabShadow)">
+    <!-- Landscape orientation Tablet -->
+    <rect x="14" y="24" width="92" height="66" rx="8" fill="url(#tabFrame)" stroke="#475569" stroke-width="0.8" />
+    <rect x="18" y="28" width="84" height="58" rx="6" fill="url(#tabScreen)" />
+    
+    <!-- Neon horizon wave -->
+    <path d="M 18 64 Q 40 45 60 62 T 102 52 L 102 86 L 18 86 Z" fill="#0EA5E9" opacity="0.6" />
+    <circle cx="65" cy="50" r="16" fill="#38BDF8" opacity="0.3" filter="blur(6px)" />
+    
+    <!-- Camera pinhole -->
+    <circle cx="60" cy="26" r="1" fill="#000000" />
+    
+    <!-- Stylus tilted across corner -->
+    <line x1="90" y1="85" x2="106" y2="102" stroke="#0284C7" stroke-width="3" stroke-linecap="round" />
+    <polygon points="87,83 91,82 89,87" fill="#38BDF8" />
+  </g>
+</svg>

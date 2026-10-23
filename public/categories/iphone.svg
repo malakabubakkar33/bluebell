@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="iphoneFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4B5563" />
+      <stop offset="50%" stop-color="#9CA3AF" />
+      <stop offset="100%" stop-color="#374151" />
+    </linearGradient>
+    <linearGradient id="iphoneScreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="40%" stop-color="#1E1B4B" />
+      <stop offset="70%" stop-color="#312E81" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    <linearGradient id="screenWave" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#818CF8" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#C084FC" stop-opacity="0.9" />
+    </linearGradient>
+    <filter id="phoneShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#0284c7" flood-opacity="0.25" />
+    </filter>
+  </defs>
+  
+  <!-- Outer Body Frame -->
+  <g filter="url(#phoneShadow)">
+    <rect x="36" y="10" width="48" height="100" rx="14" fill="url(#iphoneFrame)" stroke="#6B7280" stroke-width="0.8" />
+    
+    <!-- Screen Glass -->
+    <rect x="38" y="12" width="44" height="96" rx="12" fill="url(#iphoneScreen)" />
+    
+    <!-- OLED Wallpaper Graphic Wave -->
+    <path d="M 38 70 Q 52 50 62 75 T 82 58 L 82 108 L 38 108 Z" fill="url(#screenWave)" opacity="0.85" />
+    <circle cx="56" cy="62" r="14" fill="#38BDF8" opacity="0.3" filter="blur(4px)" />
+    
+    <!-- Dynamic Island Pill -->
+    <rect x="52" y="16" width="16" height="4.5" rx="2.25" fill="#000000" />
+    <!-- Camera pinhole & sensor inside pill -->
+    <circle cx="63" cy="18.25" r="1" fill="#1E293B" />
+    
+    <!-- Bottom Home Indicator Bar -->
+    <rect x="50" y="103" width="20" height="2" rx="1" fill="#FFFFFF" opacity="0.75" />
+    
+    <!-- Screen Glass Sheen/Reflection -->
+    <path d="M 39 13 L 74 13 Q 39 55 39 98 Z" fill="#FFFFFF" opacity="0.08" />
+  </g>
+</svg>
