@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface AdSlide {
   id: number;
@@ -15,21 +14,27 @@ interface AdSlide {
 const AD_SLIDES: AdSlide[] = [
   {
     id: 1,
-    title: 'Apple iPhone 18 Pro Max - Bigger. Smarter. More Powerful.',
-    image: '/banners/ad-iphone-18.jpg',
-    link: '/products?search=iPhone%2018',
+    title: 'Apple iPhone Titanium Pro Flagship - Ultimate Power & Craftsmanship',
+    image: '/banners/hero-slide-1.jpg',
+    link: '/products?search=iPhone',
   },
   {
     id: 2,
-    title: 'Samsung Galaxy S24 Ultra - Galaxy AI is here',
-    image: '/banners/ad-samsung-s24.jpg',
-    link: '/products?search=S24',
+    title: 'Samsung Galaxy S24 Ultra - Titanium & Galaxy AI Precision',
+    image: '/banners/hero-slide-2.jpg',
+    link: '/products?brand=Samsung',
   },
   {
     id: 3,
-    title: 'Apple iPhone 17 Pro Max - Pro Power. Pro Performance.',
-    image: '/banners/ad-iphone-17.jpg',
-    link: '/products?search=iPhone%2017',
+    title: 'Next-Gen Foldable Flagship - Future Unveiled with Ultra Displays',
+    image: '/banners/hero-slide-3.jpg',
+    link: '/products?category=smartphones',
+  },
+  {
+    id: 4,
+    title: 'Apple Ecosystem Showcase - iPhone, iPad Pro M4 & Watch Ultra',
+    image: '/banners/hero-slide-4.jpg',
+    link: '/products?brand=Apple',
   },
 ];
 
@@ -60,7 +65,7 @@ export const HeroBanner: React.FC = () => {
 
   useEffect(() => {
     if (isPaused) return;
-    const timer = setInterval(nextSlide, 6500);
+    const timer = setInterval(nextSlide, 5000);
     return () => clearInterval(timer);
   }, [nextSlide, isPaused]);
 
@@ -125,27 +130,9 @@ export const HeroBanner: React.FC = () => {
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#0756C9]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-[#21B8F3]/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Floating Left Arrow Carousel Button */}
-      <button
-        onClick={prevSlide}
-        aria-label="Previous banner"
-        className="absolute left-2 sm:left-4 lg:left-8 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-white text-[#0756C9] border border-[#DFEBF8] shadow-lg flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95"
-      >
-        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-      </button>
-
-      {/* Floating Right Arrow Carousel Button */}
-      <button
-        onClick={nextSlide}
-        aria-label="Next banner"
-        className="absolute right-2 sm:right-4 lg:right-8 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-white text-[#0756C9] border border-[#DFEBF8] shadow-lg flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95"
-      >
-        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-      </button>
-
       {/* Main Banner Container:
-          On mobile: Full width edge-to-edge with generous, impactful height (h-[300px] sm:h-[380px])
-          On desktop: Elegant max-w-7xl centered container with crisp widescreen 1024x572 aspect ratio
+          On mobile: Full width edge-to-edge with generous, impactful height
+          On desktop: Elegant max-w-7xl centered container with crisp widescreen presentation
       */}
       <div className="w-full max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-0 sm:py-6 lg:py-8 relative z-10">
         <div className="relative w-full overflow-hidden sm:rounded-3xl shadow-sm sm:shadow-xl sm:border border-[#DFEBF8] bg-white">

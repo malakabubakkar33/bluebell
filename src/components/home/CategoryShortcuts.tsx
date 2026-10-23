@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useProducts } from '@/context/ProductsContext';
-import { ArrowRight, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 export const CategoryShortcuts: React.FC = () => {
   const { categories } = useProducts();
@@ -12,19 +12,18 @@ export const CategoryShortcuts: React.FC = () => {
     <section id="categories" className="py-8 sm:py-14 bg-white border-b border-[#DFEBF8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex items-end justify-between mb-6 sm:mb-8 gap-3">
+        <div className="flex items-center justify-between mb-5 sm:mb-8 gap-3">
           <div>
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#0878F9] flex items-center gap-1.5 mb-1">
-              <Sparkles className="w-3.5 h-3.5 fill-[#0878F9]" />
-              Official Collections
-            </span>
             <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-[#102A56] tracking-tight">
               Explore By Category
             </h2>
+            <p className="text-xs sm:text-sm text-[#52749D] font-medium mt-1">
+              Browse genuine flagships, tablets, wearables, and premium accessories
+            </p>
           </div>
           <Link
             href="/products"
-            className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#0878F9] hover:text-[#0665D0] transition-colors group flex-shrink-0"
+            className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#0756C9] hover:text-[#063B8E] transition-colors group flex-shrink-0"
           >
             <span>View All</span>
             <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
@@ -32,16 +31,16 @@ export const CategoryShortcuts: React.FC = () => {
         </div>
 
         {/* Categories: Smooth Horizontal Scroll on Mobile (snap), 8-col grid on Desktop */}
-        <div className="flex lg:grid overflow-x-auto lg:overflow-visible gap-2.5 sm:gap-3.5 lg:gap-3.5 lg:grid-cols-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory pb-3 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex lg:grid overflow-x-auto lg:overflow-visible gap-2.5 sm:gap-4 lg:grid-cols-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory pb-3 -mx-4 px-4 sm:mx-0 sm:px-0">
           {categories.map((cat) => (
             <Link
               key={cat.id}
               href={`/products?category=${cat.slug}`}
-              className="w-[96px] sm:w-[120px] lg:w-auto flex-shrink-0 snap-start group bg-white/90 backdrop-blur-md border border-[#DFEBF8] hover:border-[#0878F9] rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:shadow-[#0878F9]/10 hover:-translate-y-1"
+              className="w-[105px] sm:w-[130px] lg:w-auto flex-shrink-0 snap-start group bg-gradient-to-b from-white to-[#F8FBFE] hover:to-[#F0F7FF] border border-[#DFEBF8] hover:border-[#0756C9] rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-xl hover:shadow-[#0756C9]/10 hover:-translate-y-1.5 cursor-pointer"
             >
-              {/* Product Device Cutout centered with hover zoom */}
-              <div className="relative w-14 h-14 sm:w-18 sm:h-18 flex items-center justify-center my-1">
-                <div className="absolute inset-0 rounded-full bg-[#0878F9]/5 blur-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              {/* Product Device Cutout centered inside soft illuminated pill */}
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#F0F7FF] group-hover:bg-[#E2F0FF] flex items-center justify-center my-1.5 transition-colors duration-300">
+                <div className="absolute inset-0 rounded-2xl bg-[#0756C9]/5 blur-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 <img
                   src={cat.image}
                   alt={cat.name}
@@ -51,18 +50,13 @@ export const CategoryShortcuts: React.FC = () => {
               </div>
 
               {/* Title & Items Count */}
-              <div className="space-y-0.5 my-1">
-                <span className="text-xs sm:text-sm font-bold text-[#102A56] group-hover:text-[#0878F9] transition-colors block truncate max-w-[85px] sm:max-w-[110px]">
+              <div className="space-y-1 my-1 w-full">
+                <span className="text-xs sm:text-sm font-extrabold text-[#102A56] group-hover:text-[#0756C9] transition-colors block truncate">
                   {cat.name}
                 </span>
-                <span className="text-[10px] text-[#8394AB] font-medium block">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-[#52749D] group-hover:text-[#0756C9] bg-white group-hover:bg-[#EAF7FF] border border-[#DFEBF8] px-2 py-0.5 rounded-full inline-block transition-colors">
                   {cat.itemCount}+ Items
                 </span>
-              </div>
-
-              {/* Small Circular Arrow Button matching reference */}
-              <div className="mt-1.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#F2F8FF] group-hover:bg-[#0878F9] text-[#0878F9] group-hover:text-white flex items-center justify-center transition-colors text-xs shadow-xs">
-                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform group-hover:translate-x-0.5" />
               </div>
             </Link>
           ))}
@@ -71,3 +65,4 @@ export const CategoryShortcuts: React.FC = () => {
     </section>
   );
 };
+

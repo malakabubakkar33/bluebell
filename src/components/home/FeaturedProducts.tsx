@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Star, Heart, ArrowRight, ShoppingCart, Check, Sparkles } from 'lucide-react';
+import { Star, Heart, ArrowRight, ShoppingCart, Check } from 'lucide-react';
 import { useProducts } from '@/context/ProductsContext';
 import { useCart } from '@/context/CartContext';
 import { Product } from '@/types';
@@ -44,20 +44,19 @@ export const FeaturedProducts: React.FC = () => {
     <section id="products" className="py-8 sm:py-14 bg-white border-b border-[#DFEBF8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex items-end justify-between mb-6 sm:mb-8 gap-3">
+        <div className="flex items-center justify-between mb-5 sm:mb-8 gap-3">
           <div>
-            <span className="text-[11px] font-extrabold tracking-widest text-[#0878F9] uppercase flex items-center gap-1.5 mb-1">
-              <Sparkles className="w-3.5 h-3.5 fill-[#0878F9]" />
-              Top Rated Devices
-            </span>
             <h2 className="text-xl sm:text-3xl lg:text-4xl font-black text-[#102A56] tracking-tight">
               Best Selling Flagships
             </h2>
+            <p className="text-xs sm:text-sm text-[#52749D] font-medium mt-1">
+              Top requested smartphones in Pakistan with PTA approval and warranty
+            </p>
           </div>
 
           <Link
             href="/products"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#0878F9] hover:text-[#0665D0] transition-colors group flex-shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#0756C9] hover:text-[#063B8E] transition-colors group flex-shrink-0"
           >
             <span>View All</span>
             <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
