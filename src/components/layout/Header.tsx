@@ -235,58 +235,91 @@ export const Header: React.FC = () => {
               initial={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="overflow-hidden bg-gradient-to-r from-[#F4F9FF] via-white to-[#EAF7FF] border-b border-[#DFEBF8] text-xs text-[#102A56] px-4 sm:px-8 py-2"
+              className="relative overflow-hidden bg-gradient-to-r from-[#F4F9FF] via-white to-[#EAF7FF] border-b border-[#DFEBF8] text-xs text-[#102A56] py-1.5 sm:py-2 select-none"
             >
-              <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-                <div className="flex items-center gap-2 font-medium text-[#52749D]">
-                  <Truck className="w-4 h-4 text-[#0756C9]" />
-                  <span>
-                    Free Express Delivery Across Pakistan on Orders Above{' '}
-                    <strong className="text-[#0756C9] font-bold">Rs. 25,000</strong>
-                  </span>
-                </div>
+              {/* Edge Gradient Masks for Smooth Fading */}
+              <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[#F4F9FF] to-transparent pointer-events-none z-10" />
+              <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[#EAF7FF] to-transparent pointer-events-none z-10" />
 
-                <div className="flex items-center gap-5">
-                  <a
-                    href="tel:+923001234567"
-                    className="flex items-center gap-1.5 text-[#102A56] hover:text-[#0756C9] transition-colors font-semibold"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-[#0756C9]" />
-                    <span>+92 300 1234567</span>
-                  </a>
+              {/* Infinite 1-Line Forward Motion Train Marquee */}
+              <motion.div
+                className="flex items-center gap-8 sm:gap-12 whitespace-nowrap will-change-transform"
+                animate={{
+                  x: ['0%', '-50%'],
+                }}
+                transition={{
+                  x: {
+                    repeat: Infinity,
+                    repeatType: 'loop',
+                    duration: 25,
+                    ease: 'linear',
+                  },
+                }}
+              >
+                {[1, 2].map((loop) => (
+                  <div key={loop} className="flex items-center gap-8 sm:gap-12 flex-shrink-0">
+                    <div className="flex items-center gap-2 font-medium text-[#52749D]">
+                      <Truck className="w-3.5 h-3.5 text-[#0756C9] flex-shrink-0" />
+                      <span>
+                        Free Express Delivery Across Pakistan on Orders Above{' '}
+                        <strong className="text-[#0756C9] font-bold">Rs. 25,000</strong>
+                      </span>
+                    </div>
 
-                  <div className="flex items-center gap-2.5 border-l border-[#DFEBF8] pl-4">
-                    <span className="text-[#8394AB] font-medium">Follow Us</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0756C9]/40" />
+
                     <a
-                      href="https://facebook.com"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[#52749D] hover:text-[#0756C9] transition-colors"
-                      aria-label="Facebook"
+                      href="tel:+923001234567"
+                      className="flex items-center gap-1.5 text-[#102A56] hover:text-[#0756C9] transition-colors font-semibold"
                     >
-                      <Facebook className="w-3.5 h-3.5" />
+                      <Phone className="w-3.5 h-3.5 text-[#0756C9] flex-shrink-0" />
+                      <span>Official Helpline: +92 300 1234567</span>
                     </a>
-                    <a
-                      href="https://instagram.com"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[#52749D] hover:text-[#0756C9] transition-colors"
-                      aria-label="Instagram"
-                    >
-                      <Instagram className="w-3.5 h-3.5" />
-                    </a>
-                    <a
-                      href="https://youtube.com"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[#52749D] hover:text-[#0756C9] transition-colors"
-                      aria-label="YouTube"
-                    >
-                      <Youtube className="w-3.5 h-3.5" />
-                    </a>
+
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0756C9]/40" />
+
+                    <div className="flex items-center gap-2 font-medium text-[#52749D]">
+                      <Sparkles className="w-3.5 h-3.5 text-[#0756C9] flex-shrink-0" />
+                      <span>100% Genuine PTA Approved Flagship Devices with Official Warranty</span>
+                    </div>
+
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0756C9]/40" />
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-[#8394AB] font-medium">Follow Us:</span>
+                      <div className="flex items-center gap-2.5">
+                        <a
+                          href="https://facebook.com"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#52749D] hover:text-[#0756C9] transition-colors"
+                          aria-label="Facebook"
+                        >
+                          <Facebook className="w-3.5 h-3.5" />
+                        </a>
+                        <a
+                          href="https://instagram.com"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#52749D] hover:text-[#0756C9] transition-colors"
+                          aria-label="Instagram"
+                        >
+                          <Instagram className="w-3.5 h-3.5" />
+                        </a>
+                        <a
+                          href="https://youtube.com"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#52749D] hover:text-[#0756C9] transition-colors"
+                          aria-label="YouTube"
+                        >
+                          <Youtube className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                ))}
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
