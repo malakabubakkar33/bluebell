@@ -3,18 +3,30 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Award, ArrowRight } from 'lucide-react';
+import {
+  ShieldCheck,
+  Award,
+  Truck,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Cpu,
+  Camera,
+  Smartphone,
+} from 'lucide-react';
 import { useProducts, BannerItem } from '@/context/ProductsContext';
 
 interface HeroSlide {
   id: number;
-  tag?: string;
+  tag: string;
   brand: string;
   titlePrefix: string;
   titleHighlight: string;
+  titleSuffix?: string;
   tagline: string;
   subtitle: string;
-  specs: { label: string; desc: string }[];
+  scriptText?: string;
+  specs: { label: string; desc: string; icon?: string }[];
   price: string;
   image: string;
   link: string;
@@ -24,75 +36,83 @@ interface HeroSlide {
 const HIGH_RES_SLIDES: HeroSlide[] = [
   {
     id: 1,
-    tag: 'FLAGSHIP TABLET',
-    brand: 'Apple iPad',
-    titlePrefix: 'iPad ',
-    titleHighlight: 'Pro',
-    tagline: 'Power to do more.',
-    subtitle: 'The ultimate iPad experience with groundbreaking M4 performance.',
+    tag: 'Latest & Best',
+    brand: 'Apple iPhone',
+    titlePrefix: 'iPhone ',
+    titleHighlight: '18',
+    titleSuffix: ' Pro Max',
+    tagline: 'The next generation of iPhone is here.',
+    subtitle: 'The next generation of iPhone is here.',
+    scriptText: 'iPhone 18 Pro Max\nPower. Pro. Perfection.',
     specs: [
-      { label: 'M4 Chip', desc: 'Breakthrough speed' },
-      { label: '11" / 13"', desc: 'Ultra Retina XDR' },
-      { label: 'Apple Pencil', desc: 'Pro Precision' },
+      { label: 'A20 Pro Chip', desc: 'Next-Gen Performance', icon: 'cpu' },
+      { label: '48MP Pro Camera', desc: 'Pro-Level Photos', icon: 'camera' },
+      { label: '6.9" Super Retina XDR', desc: 'Stunning Display', icon: 'screen' },
     ],
-    price: 'Rs. 229,999',
-    image: '/banners/hero-ipad-pro.jpg',
-    link: '/products?category=ipad',
-    themeColor: '#0284c7',
+    price: 'Rs. 449,999',
+    image: '/banners/iphone-hero-pedestal.jpg',
+    link: '/products?search=iPhone%2018',
+    themeColor: '#0878F9',
   },
   {
     id: 2,
-    tag: 'NEW ARRIVAL',
-    brand: 'Apple iPhone',
-    titlePrefix: 'iPhone ',
-    titleHighlight: '18 Pro Max',
-    tagline: 'Bigger. Smarter. More Powerful.',
-    subtitle: 'The next generation of titanium smartphone innovation is here.',
-    specs: [
-      { label: 'A20 Pro Chip', desc: '3nm Architecture' },
-      { label: '48MP Pro', desc: 'Fusion Telephoto' },
-      { label: '6.9" Display', desc: 'Super Retina XDR' },
-    ],
-    price: 'Rs. 449,999',
-    image: '/banners/hero-iphone-18.jpg',
-    link: '/products?search=iPhone%2018',
-    themeColor: '#0284c7',
-  },
-  {
-    id: 3,
-    tag: 'GALAXY AI IS HERE',
-    brand: 'SAMSUNG',
+    tag: 'Galaxy AI Is Here',
+    brand: 'Samsung Galaxy',
     titlePrefix: 'Galaxy ',
-    titleHighlight: 'S24 Ultra',
+    titleHighlight: 'S24',
+    titleSuffix: ' Ultra',
     tagline: 'Smarter. Faster. More Powerful.',
     subtitle: 'Unleash mobile AI capabilities with integrated S-Pen and titanium frame.',
+    scriptText: 'Galaxy S24 Ultra\nGalaxy AI Mobile Intelligence.',
     specs: [
-      { label: '200MP Camera', desc: 'Nightography Zoom' },
-      { label: 'Snapdragon 8 Gen 3', desc: 'Extreme Speed' },
-      { label: '6.8" Screen', desc: 'Dynamic AMOLED 2X' },
+      { label: '200MP Camera', desc: 'Nightography Zoom', icon: 'camera' },
+      { label: 'Snapdragon 8 Gen 3', desc: 'Extreme Speed', icon: 'cpu' },
+      { label: '6.8" Screen', desc: 'Dynamic AMOLED 2X', icon: 'screen' },
     ],
     price: 'Rs. 289,999',
     image: '/banners/hero-samsung-s24.jpg',
     link: '/products?search=S24',
-    themeColor: '#0284c7',
+    themeColor: '#0878F9',
+  },
+  {
+    id: 3,
+    tag: 'Flagship Tablet',
+    brand: 'Apple iPad',
+    titlePrefix: 'iPad ',
+    titleHighlight: 'Pro',
+    titleSuffix: ' (M4)',
+    tagline: 'Thinpossible. Ultra Retina XDR.',
+    subtitle: 'The ultimate iPad experience with groundbreaking M4 performance.',
+    scriptText: 'iPad Pro (M4)\nThinpossible. Incredible Speed.',
+    specs: [
+      { label: 'M4 Silicon', desc: 'Breakthrough Speed', icon: 'cpu' },
+      { label: '11" / 13"', desc: 'Ultra Retina OLED', icon: 'screen' },
+      { label: 'Apple Pencil Pro', desc: 'Haptic Feedback', icon: 'camera' },
+    ],
+    price: 'Rs. 229,999',
+    image: '/banners/hero-ipad-pro.jpg',
+    link: '/products?category=ipad',
+    themeColor: '#0878F9',
   },
   {
     id: 4,
-    tag: 'BEST SELLER',
+    tag: 'Best Seller',
     brand: 'Apple iPhone',
     titlePrefix: 'iPhone ',
-    titleHighlight: '17 Pro Max',
+    titleHighlight: '17',
+    titleSuffix: ' Pro Max',
     tagline: 'Pro Power. Pro Performance.',
     subtitle: 'A more powerful iPhone with aerospace-grade desert titanium design.',
+    scriptText: 'iPhone 17 Pro Max\nTitanium. Pro Performance.',
     specs: [
-      { label: 'A19 Pro Chip', desc: 'Hardware Ray Tracing' },
-      { label: '48MP Pro', desc: 'Macro & Spatial' },
-      { label: '6.9" Display', desc: 'ProMotion 120Hz' },
+      { label: 'A19 Pro Chip', desc: 'Hardware Ray Tracing', icon: 'cpu' },
+      { label: '48MP Pro', desc: 'Spatial Video Capture', icon: 'camera' },
+      { label: '6.9" ProMotion', desc: '120Hz Refresh Rate', icon: 'screen' },
     ],
     price: 'Rs. 389,999',
     image: '/banners/hero-iphone-17.jpg',
     link: '/products?search=iPhone%2017',
-    themeColor: '#0284c7',
+    themeColor: '#0878F9',
   },
 ];
 
@@ -105,7 +125,7 @@ export const HeroBanner: React.FC = () => {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Active banners only with fallback to defaults
+  // Active banners only with fallback to high res slides
   const activeBanners = banners && banners.length > 0 ? banners.filter((b) => b.status !== 'Inactive') : [];
   const slides: (BannerItem | HeroSlide)[] = activeBanners.length > 0 ? activeBanners : HIGH_RES_SLIDES;
   const totalSlides = slides.length;
@@ -127,11 +147,11 @@ export const HeroBanner: React.FC = () => {
 
   useEffect(() => {
     if (isPaused) return;
-    const timer = setInterval(nextSlide, 6000);
+    const timer = setInterval(nextSlide, 7000);
     return () => clearInterval(timer);
   }, [nextSlide, isPaused]);
 
-  // Touch swipe support for mobile
+  // Touch swipe support
   const minSwipeDistance = 40;
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
@@ -153,23 +173,23 @@ export const HeroBanner: React.FC = () => {
 
   const slideVariants = {
     enter: (dir: number) => ({
-      x: dir > 0 ? '40%' : '-40%',
+      x: dir > 0 ? '30%' : '-30%',
       opacity: 0,
     }),
     center: {
       x: 0,
       opacity: 1,
       transition: {
-        x: { type: 'spring' as const, stiffness: 220, damping: 28 },
-        opacity: { duration: 0.4 },
+        x: { type: 'spring' as const, stiffness: 240, damping: 28 },
+        opacity: { duration: 0.35 },
       },
     },
     exit: (dir: number) => ({
-      x: dir > 0 ? '-40%' : '40%',
+      x: dir > 0 ? '-30%' : '30%',
       opacity: 0,
       transition: {
-        x: { type: 'spring' as const, stiffness: 220, damping: 28 },
-        opacity: { duration: 0.4 },
+        x: { type: 'spring' as const, stiffness: 240, damping: 28 },
+        opacity: { duration: 0.35 },
       },
     }),
   };
@@ -180,26 +200,39 @@ export const HeroBanner: React.FC = () => {
   // Harmonized slide object
   const slide = {
     id: rawSlide.id,
-    tag: rawSlide.tag || 'FLAGSHIP SPECIAL',
-    brand: rawSlide.brand || 'BLUE BELL MOBILE',
-    titlePrefix: rawSlide.titlePrefix !== undefined ? rawSlide.titlePrefix : rawSlide.title,
-    titleHighlight: rawSlide.titleHighlight || '',
-    tagline: rawSlide.tagline || 'Official PTA Approved & Warranted',
-    subtitle: rawSlide.subtitle || 'Premium genuine smartphone with official brand warranty.',
+    tag: rawSlide.tag || 'Latest & Best',
+    brand: rawSlide.brand || 'Apple iPhone',
+    titlePrefix: (rawSlide as any).titlePrefix !== undefined ? (rawSlide as any).titlePrefix : ((rawSlide as any).title || ''),
+    titleHighlight: rawSlide.titleHighlight || '18',
+    titleSuffix: (rawSlide as any).titleSuffix || '',
+    tagline: rawSlide.tagline || 'The next generation of iPhone is here.',
+    subtitle: rawSlide.subtitle || 'The next generation of iPhone is here.',
+    scriptText: (rawSlide as any).scriptText || 'iPhone 18 Pro Max\nPower. Pro. Perfection.',
     specs: rawSlide.specs && rawSlide.specs.length > 0 ? rawSlide.specs : [
-      { label: 'PTA Approved', desc: 'Official' },
-      { label: 'Warranty', desc: '1 Year Brand' },
-      { label: 'Authentic', desc: 'Sealed Box' },
+      { label: 'A20 Pro Chip', desc: 'Next-Gen Performance', icon: 'cpu' },
+      { label: '48MP Pro Camera', desc: 'Pro-Level Photos', icon: 'camera' },
+      { label: '6.9" Super Retina XDR', desc: 'Stunning Display', icon: 'screen' },
     ],
-    price: rawSlide.price || 'Rs. 99,999',
-    image: rawSlide.image || '/banners/hero-ipad-pro.jpg',
+    price: rawSlide.price || 'Rs. 449,999',
+    image: rawSlide.image || '/banners/iphone-hero-pedestal.jpg',
     link: rawSlide.link || '/products',
+  };
+
+  const getSpecIcon = (iconName?: string) => {
+    switch (iconName) {
+      case 'cpu':
+        return <Cpu className="w-4 h-4 text-[#0878F9] flex-shrink-0" />;
+      case 'camera':
+        return <Camera className="w-4 h-4 text-[#0878F9] flex-shrink-0" />;
+      default:
+        return <Smartphone className="w-4 h-4 text-[#0878F9] flex-shrink-0" />;
+    }
   };
 
   return (
     <section
       ref={containerRef}
-      className="relative w-full overflow-hidden bg-gradient-to-b from-[#f0f9ff] via-[#e0f2fe]/40 to-white border-b border-sky-100"
+      className="relative w-full overflow-hidden bg-gradient-to-r from-[#F2F8FF] via-[#EBF4FE] to-[#F7FAFD] border-b border-[#DFEBF8]"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={onTouchStart}
@@ -207,7 +240,29 @@ export const HeroBanner: React.FC = () => {
       onTouchEnd={onTouchEnd}
       aria-label="Flagship Hero Showcase"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-6 lg:py-12">
+      {/* Background Soft Blue Ambient Rings matching reference */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#0878F9]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-[#10A9F4]/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Floating Left Arrow Carousel Button matching reference */}
+      <button
+        onClick={prevSlide}
+        aria-label="Previous slide"
+        className="absolute left-3 sm:left-6 lg:left-8 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/95 hover:bg-white text-[#102A56] hover:text-[#0878F9] border border-[#DFEBF8] shadow-md flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95"
+      >
+        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+      </button>
+
+      {/* Floating Right Arrow Carousel Button matching reference */}
+      <button
+        onClick={nextSlide}
+        aria-label="Next slide"
+        className="absolute right-3 sm:right-6 lg:right-8 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/95 hover:bg-white text-[#102A56] hover:text-[#0878F9] border border-[#DFEBF8] shadow-md flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95"
+      >
+        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+      </button>
+
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-6 sm:py-10 lg:py-14 relative z-10">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={slide.id}
@@ -216,127 +271,140 @@ export const HeroBanner: React.FC = () => {
             initial="enter"
             animate="center"
             exit="exit"
-            className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6 lg:gap-8 items-center"
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center"
           >
-            {/* Left Column (Desktop) / Main Content (Mobile): Compact, Balanced Typography */}
-            <div className="lg:col-span-7 space-y-2 sm:space-y-4 text-center lg:text-left order-1">
-              {/* Badge & Brand */}
-              <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
-                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[11px] font-black uppercase tracking-wider bg-sky-500 text-white shadow-xs">
+            {/* Left Column: Heading, Specs, Price, Shop Now, Trust */}
+            <div className="lg:col-span-7 space-y-4 text-center lg:text-left order-1">
+              {/* Badge: "Latest & Best" matching reference */}
+              <div className="flex items-center justify-center lg:justify-start">
+                <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[#0878F9] text-white shadow-sm shadow-[#0878F9]/20">
                   {slide.tag}
-                </span>
-                <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">
-                  {slide.brand}
                 </span>
               </div>
 
-              {/* Tagline & Main Title */}
-              <div className="space-y-0.5">
-                <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-sky-600 tracking-wide uppercase">
-                  {slide.tagline}
-                </p>
-                <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
+              {/* Main Heading: "iPhone 18 Pro Max" with "18" in bright blue */}
+              <div className="space-y-1.5">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#102A56] tracking-tight leading-[1.1]">
                   <span>{slide.titlePrefix}</span>
-                  <span className="text-sky-500">{slide.titleHighlight}</span>
+                  <span className="text-[#0878F9]">{slide.titleHighlight}</span>
+                  {slide.titleSuffix && <span>{slide.titleSuffix}</span>}
                 </h1>
-                <p className="text-[11px] sm:text-sm text-slate-600 max-w-xl mx-auto lg:mx-0 font-normal line-clamp-1 sm:line-clamp-none">
+                <p className="text-sm sm:text-base text-[#536780] font-medium max-w-xl mx-auto lg:mx-0">
                   {slide.subtitle}
                 </p>
               </div>
 
-              {/* Mobile-Only Product Image: Fully contained inside its rounded frame, perfectly proportioned */}
-              <div className="block lg:hidden my-1.5 sm:my-3">
-                <Link href={slide.link} className="relative block group max-w-[260px] sm:max-w-sm mx-auto">
-                  <div className="relative aspect-[16/9] sm:aspect-[16/10] rounded-2xl overflow-hidden bg-gradient-to-tr from-sky-50 via-white to-sky-100/50 shadow-md border border-sky-100/80 p-2 flex items-center justify-center">
+              {/* Mobile-Only Product Image */}
+              <div className="block lg:hidden my-3">
+                <Link href={slide.link} className="relative block group max-w-[280px] sm:max-w-sm mx-auto">
+                  <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-white/80 p-2 border border-[#DFEBF8] shadow-md flex items-center justify-center">
                     <img
                       src={slide.image}
                       alt={`${slide.brand} ${slide.titleHighlight}`}
-                      className="w-full h-full object-contain object-center rounded-xl group-hover:scale-102 transition-transform duration-500"
+                      className="w-full h-full object-contain object-center rounded-xl transition-transform duration-500 group-hover:scale-102"
                       loading={currentSlide === 0 ? 'eager' : 'lazy'}
                     />
                   </div>
                 </Link>
               </div>
 
-              {/* Spec Chips (Hidden on small mobile to fit in single screen, visible on sm and above) */}
-              <div className="hidden sm:grid grid-cols-3 gap-2 sm:gap-3 max-w-sm sm:max-w-md mx-auto lg:mx-0">
-                {slide.specs.map((spec, i) => (
+              {/* Three Compact Spec Highlights matching reference */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 max-w-md sm:max-w-xl mx-auto lg:mx-0 pt-1">
+                {slide.specs.slice(0, 3).map((spec, i) => (
                   <div
                     key={i}
-                    className="p-1.5 sm:p-2.5 rounded-xl bg-white border border-sky-100 shadow-xs text-center"
+                    className="p-2.5 rounded-xl bg-white border border-[#DFEBF8] shadow-xs flex items-center gap-2.5 text-left"
                   >
-                    <p className="text-[10px] sm:text-xs font-black text-slate-900 truncate">
-                      {spec.label}
-                    </p>
-                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium truncate">
-                      {spec.desc}
-                    </p>
+                    <div className="w-8 h-8 rounded-lg bg-[#F2F8FF] border border-[#DFEBF8] flex items-center justify-center flex-shrink-0">
+                      {getSpecIcon((spec as any).icon || (i === 0 ? 'cpu' : i === 1 ? 'camera' : 'screen'))}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-[#102A56] truncate">
+                        {spec.label}
+                      </p>
+                      <p className="text-[10px] text-[#8394AB] font-medium truncate">
+                        {spec.desc}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              {/* Price & CTA Button (Compact inline row on mobile) */}
-              <div className="pt-1 flex flex-row items-center justify-center lg:justify-start gap-3 sm:gap-5">
+              {/* Price & Primary CTA matching reference */}
+              <div className="pt-2 flex flex-row items-center justify-center lg:justify-start gap-5 sm:gap-6">
                 <div className="text-left">
-                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-[10px] sm:text-xs font-bold text-[#8394AB] uppercase tracking-wider block">
                     Starting From
                   </span>
-                  <span className="text-base sm:text-2xl font-black text-slate-900 font-mono">
+                  <span className="text-xl sm:text-3xl font-black text-[#102A56] font-mono">
                     {slide.price}
                   </span>
                 </div>
 
                 <Link
                   href={slide.link}
-                  className="inline-flex items-center gap-1.5 px-4 sm:px-7 py-2 sm:py-3.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-500/25 hover:scale-105 active:scale-95 transition-all"
+                  className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#0878F9] hover:bg-[#0665D0] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-[#0878F9]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                 >
                   <span>Shop Now</span>
-                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
-              {/* Trust Badges */}
-              <div className="pt-2 sm:pt-3 border-t border-sky-100 flex items-center justify-center lg:justify-start gap-4 sm:gap-6 text-[9px] sm:text-[11px] font-semibold text-slate-500">
-                <div className="flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500" />
-                  <span>100% Original PTA Approved</span>
+              {/* 3 Compact Trust Indicators matching reference */}
+              <div className="pt-3 border-t border-[#DFEBF8]/80 flex items-center justify-center lg:justify-start gap-4 sm:gap-6 text-[10px] sm:text-xs font-semibold text-[#536780]">
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-[#0878F9]" />
+                  <span>100% Original Products</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500" />
+                <div className="flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-[#0878F9]" />
                   <span>Official Warranty</span>
+                </div>
+                <div className="flex items-center gap-1.5 hidden sm:flex">
+                  <Truck className="w-4 h-4 text-[#0878F9]" />
+                  <span>Fast &amp; Secure Delivery</span>
                 </div>
               </div>
             </div>
 
-            {/* Desktop-Only Right Column: Complete High-Res Product Inside Container */}
-            <div className="hidden lg:flex lg:col-span-5 order-2 items-center justify-center">
-              <Link href={slide.link} className="relative block group w-full max-w-lg">
-                <div className="relative aspect-[16/11] rounded-3xl overflow-hidden bg-gradient-to-tr from-sky-50 via-white to-sky-100/50 shadow-xl shadow-sky-100/80 border border-sky-100 p-3 flex items-center justify-center">
+            {/* Desktop-Only Right Column: Pedestal Showcase with Script Typography */}
+            <div className="hidden lg:flex lg:col-span-5 order-2 flex-col items-center justify-center relative">
+              {/* Script Typography Accent matching reference */}
+              <div className="absolute top-2 right-4 z-20 text-right pointer-events-none select-none">
+                <p className="font-serif italic text-lg lg:text-xl font-medium text-[#0878F9]/90 drop-shadow-xs">
+                  {slide.titlePrefix} {slide.titleHighlight} {slide.titleSuffix}
+                </p>
+                <p className="font-serif italic text-xs lg:text-sm text-[#102A56]/75">
+                  Power. Pro. Perfection.
+                </p>
+              </div>
+
+              {/* Product Frame with Pedestal visual */}
+              <Link href={slide.link} className="relative block group w-full max-w-lg mt-6">
+                <div className="relative aspect-[16/11] rounded-3xl overflow-hidden bg-white/60 p-2 border border-[#DFEBF8] shadow-xl shadow-sky-900/5 flex items-center justify-center">
                   <img
                     src={slide.image}
                     alt={`${slide.brand} ${slide.titleHighlight}`}
                     className="w-full h-full object-contain object-center rounded-2xl group-hover:scale-105 transition-transform duration-700"
                     loading={currentSlide === 0 ? 'eager' : 'lazy'}
                   />
-                  {/* Subtle Clean Vignette */}
-                  <div className="absolute inset-0 rounded-3xl pointer-events-none ring-1 ring-inset ring-sky-500/10" />
                 </div>
               </Link>
             </div>
           </motion.div>
         </AnimatePresence>
 
-        {/* Clean Pill Carousel Indicators */}
-        <div className="mt-2.5 sm:mt-6 flex items-center justify-center gap-2">
+        {/* Slide Indicators matching reference (small blue dots) */}
+        <div className="mt-6 flex items-center justify-center gap-2">
           {slides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => goToSlide(idx)}
               aria-label={`Slide ${idx + 1}`}
-              className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 cursor-pointer ${
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                 idx === currentSlideSafe
-                  ? 'w-6 sm:w-8 bg-sky-500 shadow-md shadow-sky-500/40'
-                  : 'w-1.5 sm:w-2.5 bg-sky-200 hover:bg-sky-300'
+                  ? 'w-7 bg-[#0878F9] shadow-md shadow-[#0878F9]/30'
+                  : 'w-2 bg-[#DFEBF8] hover:bg-sky-300'
               }`}
             />
           ))}

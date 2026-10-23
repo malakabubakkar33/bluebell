@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
@@ -93,8 +94,9 @@ const MEGA_DROPDOWNS = {
 type MegaKey = 'iphone' | 'samsung' | 'tablets' | 'watches' | 'accessories';
 
 export const Header: React.FC = () => {
-  const { totalItems, wishlist, setIsDrawerOpen } = useCart();
+  const { totalItems, subtotal, wishlist, setIsDrawerOpen } = useCart();
   const { user, isAdmin } = useAuth();
+  const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -159,6 +161,14 @@ export const Header: React.FC = () => {
     }, 180);
   };
 
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (searchQuery.trim().length > 0) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchFocused(false);
+    }
+  };
+
   // Search filtering
   const searchResults = searchQuery.trim().length > 1
     ? PRODUCTS.filter((p) =>
@@ -188,33 +198,33 @@ export const Header: React.FC = () => {
         }`}
       >
         {/* 1. TOP UTILITY BAR (Frosted Glass Type) */}
-        <div className="bg-white/45 backdrop-blur-xl border-b border-white/30 text-xs text-slate-700 px-4 sm:px-8 py-2 transition-colors">
+        <div className="bg-white border-b border-[#DFEBF8] text-xs text-[#102A56] px-4 sm:px-8 py-2 transition-colors">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
             <div className="flex items-center gap-2 font-medium text-slate-700">
-              <Truck className="w-4 h-4 text-brand-500 animate-pulse" />
+              <Truck className="w-4 h-4 text-[#0878F9]" />
               <span>
-                Free Express Delivery on Orders Above <strong className="text-brand-600 font-bold">Rs. 25,000</strong>
+                Free Express Delivery on Orders Above <strong className="text-[#0878F9] font-bold">Rs. 25,000</strong>
               </span>
             </div>
 
             <div className="flex items-center gap-5">
               <a
                 href="tel:+923001234567"
-                className="flex items-center gap-1.5 hover:text-brand-600 transition-colors font-medium"
+                className="flex items-center gap-1.5 text-[#102A56] hover:text-[#0878F9] transition-colors font-semibold"
               >
-                <Phone className="w-3.5 h-3.5 text-brand-500" />
+                <Phone className="w-3.5 h-3.5 text-[#0878F9]" />
                 <span>+92 300 1234567</span>
               </a>
 
-              <div className="flex items-center gap-2.5 border-l border-slate-300/60 pl-4">
-                <span className="text-slate-500">Follow Us</span>
-                <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-brand-600 transition-colors">
+              <div className="flex items-center gap-2.5 border-l border-[#DFEBF8] pl-4">
+                <span className="text-[#8394AB] font-medium">Follow Us</span>
+                <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-[#536780] hover:text-[#0878F9] transition-colors" aria-label="Facebook">
                   <Facebook className="w-3.5 h-3.5" />
                 </a>
-                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-pink-600 transition-colors">
+                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-[#536780] hover:text-[#0878F9] transition-colors" aria-label="Instagram">
                   <Instagram className="w-3.5 h-3.5" />
                 </a>
-                <a href="https://youtube.com" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-red-600 transition-colors">
+                <a href="https://youtube.com" target="_blank" rel="noreferrer" className="text-[#536780] hover:text-[#0878F9] transition-colors" aria-label="YouTube">
                   <Youtube className="w-3.5 h-3.5" />
                 </a>
               </div>
@@ -223,30 +233,33 @@ export const Header: React.FC = () => {
         </div>
 
         {/* 2. MAIN HEADER BAR (Pure Frosted Glasstype Backdrop) */}
-        <div className="bg-white/70 backdrop-blur-2xl border-b border-white/40 shadow-sm transition-all duration-300">
+        <div className="bg-white border-b border-[#DFEBF8] shadow-xs transition-all duration-300">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between gap-4 sm:gap-8">
             {/* Brand Logo */}
             <BrandLogo variant="header" />
 
             {/* Search Bar with live popup */}
             <div ref={searchRef} className="relative flex-1 max-w-2xl hidden md:block">
-              <div className="relative flex items-center">
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSearchSubmit(e);
+                  }}
                   placeholder="Search for iPhone 17, Samsung S24, iPad, Accessories..."
-                  className="w-full bg-white/60 backdrop-blur-md border border-white/80 rounded-full py-2.5 pl-5 pr-14 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 transition-all duration-200 shadow-inner"
+                  className="w-full bg-white border border-[#DFEBF8] rounded-full py-2.5 pl-5 pr-14 text-sm text-[#102A56] placeholder-[#8394AB] focus:outline-none focus:border-[#0878F9] focus:ring-4 focus:ring-[#0878F9]/10 transition-all duration-200 shadow-xs"
                 />
                 <button
-                  type="button"
+                  type="submit"
                   aria-label="Search"
-                  className="absolute right-1.5 w-9 h-9 rounded-full bg-brand-500 hover:bg-brand-600 text-white flex items-center justify-center transition-colors shadow-sm"
+                  className="absolute right-1.5 w-9 h-9 rounded-full bg-[#0878F9] hover:bg-[#0665D0] text-white flex items-center justify-center transition-colors shadow-sm cursor-pointer"
                 >
                   <Search className="w-4 h-4" />
                 </button>
-              </div>
+              </form>
 
               {/* Live Search Results Popup */}
               {isSearchFocused && searchResults.length > 0 && (
@@ -277,18 +290,21 @@ export const Header: React.FC = () => {
 
             {/* User Actions */}
             <div className="flex items-center gap-3 sm:gap-5">
-              {/* Account / Admin Portal Link */}
+              {/* Account / Login Area matching reference */}
               <Link
                 href={user ? (isAdmin ? '/admin' : '/account') : '/auth/login'}
-                className="hidden sm:flex items-center gap-2 p-2 rounded-xl text-slate-700 hover:text-brand-600 hover:bg-white/60 transition-colors text-xs font-bold"
+                className="hidden sm:flex items-center gap-2.5 p-1.5 rounded-xl text-[#102A56] hover:text-[#0878F9] transition-colors"
                 title={user ? (isAdmin ? 'Admin Dashboard' : 'My Account') : 'Sign In / Register'}
               >
-                <div className="w-9 h-9 rounded-full bg-white/70 hover:bg-blue-100 text-slate-700 flex items-center justify-center transition-colors border border-white/50 shadow-sm">
-                  <User className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-full bg-[#F2F8FF] border border-[#DFEBF8] text-[#0878F9] flex items-center justify-center transition-colors shadow-xs">
+                  <User className="w-4.5 h-4.5" />
                 </div>
-                <span className="hidden xl:inline">
-                  {user ? (isAdmin ? 'Admin Panel' : user.name.split(' ')[0]) : 'Sign In'}
-                </span>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] text-[#8394AB] font-medium leading-tight">Account</span>
+                  <span className="text-xs font-bold text-[#102A56] leading-tight">
+                    {user ? (isAdmin ? 'Admin Panel' : user.name.split(' ')[0]) : 'Login / Register'}
+                  </span>
+                </div>
               </Link>
 
               {/* Wishlist Link */}
@@ -308,20 +324,20 @@ export const Header: React.FC = () => {
               {/* Cart Trigger */}
               <button
                 onClick={() => setIsDrawerOpen(true)}
-                className="flex items-center gap-2.5 bg-white/70 hover:bg-white/90 border border-white/60 rounded-full py-1.5 pl-2 pr-3.5 transition-all text-slate-800 shadow-sm group"
+                className="flex items-center gap-2.5 bg-white hover:bg-[#F2F8FF]/60 border border-[#DFEBF8] hover:border-[#0878F9] rounded-xl py-1.5 px-3 transition-all text-[#102A56] shadow-xs group cursor-pointer"
               >
-                <div className="relative w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
+                <div className="relative w-8 h-8 rounded-lg bg-[#F2F8FF] text-[#0878F9] flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
                   <ShoppingCart className="w-4 h-4" />
                   {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black flex items-center justify-center shadow-sm">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#0878F9] text-white text-[10px] font-black flex items-center justify-center shadow-xs">
                       {totalItems}
                     </span>
                   )}
                 </div>
                 <div className="hidden lg:flex flex-col text-left">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Shopping</span>
-                  <span className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition-colors">
-                    Cart
+                  <span className="text-[10px] text-[#8394AB] font-medium leading-tight">Cart</span>
+                  <span className="text-xs font-bold text-[#102A56] leading-tight font-mono group-hover:text-[#0878F9] transition-colors">
+                    Rs. {subtotal.toLocaleString()}
                   </span>
                 </div>
               </button>
@@ -339,26 +355,27 @@ export const Header: React.FC = () => {
           </div>
 
           {/* 3. CATEGORY NAVIGATION BAR (Positioned Slightly Lower with Floating Glass Shelf & 2-Line Hamburger) */}
-          <div className="border-t border-slate-200/50 mt-1 py-1.5 hidden md:block bg-white/65 backdrop-blur-xl relative">
+          <div className="border-t border-[#DFEBF8] mt-0 py-2 hidden md:block bg-white relative">
             <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between">
               <div className="flex items-center gap-7">
                 {/* A. SLEEK 2-LINE HAMBURGER ICON BUTTON (Replaces bulky button) */}
                 <button
                   onClick={() => setIsSideNavOpen(true)}
-                  className="group flex items-center gap-2.5 py-1.5 px-3 rounded-xl bg-white/70 hover:bg-white text-slate-800 hover:text-brand-600 transition-all border border-slate-200/70 shadow-sm"
+                  className="group flex items-center gap-2 py-1.5 px-3.5 rounded-lg bg-white hover:bg-[#F2F8FF] text-[#102A56] hover:text-[#0878F9] transition-all border border-[#DFEBF8] shadow-xs cursor-pointer"
                   title="Open Navigation Menu"
                 >
-                  <div className="flex flex-col gap-1.5 items-start">
-                    <span className="w-5 h-[2.5px] bg-slate-800 group-hover:bg-brand-600 rounded-full transition-all group-hover:w-6" />
-                    <span className="w-3.5 h-[2.5px] bg-brand-500 rounded-full transition-all group-hover:w-6" />
+                  <div className="flex flex-col gap-1 items-start">
+                    <span className="w-4 h-[2px] bg-[#102A56] group-hover:bg-[#0878F9] rounded-full transition-all" />
+                    <span className="w-3 h-[2px] bg-[#0878F9] rounded-full transition-all" />
+                    <span className="w-4 h-[2px] bg-[#102A56] group-hover:bg-[#0878F9] rounded-full transition-all" />
                   </div>
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 group-hover:text-brand-600">
-                    Menu
+                  <span className="text-xs font-black uppercase tracking-wider text-[#102A56] group-hover:text-[#0878F9]">
+                    MENU
                   </span>
                 </button>
 
                 {/* B. CATEGORY ITEMS WITH AUTO-HOVER MEGA DROPDOWNS */}
-                <nav className="flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-700">
+                <nav className="flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-[#102A56]">
                   <Link href="/" className="hover:text-brand-600 py-2.5 transition-colors">
                     Home
                   </Link>
@@ -461,9 +478,9 @@ export const Header: React.FC = () => {
               </div>
 
               {/* Right Live Stock Pulse */}
-              <div className="text-xs font-bold text-slate-500 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[11px] text-slate-600 font-semibold">100% Genuine PTA Stock</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F2F8FF] border border-[#DFEBF8] text-[11px] font-bold text-[#0878F9]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#0878F9]" />
+                <span className="text-[#102A56]">100% Genuine PTA Stock</span>
               </div>
             </div>
 

@@ -10,21 +10,30 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50: "#f0f9ff",  // Sky-50
-          100: "#e0f2fe", // Sky-100
-          200: "#bae6fd", // Sky-200
-          300: "#7dd3fc", // Sky-300
-          400: "#38bdf8", // Sky-400
-          500: "#0284c7", // Sky Blue Primary (#0284c7 / #0ea5e9)
-          600: "#0369a1", // Hover Sky Blue
-          700: "#075985", // Deep Sky Blue
-          800: "#0c4a6e",
-          900: "#082f49",
+          50: "#F2F8FF",  // Light Blue Background
+          100: "#DFEBF8", // Light Border
+          200: "#BAE6FD",
+          300: "#7DD3FC",
+          400: "#10A9F4", // Accent Blue
+          500: "#0878F9", // Primary Bright Blue (#0878F9)
+          600: "#0665D0", // Primary Blue Hover
+          700: "#044FA8",
+          800: "#102A56", // Dark Navy Text
+          900: "#0A192F", // Deep Navy Footer
         },
         navy: {
-          800: "#0F213D",
+          800: "#102A56", // Dark Navy Text
           900: "#0A192F", // Footer Navy
-          950: "#06101E",
+          950: "#061224",
+        },
+        theme: {
+          primary: "#0878F9",
+          accent: "#10A9F4",
+          navy: "#102A56",
+          body: "#536780",
+          muted: "#8394AB",
+          bgLight: "#F2F8FF",
+          border: "#DFEBF8",
         },
         surface: {
           50: "#F8FAFC",
