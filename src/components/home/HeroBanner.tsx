@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Award, ArrowRight } from 'lucide-react';
+import { useProducts, BannerItem } from '@/context/ProductsContext';
 
 interface HeroSlide {
   id: number;
@@ -96,6 +97,7 @@ const HIGH_RES_SLIDES: HeroSlide[] = [
 ];
 
 export const HeroBanner: React.FC = () => {
+  const { banners } = useProducts();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
@@ -103,7 +105,10 @@ export const HeroBanner: React.FC = () => {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const totalSlides = HIGH_RES_SLIDES.length;
+  // Active banners only with fallback to defaults
+  const activeBanners = banners && banners.length > 0 ? banners.filter((b) => b.status !== 'Inactive') : [];
+  const slides: (BannerItem | HeroSlide)[] = activeBanners.length > 0 ? activeBanners : HIGH_RES_SLIDES;
+  const totalSlides = slides.length;
 
   const nextSlide = useCallback(() => {
     setDirection(1);
@@ -169,7 +174,27 @@ export const HeroBanner: React.FC = () => {
     }),
   };
 
-  const slide = HIGH_RES_SLIDES[currentSlide];
+  const currentSlideSafe = currentSlide >= totalSlides ? 0 : currentSlide;
+  const rawSlide = slides[currentSlideSafe] || HIGH_RES_SLIDES[0];
+
+  // Harmonized slide object
+  const slide = {
+    id: rawSlide.id,
+    tag: rawSlide.tag || 'FLAGSHIP SPECIAL',
+    brand: rawSlide.brand || 'BLUE BELL MOBILE',
+    titlePrefix: rawSlide.titlePrefix !== undefined ? rawSlide.titlePrefix : rawSlide.title,
+    titleHighlight: rawSlide.titleHighlight || '',
+    tagline: rawSlide.tagline || 'Official PTA Approved & Warranted',
+    subtitle: rawSlide.subtitle || 'Premium genuine smartphone with official brand warranty.',
+    specs: rawSlide.specs && rawSlide.specs.length > 0 ? rawSlide.specs : [
+      { label: 'PTA Approved', desc: 'Official' },
+      { label: 'Warranty', desc: '1 Year Brand' },
+      { label: 'Authentic', desc: 'Sealed Box' },
+    ],
+    price: rawSlide.price || 'Rs. 99,999',
+    image: rawSlide.image || '/banners/hero-ipad-pro.jpg',
+    link: rawSlide.link || '/products',
+  };
 
   return (
     <section
@@ -303,13 +328,13 @@ export const HeroBanner: React.FC = () => {
 
         {/* Clean Pill Carousel Indicators */}
         <div className="mt-2.5 sm:mt-6 flex items-center justify-center gap-2">
-          {HIGH_RES_SLIDES.map((_, idx) => (
+          {slides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => goToSlide(idx)}
               aria-label={`Slide ${idx + 1}`}
               className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                idx === currentSlide
+                idx === currentSlideSafe
                   ? 'w-6 sm:w-8 bg-sky-500 shadow-md shadow-sky-500/40'
                   : 'w-1.5 sm:w-2.5 bg-sky-200 hover:bg-sky-300'
               }`}

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/components/products/ProductCard';
-import { PRODUCTS, CATEGORIES } from '@/lib/data/mockData';
+import { useProducts } from '@/context/ProductsContext';
 import {
   SlidersHorizontal,
   Search,
@@ -17,6 +17,10 @@ import {
 } from 'lucide-react';
 
 function ProductsContent() {
+  const { products: storeProducts, categories: storeCategories } = useProducts();
+  const productsList = storeProducts && storeProducts.length > 0 ? storeProducts : [];
+  const categoriesList = storeCategories && storeCategories.length > 0 ? storeCategories : [];
+
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
   const initialBrand = searchParams.get('brand') || 'all';
@@ -30,9 +34,9 @@ function ProductsContent() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   const brands = useMemo(() => {
-    const list = Array.from(new Set(PRODUCTS.map((p) => p.brand)));
+    const list = Array.from(new Set(productsList.map((p) => p.brand)));
     return ['all', ...list];
-  }, []);
+  }, [productsList]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -45,7 +49,7 @@ function ProductsContent() {
   }, [selectedCategory, selectedBrand, inStockOnly, priceRange, searchQuery]);
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((p) => {
+    return productsList.filter((p) => {
       if (selectedCategory !== 'all' && p.categorySlug !== selectedCategory) return false;
       if (selectedBrand !== 'all' && p.brand.toLowerCase() !== selectedBrand.toLowerCase()) return false;
       if (inStockOnly && p.stock <= 0) return false;
@@ -65,7 +69,7 @@ function ProductsContent() {
       if (sortBy === 'rating') return b.rating - a.rating;
       return 0; // featured default
     });
-  }, [selectedCategory, selectedBrand, inStockOnly, priceRange, searchQuery, sortBy]);
+  }, [productsList, selectedCategory, selectedBrand, inStockOnly, priceRange, searchQuery, sortBy]);
 
   const clearFilters = () => {
     setSelectedCategory('all');
@@ -110,7 +114,7 @@ function ProductsContent() {
             Category
           </label>
           <span className="text-[10px] font-bold text-brand-600 bg-sky-50 px-2 py-0.5 rounded-full">
-            {CATEGORIES.length + 1}
+            {categoriesList.length + 1}
           </span>
         </div>
         <div className="space-y-1 max-h-52 overflow-y-auto pr-1">
@@ -124,10 +128,10 @@ function ProductsContent() {
           >
             <span>All Categories</span>
             <span className={`text-[10px] ${selectedCategory === 'all' ? 'text-white/90' : 'text-slate-400'}`}>
-              {PRODUCTS.length}
+              {productsList.length}
             </span>
           </button>
-          {CATEGORIES.map((cat) => (
+          {categoriesList.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.slug)}
@@ -465,7 +469,7 @@ function ProductsContent() {
                       Category
                     </label>
                     <span className="text-[9px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded-full">
-                      {CATEGORIES.length + 1}
+                      {categoriesList.length + 1}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -479,7 +483,7 @@ function ProductsContent() {
                     >
                       All
                     </button>
-                    {CATEGORIES.map((cat) => (
+                    {categoriesList.map((cat) => (
                       <button
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.slug)}

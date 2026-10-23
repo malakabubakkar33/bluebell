@@ -469,37 +469,57 @@ export default function ProductDetailPage({
                 {/* Direct Action CTA Buttons */}
                 <div className="mt-8 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={handleAddToCart}
-                      disabled={isAdded}
-                      className={`py-3.5 px-6 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all duration-200 ${
-                        isAdded
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-brand-600 text-white hover:bg-brand-700 shadow-brand-500/25 active:scale-98'
-                      }`}
-                    >
-                      {isAdded ? (
-                        <>
-                          <Check className="w-4 h-4 stroke-[3]" />
-                          <span>Added to Cart!</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="w-4 h-4" />
-                          <span>Add to Cart</span>
-                        </>
-                      )}
-                    </button>
+                    {product.stock <= 0 ? (
+                      <button
+                        type="button"
+                        disabled
+                        className="py-3.5 px-6 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-slate-200 text-slate-500 cursor-not-allowed select-none"
+                      >
+                        <span>Out of Stock</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleAddToCart}
+                        disabled={isAdded}
+                        className={`py-3.5 px-6 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all duration-200 ${
+                          isAdded
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-brand-600 text-white hover:bg-brand-700 shadow-brand-500/25 active:scale-98'
+                        }`}
+                      >
+                        {isAdded ? (
+                          <>
+                            <Check className="w-4 h-4 stroke-[3]" />
+                            <span>Added to Cart!</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingCart className="w-4 h-4" />
+                            <span>Add to Cart</span>
+                          </>
+                        )}
+                      </button>
+                    )}
 
-                    <button
-                      type="button"
-                      onClick={handleBuyNow}
-                      className="py-3.5 px-6 rounded-2xl font-black text-sm bg-slate-900 text-white hover:bg-slate-800 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 transition-all active:scale-98"
-                    >
-                      <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />
-                      <span>Buy Now (Instant Checkout)</span>
-                    </button>
+                    {product.stock <= 0 ? (
+                      <button
+                        type="button"
+                        disabled
+                        className="py-3.5 px-6 rounded-2xl font-black text-sm bg-slate-100 text-slate-400 cursor-not-allowed select-none flex items-center justify-center gap-2"
+                      >
+                        <span>Temporarily Unavailable</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleBuyNow}
+                        className="py-3.5 px-6 rounded-2xl font-black text-sm bg-slate-900 text-white hover:bg-slate-800 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 transition-all active:scale-98"
+                      >
+                        <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        <span>Buy Now (Instant Checkout)</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* 1-Click WhatsApp Direct Order */}

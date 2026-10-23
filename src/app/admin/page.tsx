@@ -65,22 +65,44 @@ export default function AdminPage() {
 
   // File Upload Ref for Products
   const productImageInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingProduct, setIsUploadingProduct] = useState(false);
 
-  const handleProductFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProductFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (loadEvt) => {
-        if (loadEvt.target?.result) {
-          setProductForm((prev) => ({
-            ...prev,
-            image: loadEvt.target?.result as string,
-          }));
-          showToast('Product image uploaded successfully!');
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setIsUploadingProduct(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setProductForm((prev) => ({
+          ...prev,
+          image: data.url,
+        }));
+        showToast(`Image uploaded successfully (${data.provider})!`);
+        setIsUploadingProduct(false);
+        return;
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
     }
+
+    // Fallback to local FileReader
+    const reader = new FileReader();
+    reader.onload = (loadEvt) => {
+      if (loadEvt.target?.result) {
+        setProductForm((prev) => ({
+          ...prev,
+          image: loadEvt.target?.result as string,
+        }));
+        showToast('Product image loaded locally!');
+      }
+      setIsUploadingProduct(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Login Form State (Shown when not authenticated)
@@ -509,6 +531,10 @@ export default function AdminPage() {
                   showToast(`Product "${name}" deleted.`);
                 }
               }}
+              onUpdateProduct={(id, updates) => {
+                updateProduct(id, updates);
+                showToast('Product updated successfully!');
+              }}
             />
           )}
 
@@ -538,6 +564,7 @@ export default function AdminPage() {
           {activeTab === 'banners' && (
             <BannersView
               bannersList={bannersList}
+              productsList={productsList}
               onAddBanner={(b) => {
                 addBanner(b);
                 showToast(`Banner "${b.title}" activated!`);
@@ -667,25 +694,61 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Price (PKR) *</label>
+                  <label className="block font-bold text-slate-700 mb-1">Selling Price (PKR) *</label>
                   <input
                     type="number"
                     value={productForm.price}
                     onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
                     required
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sky-600 font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Stock Quantity</label>
+                  <label className="block font-bold text-slate-700 mb-1">Original Price (Strikethrough) (PKR)</label>
                   <input
                     type="number"
-                    value={productForm.stock}
-                    onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
-                    required
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                    value={productForm.originalPrice}
+                    onChange={(e) => setProductForm({ ...productForm, originalPrice: Number(e.target.value) })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-500 font-mono"
                   />
+                </div>
+
+                <div className="sm:col-span-2 p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setProductForm((prev) => ({
+                          ...prev,
+                          stock: prev.stock > 0 ? 0 : 10,
+                        }))
+                      }
+                      className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all ${
+                        productForm.stock > 0
+                          ? 'bg-emerald-500 text-white shadow-xs'
+                          : 'bg-rose-500 text-white shadow-xs'
+                      }`}
+                    >
+                      {productForm.stock > 0 ? 'STATUS: IN STOCK' : 'STATUS: OUT OF STOCK'}
+                    </button>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      {productForm.stock > 0
+                        ? 'Product will be purchasable on shop page'
+                        : 'Product button will be disabled with Out of Stock badge'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-600">Stock Count:</span>
+                    <input
+                      type="number"
+                      value={productForm.stock}
+                      onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
+                      min="0"
+                      className="w-20 p-1.5 bg-white border border-slate-300 rounded-lg text-center font-bold text-xs"
+                    />
+                  </div>
                 </div>
 
                 <div className="sm:col-span-2">

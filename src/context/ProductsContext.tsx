@@ -8,53 +8,104 @@ export interface BannerItem {
   id: number | string;
   image: string;
   title: string;
+  titlePrefix?: string;
+  titleHighlight?: string;
+  brand?: string;
+  tag?: string;
+  tagline?: string;
   subtitle?: string;
   price?: string;
   link: string;
   status: 'Active' | 'Inactive';
   validPeriod: string;
+  specs?: { label: string; desc: string }[];
+  themeColor?: string;
 }
 
 export const INITIAL_BANNERS: BannerItem[] = [
   {
     id: 1,
-    image: '/banners/slide-1.png',
+    image: '/banners/hero-ipad-pro.jpg',
     title: 'Apple iPad Pro M4 Experience',
-    subtitle: 'The ultimate iPad experience. M4 Chip, Liquid Retina XDR.',
+    titlePrefix: 'iPad ',
+    titleHighlight: 'Pro',
+    tag: 'FLAGSHIP TABLET',
+    brand: 'Apple iPad',
+    tagline: 'Power to do more.',
+    subtitle: 'The ultimate iPad experience with groundbreaking M4 performance.',
     price: 'Rs. 229,999',
     link: '/products?category=ipad',
     status: 'Active',
     validPeriod: 'Apr 20 - May 20',
+    specs: [
+      { label: 'M4 Chip', desc: 'Breakthrough speed' },
+      { label: '11" / 13"', desc: 'Ultra Retina XDR' },
+      { label: 'Apple Pencil', desc: 'Pro Precision' },
+    ],
+    themeColor: '#0284c7',
   },
   {
     id: 2,
-    image: '/banners/slide-2.png',
+    image: '/banners/hero-iphone-18.jpg',
     title: 'iPhone 18 Pro Max - New Arrival',
-    subtitle: 'Bigger. Smarter. More Powerful. A20 Pro Chip.',
+    titlePrefix: 'iPhone ',
+    titleHighlight: '18 Pro Max',
+    tag: 'NEW ARRIVAL',
+    brand: 'Apple iPhone',
+    tagline: 'Bigger. Smarter. More Powerful.',
+    subtitle: 'The next generation of titanium smartphone innovation is here.',
     price: 'Rs. 449,999',
     link: '/products?search=iPhone%2018',
     status: 'Active',
     validPeriod: 'Apr 18 - May 18',
+    specs: [
+      { label: 'A20 Pro Chip', desc: '3nm Architecture' },
+      { label: '48MP Pro', desc: 'Fusion Telephoto' },
+      { label: '6.9" Display', desc: 'Super Retina XDR' },
+    ],
+    themeColor: '#0284c7',
   },
   {
     id: 3,
-    image: '/banners/slide-3.png',
+    image: '/banners/hero-samsung-s24.jpg',
     title: 'Samsung Galaxy S24 Ultra with Galaxy AI',
-    subtitle: 'Smarter. Faster. More Powerful. 200MP Quad Camera.',
+    titlePrefix: 'Galaxy ',
+    titleHighlight: 'S24 Ultra',
+    tag: 'GALAXY AI IS HERE',
+    brand: 'SAMSUNG',
+    tagline: 'Smarter. Faster. More Powerful.',
+    subtitle: 'Unleash mobile AI capabilities with integrated S-Pen and titanium frame.',
     price: 'Rs. 289,999',
     link: '/products?search=S24',
     status: 'Active',
     validPeriod: 'Apr 15 - May 15',
+    specs: [
+      { label: '200MP Camera', desc: 'Nightography Zoom' },
+      { label: 'Snapdragon 8 Gen 3', desc: 'Extreme Speed' },
+      { label: '6.8" Screen', desc: 'Dynamic AMOLED 2X' },
+    ],
+    themeColor: '#0284c7',
   },
   {
     id: 4,
-    image: '/banners/slide-4.png',
+    image: '/banners/hero-iphone-17.jpg',
     title: 'iPhone 17 Pro Max - Best Seller',
-    subtitle: 'Pro Power. Pro Performance. A19 Pro Chip.',
+    titlePrefix: 'iPhone ',
+    titleHighlight: '17 Pro Max',
+    tag: 'BEST SELLER',
+    brand: 'Apple iPhone',
+    tagline: 'Pro Power. Pro Performance.',
+    subtitle: 'A more powerful iPhone with aerospace-grade desert titanium design.',
     price: 'Rs. 389,999',
     link: '/products?search=iPhone%2017',
     status: 'Active',
     validPeriod: 'Apr 10 - May 10',
+    specs: [
+      { label: 'A19 Pro Chip', desc: 'Hardware Ray Tracing' },
+      { label: '48MP Pro', desc: 'Macro & Spatial' },
+      { label: '6.9" Display', desc: 'ProMotion 120Hz' },
+    ],
+    themeColor: '#0284c7',
   },
 ];
 
@@ -69,6 +120,9 @@ export interface PromoDeal {
   image: string;
   link: string;
   bgGradient?: string;
+  price?: number | string;
+  products?: { id: string; name: string; price: number; image?: string }[];
+  status?: 'Active' | 'Inactive';
 }
 
 export const INITIAL_DEALS: PromoDeal[] = [
@@ -83,6 +137,12 @@ export const INITIAL_DEALS: PromoDeal[] = [
     image: '/categories/samsung.svg',
     link: '/products?brand=Samsung',
     bgGradient: 'from-sky-100/90 via-sky-50/70 to-white',
+    price: 'Rs. 289,999',
+    status: 'Active',
+    products: [
+      { id: 's24-ultra', name: 'Galaxy S24 Ultra', price: 289999, image: '/categories/samsung.svg' },
+      { id: 'charger-45w', name: 'Original 45W GaN Fast Charger', price: 9500, image: '/categories/accessories.svg' },
+    ],
   },
   {
     id: 2,
@@ -95,6 +155,12 @@ export const INITIAL_DEALS: PromoDeal[] = [
     image: '/categories/iphone.svg',
     link: '/products?brand=Apple',
     bgGradient: 'from-blue-100/80 via-white to-sky-50/70',
+    price: 'Rs. 419,999',
+    status: 'Active',
+    products: [
+      { id: 'iphone-16-pro', name: 'iPhone 16 Pro Max 256GB', price: 419999, image: '/categories/iphone.svg' },
+      { id: 'magsafe-case', name: 'Original Apple MagSafe Case', price: 14500, image: '/categories/accessories.svg' },
+    ],
   },
   {
     id: 3,
@@ -107,6 +173,12 @@ export const INITIAL_DEALS: PromoDeal[] = [
     image: '/categories/ipad.svg',
     link: '/products?category=ipad',
     bgGradient: 'from-cyan-100/80 via-sky-50/70 to-white',
+    price: 'Rs. 259,999',
+    status: 'Active',
+    products: [
+      { id: 'ipad-pro-m4', name: 'iPad Pro M4 11-inch', price: 229999, image: '/categories/ipad.svg' },
+      { id: 'pencil-pro', name: 'Apple Pencil Pro', price: 38000, image: '/categories/accessories.svg' },
+    ],
   },
   {
     id: 4,
@@ -119,6 +191,11 @@ export const INITIAL_DEALS: PromoDeal[] = [
     image: '/categories/smartwatches.svg',
     link: '/products?category=smart-watches',
     bgGradient: 'from-sky-100/90 via-white to-slate-50',
+    price: 'Rs. 195,000',
+    status: 'Active',
+    products: [
+      { id: 'watch-ultra-2', name: 'Apple Watch Ultra 2 Titanium', price: 195000, image: '/categories/smartwatches.svg' },
+    ],
   },
 ];
 

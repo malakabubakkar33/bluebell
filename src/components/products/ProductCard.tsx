@@ -54,12 +54,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   const inWish = isInWishlist(product.id);
+  const isOutOfStock = (product.stock ?? 10) <= 0;
 
   return (
-    <div className="group relative bg-white rounded-2xl border border-slate-100/80 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:border-brand-200 transition-all duration-300 flex flex-col overflow-hidden">
+    <div className={`group relative bg-white rounded-2xl border border-slate-100/80 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:border-brand-200 transition-all duration-300 flex flex-col overflow-hidden ${isOutOfStock ? 'opacity-85' : ''}`}>
       {/* Top badges & Wishlist */}
       <div className="absolute top-3 inset-x-3 flex items-center justify-between z-10">
-        {product.badge ? (
+        {isOutOfStock ? (
+          <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm bg-rose-600 text-white animate-pulse">
+            Out of Stock
+          </span>
+        ) : product.badge ? (
           <span
             className={`text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm ${getBadgeStyle(
               product.badge
@@ -88,12 +93,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Product Image: Clean & Boxless without background */}
       <Link href={`/products/${product.id}`} className="relative block aspect-square p-6 flex items-center justify-center">
         {/* Ambient radial glow on hover */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-500/10 via-blue-400/10 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none scale-110" />
+        {!isOutOfStock && (
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-500/10 via-blue-400/10 to-transparent blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none scale-110" />
+        )}
 
         <img
           src={product.image}
           alt={product.name}
-          className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 object-contain transition-all duration-300 group-hover:scale-115 group-hover:-translate-y-2 filter group-hover:drop-shadow-[0_12px_16px_rgba(2,132,199,0.22)]"
+          className={`relative z-10 w-28 h-28 sm:w-32 sm:h-32 object-contain transition-all duration-300 group-hover:scale-115 group-hover:-translate-y-2 filter group-hover:drop-shadow-[0_12px_16px_rgba(2,132,199,0.22)] ${isOutOfStock ? 'grayscale-[50%]' : ''}`}
         />
 
         {/* View Details hover action */}
@@ -129,9 +136,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {product.subtitle || 'Official PTA Approved device with manufacturer warranty'}
           </p>
 
-          <div className="flex items-center gap-1 mt-2 text-[11px] text-emerald-600 font-medium">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{product.warranty || '1 Year Official Warranty'}</span>
+          <div className="flex items-center justify-between mt-2 text-[11px]">
+            <div className="flex items-center gap-1 text-emerald-600 font-medium">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>{product.warranty || '1 Year Official Warranty'}</span>
+            </div>
+            {isOutOfStock ? (
+              <span className="font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md text-[10px]">
+                Out of Stock
+              </span>
+            ) : (
+              <span className="font-medium text-slate-400 text-[10px]">
+                Stock: {product.stock || 10}
+              </span>
+            )}
           </div>
         </div>
 
@@ -148,28 +166,38 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             )}
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            type="button"
-            disabled={isAdded}
-            className={`h-9 px-3.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all duration-200 shadow-sm ${
-              isAdded
-                ? 'bg-emerald-600 text-white'
-                : 'bg-brand-600 text-white hover:bg-brand-700 shadow-brand-500/20 active:scale-95'
-            }`}
-          >
-            {isAdded ? (
-              <>
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Added</span>
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="w-3.5 h-3.5" />
-                <span>Add</span>
-              </>
-            )}
-          </button>
+          {isOutOfStock ? (
+            <button
+              type="button"
+              disabled
+              className="h-9 px-3 rounded-xl font-bold text-xs bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed select-none"
+            >
+              Out of Stock
+            </button>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              type="button"
+              disabled={isAdded}
+              className={`h-9 px-3.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all duration-200 shadow-sm ${
+                isAdded
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-brand-600 text-white hover:bg-brand-700 shadow-brand-500/20 active:scale-95'
+              }`}
+            >
+              {isAdded ? (
+                <>
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Added</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  <span>Add</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
