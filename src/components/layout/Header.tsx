@@ -563,79 +563,79 @@ export const Header: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="relative w-full max-w-sm bg-white/95 backdrop-blur-2xl shadow-2xl h-full flex flex-col justify-between z-10 border-l border-slate-100 overflow-y-auto"
+              className="relative w-[80vw] max-w-[280px] bg-white/95 backdrop-blur-2xl shadow-2xl h-full flex flex-col justify-between z-10 border-l border-sky-100 rounded-l-3xl overflow-y-auto"
             >
               {/* Drawer Top Header */}
               <div>
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                   <BrandLogo variant="header" />
                   <button
                     onClick={() => setIsSideNavOpen(false)}
-                    className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                    className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
                     aria-label="Close Navigation"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Primary Nav Links */}
-                <div className="p-6 space-y-1.5 border-b border-slate-100">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2 px-3">
-                    Main Navigation
+                <div className="p-4 space-y-1 border-b border-slate-100">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1.5 px-2">
+                    Menu
                   </span>
 
                   <Link
                     href="/"
                     onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-bold text-sm text-slate-800 hover:text-brand-600 hover:bg-blue-50/70 transition-colors"
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-xs text-slate-800 hover:text-sky-600 hover:bg-sky-50 transition-colors"
                   >
-                    <Home className="w-4 h-4 text-brand-500" />
+                    <Home className="w-4 h-4 text-sky-500" />
                     <span>Home Page</span>
                   </Link>
 
                   <Link
                     href="/products"
                     onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-bold text-sm text-slate-800 hover:text-brand-600 hover:bg-blue-50/70 transition-colors"
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-xs text-slate-800 hover:text-sky-600 hover:bg-sky-50 transition-colors"
                   >
-                    <ShoppingBag className="w-4 h-4 text-brand-500" />
-                    <span>Shop All Products</span>
+                    <ShoppingBag className="w-4 h-4 text-sky-500" />
+                    <span>Shop All</span>
                   </Link>
 
                   <Link
                     href="/track-order"
                     onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-bold text-sm text-slate-800 hover:text-brand-600 hover:bg-blue-50/70 transition-colors"
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-xs text-slate-800 hover:text-sky-600 hover:bg-sky-50 transition-colors"
                   >
-                    <Truck className="w-4 h-4 text-brand-500" />
-                    <span>Track Your Order</span>
+                    <Truck className="w-4 h-4 text-sky-500" />
+                    <span>Track Order</span>
                   </Link>
 
                   <Link
                     href="/contact"
                     onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center gap-3.5 px-4 py-3 rounded-2xl font-bold text-sm text-slate-800 hover:text-brand-600 hover:bg-blue-50/70 transition-colors"
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl font-bold text-xs text-slate-800 hover:text-sky-600 hover:bg-sky-50 transition-colors"
                   >
-                    <Phone className="w-4 h-4 text-brand-500" />
-                    <span>Contact Us &amp; Location</span>
+                    <Phone className="w-4 h-4 text-sky-500" />
+                    <span>Contact &amp; Store</span>
                   </Link>
                 </div>
 
                 {/* Categories Shortcuts */}
-                <div className="p-6 space-y-2 border-b border-slate-100">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block mb-2 px-3">
-                    Flagship Collections
+                <div className="p-4 space-y-2 border-b border-slate-100">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1 px-2">
+                    Collections
                   </span>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {CATEGORIES.slice(0, 6).map((cat) => (
                       <Link
                         key={cat.id}
                         href={`/products?category=${cat.slug}`}
                         onClick={() => setIsSideNavOpen(false)}
-                        className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-blue-50/60 border border-slate-100 text-xs font-bold text-slate-800 transition-colors"
+                        className="flex items-center gap-2 p-2 rounded-xl hover:bg-sky-50 border border-slate-100 text-[11px] font-bold text-slate-700 transition-colors"
                       >
-                        <img src={cat.image} alt={cat.name} className="w-6 h-6 object-contain" />
+                        <img src={cat.image} alt={cat.name} className="w-5 h-5 object-contain" />
                         <span className="truncate">{cat.name}</span>
                       </Link>
                     ))}
@@ -643,44 +643,44 @@ export const Header: React.FC = () => {
                 </div>
 
                 {/* Account / Admin Portal Links */}
-                <div className="p-6 space-y-2">
+                <div className="p-4 space-y-1.5">
                   <Link
                     href={user ? (isAdmin ? '/admin' : '/account') : '/auth/login'}
                     onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/80 hover:bg-blue-100/80 border border-blue-100 text-brand-700 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-2xl bg-sky-50/80 hover:bg-sky-100/80 border border-sky-100 text-sky-700 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold">
-                        <User className="w-4 h-4" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-sky-500 text-white flex items-center justify-center font-bold text-xs">
+                        <User className="w-3.5 h-3.5" />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-bold block">
+                        <span className="text-xs font-bold block truncate max-w-[140px]">
                           {user ? user.name : 'Sign In / Register'}
                         </span>
-                        <span className="text-[10px] text-slate-500">
-                          {user ? (isAdmin ? 'Open Admin Panel' : 'Manage Account & Orders') : 'Create your free account'}
+                        <span className="text-[9px] text-slate-500">
+                          {user ? (isAdmin ? 'Admin Dashboard' : 'My Orders & Profile') : 'Access your account'}
                         </span>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-3.5 h-3.5 text-sky-500" />
                   </Link>
                 </div>
               </div>
 
               {/* Drawer Bottom Support */}
-              <div className="p-6 bg-slate-50 border-t border-slate-100 space-y-3">
+              <div className="p-4 bg-slate-50/90 border-t border-slate-100 space-y-2">
                 <a
                   href="https://wa.me/923001234567?text=Hello%20Blue%20Bell%20Mobile%20Shop"
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors"
+                  className="w-full py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Chat With Us on WhatsApp</span>
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>WhatsApp Shop</span>
                 </a>
 
                 <div className="text-center">
-                  <span className="text-[11px] text-slate-400 font-medium">
+                  <span className="text-[10px] text-slate-400 font-medium">
                     Blue Bell Mobile Shop • Official PTA Approved
                   </span>
                 </div>

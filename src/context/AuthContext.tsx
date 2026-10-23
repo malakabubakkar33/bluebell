@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export interface UserProfile {
   id: string;
@@ -9,6 +10,8 @@ export interface UserProfile {
   phone: string;
   whatsapp: string;
   email: string;
+  city?: string;
+  address?: string;
   role: 'customer' | 'admin';
   status: 'active' | 'suspended';
   created_at: string;
@@ -22,6 +25,8 @@ export interface RegisterInput {
   whatsapp: string;
   email: string;
   password: string;
+  city?: string;
+  address?: string;
 }
 
 interface AuthContextType {
@@ -31,6 +36,7 @@ interface AuthContextType {
   usersList: UserProfile[];
   login: (email: string, password: string) => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
   register: (data: RegisterInput) => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
   adminUpdateUserRole: (userId: string, newRole: 'customer' | 'admin') => void;
@@ -45,9 +51,11 @@ const DEFAULT_USERS: UserProfile[] = [
     email: 'admin@bluebells.pk',
     phone: '+92 300 1234567',
     whatsapp: '+92 300 1234567',
+    city: 'Peshawar',
+    address: 'Saddar Road, Blue Bell Mobile Shop',
     role: 'admin',
     status: 'active',
-    created_at: new Date().toISOString(),
+    created_at: '2026-01-01T00:00:00.000Z',
     orders_count: 0,
     total_spent: 0,
   },
@@ -64,11 +72,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Load user and usersList from localStorage on mount
   useEffect(() => {
     try {
-      const storedUsers = localStorage.getItem('bluebell_users_list_v3');
+      const storedUsers = localStorage.getItem('bluebell_users_list_v4');
       if (storedUsers) {
         setUsersList(JSON.parse(storedUsers));
       } else {
-        localStorage.setItem('bluebell_users_list_v3', JSON.stringify(DEFAULT_USERS));
+        localStorage.setItem('bluebell_users_list_v4', JSON.stringify(DEFAULT_USERS));
         setUsersList(DEFAULT_USERS);
       }
 
@@ -86,37 +94,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const saveUsersList = (newList: UserProfile[]) => {
     setUsersList(newList);
     try {
-      localStorage.setItem('bluebell_users_list_v3', JSON.stringify(newList));
+      localStorage.setItem('bluebell_users_list_v4', JSON.stringify(newList));
     } catch (e) {
       console.error(e);
     }
   };
 
-  // Login handler
+  // Login handler: Integrates Supabase Auth with smooth fallback
   const login = async (email: string, password: string): Promise<{ success: boolean; user?: UserProfile; error?: string }> => {
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 400)); // Smooth UX transition delay
-
     const trimmedEmail = email.trim().toLowerCase();
 
-    // Check admin credentials
+    // 1. Check local/demo Admin credentials
     if (
-      (trimmedEmail === 'admin@bluebell.com' ||
-        trimmedEmail === 'admin@bluebells.pk' ||
+      (trimmedEmail === 'admin@bluebells.pk' ||
+        trimmedEmail === 'admin@bluebell.com' ||
         trimmedEmail === 'admin') &&
       (password === 'admin123' || password === 'admin' || password === 'BlueBells@2026')
     ) {
       const adminUser: UserProfile = {
         id: 'user-admin-1',
-        name: 'Admin',
-        email: trimmedEmail.includes('@') ? trimmedEmail : 'admin@bluebells.pk',
+        name: 'Blue Bell Admin',
+        email: 'admin@bluebells.pk',
         phone: '+92 300 1234567',
         whatsapp: '+92 300 1234567',
+        city: 'Peshawar',
+        address: 'Saddar Road, Blue Bell Mobile Shop',
         role: 'admin',
         status: 'active',
         created_at: '2026-01-01T00:00:00.000Z',
-        orders_count: 124,
-        total_spent: 1248750,
+        orders_count: 0,
+        total_spent: 0,
       };
       setUser(adminUser);
       localStorage.setItem('bluebell_active_user', JSON.stringify(adminUser));
@@ -124,13 +132,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true, user: adminUser };
     }
 
-    // Check existing customer accounts
+    // 2. Call server-side Supabase Auth login route
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmedEmail, password }),
+      });
+
+      const resData = await response.json();
+
+      if (response.ok && resData.success && resData.user) {
+        setUser(resData.user);
+        localStorage.setItem('bluebell_active_user', JSON.stringify(resData.user));
+
+        // Sync into usersList if not already present
+        const exists = usersList.some((u) => u.email.toLowerCase() === resData.user.email.toLowerCase());
+        if (!exists) {
+          saveUsersList([resData.user, ...usersList]);
+        }
+
+        setIsLoading(false);
+        return { success: true, user: resData.user };
+      } else if (resData.error && !resData.error.includes('Failed to fetch')) {
+        // Explicit invalid credentials from Supabase
+        setIsLoading(false);
+        return {
+          success: false,
+          error: resData.error || 'Invalid credentials. Please verify your email and password.',
+        };
+      }
+    } catch (apiErr) {
+      console.warn('API login request failed, falling back to local store', apiErr);
+    }
+
+    // 3. Fallback: Check local registered accounts
     const existing = usersList.find((u) => u.email.toLowerCase() === trimmedEmail);
     if (!existing) {
       setIsLoading(false);
       return {
         success: false,
-        error: 'No account found with this email. Please register your account first.',
+        error: 'No account found with this email. Please check your credentials or click Sign Up.',
       };
     }
 
@@ -138,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       return {
         success: false,
-        error: 'Your account is suspended. Please contact store support.',
+        error: 'Your account is currently suspended. Please contact store support on WhatsApp.',
       };
     }
 
@@ -148,25 +190,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true, user: existing };
   };
 
-  // Register handler (Name, Phone, WhatsApp, Email, Password)
+  // Register handler: Registers in Supabase Auth & Local Store
   const register = async (data: RegisterInput): Promise<{ success: boolean; user?: UserProfile; error?: string }> => {
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
-
     const trimmedEmail = data.email.trim().toLowerCase();
 
-    // Check if user already exists
+    // Check if user already exists locally
     if (usersList.some((u) => u.email.toLowerCase() === trimmedEmail)) {
       setIsLoading(false);
-      return { success: false, error: 'An account with this email already exists. Please log in.' };
+      return { success: false, error: 'An account with this email already exists. Please sign in.' };
     }
 
-    const newUser: UserProfile = {
+    // Register with Supabase Auth API
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const resData = await response.json();
+
+      if (response.ok && resData.success && resData.user) {
+        const newUser = resData.user;
+        const updatedList = [newUser, ...usersList.filter((u) => u.email.toLowerCase() !== trimmedEmail)];
+        saveUsersList(updatedList);
+        setUser(newUser);
+        localStorage.setItem('bluebell_active_user', JSON.stringify(newUser));
+
+        setIsLoading(false);
+        return { success: true, user: newUser };
+      } else if (resData.error) {
+        setIsLoading(false);
+        return { success: false, error: resData.error };
+      }
+    } catch (apiErr) {
+      console.warn('Supabase register API call note:', apiErr);
+    }
+
+    // Fallback: Local registration
+    const fallbackUser: UserProfile = {
       id: `user-${Date.now()}`,
       name: data.name.trim(),
       phone: data.phone.trim(),
       whatsapp: data.whatsapp.trim(),
       email: trimmedEmail,
+      city: data.city || 'Peshawar',
+      address: data.address || '',
       role: 'customer',
       status: 'active',
       created_at: new Date().toISOString(),
@@ -174,23 +244,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       total_spent: 0,
     };
 
-    const updatedList = [newUser, ...usersList];
+    const updatedList = [fallbackUser, ...usersList];
     saveUsersList(updatedList);
-    setUser(newUser);
-    localStorage.setItem('bluebell_active_user', JSON.stringify(newUser));
+    setUser(fallbackUser);
+    localStorage.setItem('bluebell_active_user', JSON.stringify(fallbackUser));
 
     setIsLoading(false);
-    return { success: true, user: newUser };
+    return { success: true, user: fallbackUser };
+  };
+
+  // Reset Password via Supabase
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
+      return { success: false, error: 'Please enter your registered email address.' };
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail);
+        if (error) {
+          return { success: false, error: error.message };
+        }
+      } catch (e: any) {
+        console.warn('Reset password error:', e?.message);
+      }
+    }
+
+    return { success: true };
   };
 
   // Logout handler
   const logout = () => {
+    if (isSupabaseConfigured) {
+      supabase.auth.signOut().catch(() => {});
+    }
     setUser(null);
     localStorage.removeItem('bluebell_active_user');
     router.push('/');
   };
 
-  // Update Profile
+  // Update Profile with Supabase sync
   const updateProfile = (data: Partial<UserProfile>) => {
     if (!user) return;
     const updated = { ...user, ...data };
@@ -199,22 +293,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedList = usersList.map((u) => (u.id === user.id ? updated : u));
     saveUsersList(updatedList);
+
+    // Sync with Supabase Auth
+    fetch('/api/auth/update-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: user.id,
+        email: user.email,
+        name: updated.name,
+        phone: updated.phone,
+        whatsapp: updated.whatsapp,
+        city: updated.city,
+        address: updated.address,
+      }),
+    }).catch((err) => console.warn('Supabase profile sync note:', err));
   };
 
-  // Admin user management functions
+  // Admin User Role
   const adminUpdateUserRole = (userId: string, newRole: 'customer' | 'admin') => {
     const updatedList = usersList.map((u) => (u.id === userId ? { ...u, role: newRole } : u));
     saveUsersList(updatedList);
-    if (user && user.id === userId) {
-      setUser({ ...user, role: newRole });
-    }
   };
 
+  // Admin User Status
   const adminUpdateUserStatus = (userId: string, newStatus: 'active' | 'suspended') => {
     const updatedList = usersList.map((u) => (u.id === userId ? { ...u, status: newStatus } : u));
     saveUsersList(updatedList);
   };
 
+  // Admin Delete User
   const adminDeleteUser = (userId: string) => {
     const updatedList = usersList.filter((u) => u.id !== userId);
     saveUsersList(updatedList);
@@ -229,6 +337,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         usersList,
         login,
         register,
+        resetPassword,
         logout,
         updateProfile,
         adminUpdateUserRole,

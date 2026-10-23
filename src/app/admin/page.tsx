@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -51,6 +51,10 @@ export default function AdminPage() {
     addBanner,
     updateBanner,
     deleteBanner,
+    deals: dealsList,
+    addDeal,
+    updateDeal,
+    deleteDeal,
   } = useProducts();
 
   // Navigation State
@@ -58,6 +62,26 @@ export default function AdminPage() {
   const [isOpenMobile, setIsOpenMobile] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // File Upload Ref for Products
+  const productImageInputRef = useRef<HTMLInputElement>(null);
+
+  const handleProductFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        if (loadEvt.target?.result) {
+          setProductForm((prev) => ({
+            ...prev,
+            image: loadEvt.target?.result as string,
+          }));
+          showToast('Product image uploaded successfully!');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Login Form State (Shown when not authenticated)
   const [loginEmail, setLoginEmail] = useState('admin@bluebells.pk');
@@ -528,6 +552,21 @@ export default function AdminPage() {
                   showToast('Banner deleted.');
                 }
               }}
+              dealsList={dealsList}
+              onAddDeal={(d) => {
+                addDeal(d);
+                showToast(`Deal "${d.title}" published!`);
+              }}
+              onUpdateDeal={(id, updates) => {
+                updateDeal(id, updates);
+                showToast('Deal updated.');
+              }}
+              onDeleteDeal={(id) => {
+                if (confirm('Are you sure you want to delete this promotional deal?')) {
+                  deleteDeal(id);
+                  showToast('Deal deleted.');
+                }
+              }}
             />
           )}
 
@@ -649,19 +688,62 @@ export default function AdminPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Image Thumbnail</label>
-                  <select
-                    value={productForm.image}
-                    onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                  >
-                    <option value="/categories/iphone.svg">iPhone Vector</option>
-                    <option value="/categories/samsung.svg">Samsung Vector</option>
-                    <option value="/categories/ipad.svg">iPad Vector</option>
-                    <option value="/categories/smartwatches.svg">Smart Watch Vector</option>
-                    <option value="/categories/accessories.svg">Accessories Vector</option>
-                  </select>
+                <div className="sm:col-span-2">
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Product Image (Upload File from Computer or Enter URL)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={productForm.image}
+                      onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                      placeholder="/categories/iphone.svg or image URL"
+                      className="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => productImageInputRef.current?.click()}
+                      className="px-3.5 py-2 rounded-xl bg-sky-50 border border-sky-200 text-sky-600 font-bold hover:bg-sky-100 flex items-center gap-1.5 transition-colors text-xs cursor-pointer"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload File</span>
+                    </button>
+                    <input
+                      ref={productImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProductFileUpload}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {/* Preset Quick Chooser & Live Preview */}
+                  <div className="mt-2.5 flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center p-1 overflow-hidden flex-shrink-0">
+                      <img src={productForm.image} alt="Preview" className="w-full h-full object-contain" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-bold text-slate-400 block mb-1">Quick Vector Presets:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {[
+                          { label: 'iPhone', val: '/categories/iphone.svg' },
+                          { label: 'Samsung', val: '/categories/samsung.svg' },
+                          { label: 'iPad', val: '/categories/ipad.svg' },
+                          { label: 'Watch', val: '/categories/smartwatches.svg' },
+                          { label: 'Accessories', val: '/categories/accessories.svg' },
+                        ].map((preset) => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => setProductForm({ ...productForm, image: preset.val })}
+                            className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-sky-50 hover:text-sky-600 text-[10px] font-bold text-slate-600 border border-slate-200 transition-colors"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div>

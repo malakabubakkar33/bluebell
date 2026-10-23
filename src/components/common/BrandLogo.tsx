@@ -22,9 +22,9 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   switch (variant) {
     case 'header':
       containerClasses = 'flex items-center group py-0.5';
-      imgClasses = 'h-11 sm:h-12 md:h-13 w-auto object-contain transition-all duration-300 group-hover:scale-[1.03] drop-shadow-sm';
-      imgHeight = 52;
-      imgWidth = 160;
+      imgClasses = 'h-12 sm:h-13 md:h-14 w-auto object-contain transition-all duration-300 group-hover:scale-[1.03] drop-shadow-sm';
+      imgHeight = 56;
+      imgWidth = 180;
       break;
 
     case 'footer':

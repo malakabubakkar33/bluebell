@@ -58,6 +58,70 @@ export const INITIAL_BANNERS: BannerItem[] = [
   },
 ];
 
+export interface PromoDeal {
+  id: number | string;
+  badge: string;
+  badgeColor?: string;
+  title: string;
+  discount: string;
+  subtitle: string;
+  brand: string;
+  image: string;
+  link: string;
+  bgGradient?: string;
+}
+
+export const INITIAL_DEALS: PromoDeal[] = [
+  {
+    id: 1,
+    badge: 'EXCLUSIVE GALAXY DEAL',
+    badgeColor: 'bg-sky-500 text-white',
+    title: 'Samsung Galaxy S24 Series',
+    discount: 'Up To 25% OFF',
+    subtitle: 'Free 45W GaN Fast Charger + Official Samsung Pakistan Warranty included.',
+    brand: 'SAMSUNG',
+    image: '/categories/samsung.svg',
+    link: '/products?brand=Samsung',
+    bgGradient: 'from-sky-100/90 via-sky-50/70 to-white',
+  },
+  {
+    id: 2,
+    badge: 'APPLE FLAGSHIP FEST',
+    badgeColor: 'bg-slate-900 text-white',
+    title: 'iPhone 16 Pro & 15 Pro Max',
+    discount: 'Official PTA Approved',
+    subtitle: 'Complimentary MagSafe Case + 1 Year Official Apple Warranty.',
+    brand: 'APPLE',
+    image: '/categories/iphone.svg',
+    link: '/products?brand=Apple',
+    bgGradient: 'from-blue-100/80 via-white to-sky-50/70',
+  },
+  {
+    id: 3,
+    badge: 'CREATIVE WORKSTATION',
+    badgeColor: 'bg-emerald-500 text-white',
+    title: 'iPad Pro (M4) & iPad Air',
+    discount: 'Bundle Savings',
+    subtitle: 'Special educational bundle with Apple Pencil Pro & Smart Folio.',
+    brand: 'APPLE IPAD',
+    image: '/categories/ipad.svg',
+    link: '/products?category=ipad',
+    bgGradient: 'from-cyan-100/80 via-sky-50/70 to-white',
+  },
+  {
+    id: 4,
+    badge: 'WEARABLES SALE',
+    badgeColor: 'bg-amber-500 text-white',
+    title: 'Apple Watch Ultra 2 & Galaxy Watch',
+    discount: 'Flat 15% OFF',
+    subtitle: 'Precision titanium fitness tracking & ECG sensors.',
+    brand: 'SMARTWATCHES',
+    image: '/categories/smartwatches.svg',
+    link: '/products?category=smart-watches',
+    bgGradient: 'from-sky-100/90 via-white to-slate-50',
+  },
+];
+
 interface ProductsContextType {
   // Products CRUD
   products: Product[];
@@ -78,6 +142,12 @@ interface ProductsContextType {
   addBanner: (banner: BannerItem) => void;
   updateBanner: (id: string | number, updates: Partial<BannerItem>) => void;
   deleteBanner: (id: string | number) => void;
+
+  // Deals CRUD
+  deals: PromoDeal[];
+  addDeal: (deal: PromoDeal) => void;
+  updateDeal: (id: string | number, updates: Partial<PromoDeal>) => void;
+  deleteDeal: (id: string | number) => void;
 }
 
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
@@ -86,6 +156,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
   const [categories, setCategories] = useState<Category[]>(CATEGORIES);
   const [banners, setBanners] = useState<BannerItem[]>(INITIAL_BANNERS);
+  const [deals, setDeals] = useState<PromoDeal[]>(INITIAL_DEALS);
 
   // Load from localStorage or API on mount
   useEffect(() => {
@@ -134,6 +205,21 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('Error loading banners from storage', e);
     }
 
+    // 4. Deals
+    try {
+      const storedDeals = localStorage.getItem('bluebell_deals_store');
+      if (storedDeals) {
+        const parsedDeals = JSON.parse(storedDeals);
+        if (Array.isArray(parsedDeals) && parsedDeals.length > 0) {
+          setDeals(parsedDeals);
+        }
+      } else {
+        localStorage.setItem('bluebell_deals_store', JSON.stringify(INITIAL_DEALS));
+      }
+    } catch (e) {
+      console.error('Error loading deals from storage', e);
+    }
+
     // Listen for storage events (real-time sync across multiple tabs/windows)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'bluebell_products_store' && e.newValue) {
@@ -153,6 +239,13 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (e.key === 'bluebell_banners_store' && e.newValue) {
         try {
           setBanners(JSON.parse(e.newValue));
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      if (e.key === 'bluebell_deals_store' && e.newValue) {
+        try {
+          setDeals(JSON.parse(e.newValue));
         } catch (err) {
           console.error(err);
         }
@@ -272,6 +365,31 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     saveBanners(updated);
   };
 
+  // --- Deals CRUD ---
+  const saveDeals = (updatedList: PromoDeal[]) => {
+    setDeals(updatedList);
+    try {
+      localStorage.setItem('bluebell_deals_store', JSON.stringify(updatedList));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const addDeal = (newDeal: PromoDeal) => {
+    const updated = [newDeal, ...deals];
+    saveDeals(updated);
+  };
+
+  const updateDeal = (id: string | number, updates: Partial<PromoDeal>) => {
+    const updated = deals.map((d) => (d.id === id ? { ...d, ...updates } : d));
+    saveDeals(updated);
+  };
+
+  const deleteDeal = (id: string | number) => {
+    const updated = deals.filter((d) => d.id !== id);
+    saveDeals(updated);
+  };
+
   return (
     <ProductsContext.Provider
       value={{
@@ -289,6 +407,10 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addBanner,
         updateBanner,
         deleteBanner,
+        deals,
+        addDeal,
+        updateDeal,
+        deleteDeal,
       }}
     >
       {children}

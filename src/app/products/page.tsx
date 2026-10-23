@@ -339,24 +339,24 @@ function ProductsContent() {
           </div>
         </aside>
 
-        {/* Products Grid */}
+        {/* Products Grid: 2 Columns on Mobile, 2 on Tablet, 3 on Desktop */}
         <section className="lg:col-span-3">
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-20 bg-slate-50/70 rounded-3xl border border-slate-100 p-8">
-              <Search className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-lg font-black text-slate-800">No products match your criteria</h3>
+            <div className="text-center py-16 bg-slate-50/70 rounded-3xl border border-slate-100 p-6">
+              <Search className="w-10 h-10 text-slate-300 mx-auto mb-2.5" />
+              <h3 className="text-base font-black text-slate-800">No products match your criteria</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                 Try adjusting your price range, clearing your search query, or selecting different categories.
               </p>
               <button
                 onClick={clearFilters}
-                className="mt-5 px-5 py-2.5 bg-brand-500 text-white text-xs font-bold rounded-xl hover:bg-brand-600 shadow-md shadow-brand-500/20 transition-all"
+                className="mt-4 px-5 py-2 bg-sky-500 text-white text-xs font-bold rounded-xl hover:bg-sky-600 shadow-md shadow-sky-500/20 transition-all"
               >
                 Reset Filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -365,7 +365,7 @@ function ProductsContent() {
         </section>
       </div>
 
-      {/* Mobile Animated Filter Slide-Out Drawer */}
+      {/* Classic, Compact Mobile Filter Drawer */}
       <AnimatePresence>
         {isMobileFilterOpen && (
           <div className="fixed inset-0 z-50 flex justify-end lg:hidden">
@@ -376,56 +376,198 @@ function ProductsContent() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setIsMobileFilterOpen(false)}
-              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"
             />
 
-            {/* Slide-in Filter Panel */}
+            {/* Classic Compact Drawer from Right */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="relative w-full max-w-sm bg-white h-full flex flex-col justify-between z-10 border-l border-slate-100 shadow-2xl overflow-hidden"
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="relative w-[85vw] max-w-[320px] bg-white h-full flex flex-col justify-between z-10 rounded-l-3xl shadow-2xl overflow-hidden border-l border-sky-100"
             >
               {/* Drawer Header */}
-              <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-sky-50/50">
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-sky-50 via-white to-sky-50">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-brand-500 text-white flex items-center justify-center shadow-sm">
-                    <SlidersHorizontal className="w-4 h-4" />
+                  <div className="w-7 h-7 rounded-lg bg-sky-500 text-white flex items-center justify-center shadow-xs">
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
                   </div>
                   <div>
-                    <h3 className="font-black text-sm text-slate-900">Filter Products</h3>
-                    <p className="text-[10px] text-slate-500">{filteredProducts.length} devices available</p>
+                    <h3 className="font-black text-xs sm:text-sm text-slate-900">Filter &amp; Sort</h3>
+                    <p className="text-[10px] text-slate-400">{filteredProducts.length} devices found</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
-                  className="p-2 rounded-full bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
+                  className="w-7 h-7 rounded-full bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center border border-slate-200 transition-colors"
                   aria-label="Close Filter"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Scrollable Filter Body */}
-              <div className="p-5 overflow-y-auto flex-1">
-                {renderFilterBody()}
+              {/* Scrollable Compact Filter Body */}
+              <div className="p-4 overflow-y-auto flex-1 space-y-4 text-xs">
+                {/* 1. Quick Sort Tabs / Tarteeb */}
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-2">
+                    Sort Order / Tarteeb
+                  </label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => setSortBy('price-low')}
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold text-center border transition-all ${
+                        sortBy === 'price-low'
+                          ? 'bg-sky-500 text-white border-sky-500 shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-sky-50'
+                      }`}
+                    >
+                      Low Price
+                    </button>
+                    <button
+                      onClick={() => setSortBy('price-high')}
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold text-center border transition-all ${
+                        sortBy === 'price-high'
+                          ? 'bg-sky-500 text-white border-sky-500 shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-sky-50'
+                      }`}
+                    >
+                      High Price
+                    </button>
+                    <button
+                      onClick={() => setSortBy('featured')}
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold text-center border transition-all ${
+                        sortBy === 'featured'
+                          ? 'bg-sky-500 text-white border-sky-500 shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-sky-50'
+                      }`}
+                    >
+                      New Model
+                    </button>
+                    <button
+                      onClick={() => setSortBy('rating')}
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold text-center border transition-all ${
+                        sortBy === 'rating'
+                          ? 'bg-sky-500 text-white border-sky-500 shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-sky-50'
+                      }`}
+                    >
+                      Top Rated
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. Categories Chips */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">
+                      Category
+                    </label>
+                    <span className="text-[9px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded-full">
+                      {CATEGORIES.length + 1}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      onClick={() => setSelectedCategory('all')}
+                      className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all ${
+                        selectedCategory === 'all'
+                          ? 'bg-sky-500 text-white shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.slug)}
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all ${
+                          selectedCategory === cat.slug
+                            ? 'bg-sky-500 text-white shadow-xs'
+                            : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Brand Selection */}
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-2">
+                    Brand
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {brands.map((brand) => (
+                      <button
+                        key={brand}
+                        onClick={() => setSelectedBrand(brand)}
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold capitalize transition-all ${
+                          selectedBrand === brand
+                            ? 'bg-sky-500 text-white shadow-xs'
+                            : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {brand}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. Price Slider */}
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                    <span>Max Budget</span>
+                    <span className="text-sky-600 font-black text-xs font-mono">
+                      Rs. {priceRange.toLocaleString()}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5000"
+                    max="500000"
+                    step="5000"
+                    value={priceRange}
+                    onChange={(e) => setPriceRange(Number(e.target.value))}
+                    className="w-full accent-sky-500 cursor-pointer h-1.5 bg-slate-200 rounded-lg appearance-none"
+                  />
+                  <div className="flex justify-between text-[9px] font-bold text-slate-400 mt-1">
+                    <span>Rs. 5,000</span>
+                    <span>Rs. 500,000</span>
+                  </div>
+                </div>
+
+                {/* 5. In Stock Toggle */}
+                <div className="pt-2 border-t border-slate-100">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                    <input
+                      type="checkbox"
+                      checked={inStockOnly}
+                      onChange={(e) => setInStockOnly(e.target.checked)}
+                      className="rounded text-sky-500 focus:ring-sky-500 w-4 h-4"
+                    />
+                    <span>PTA In Stock Devices Only</span>
+                  </label>
+                </div>
               </div>
 
-              {/* Sticky Drawer Footer with Action Buttons */}
-              <div className="p-4 bg-white border-t border-slate-100 flex items-center gap-3">
+              {/* Drawer Footer */}
+              <div className="p-3.5 bg-slate-50/90 border-t border-slate-100 flex items-center gap-2">
                 <button
                   onClick={clearFilters}
-                  className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                  className="flex-1 py-2 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 font-bold text-xs flex items-center justify-center gap-1 transition-colors"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <RotateCcw className="w-3 h-3" />
                   <span>Reset</span>
                 </button>
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
-                  className="flex-[2] py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-brand-500/25 transition-all"
+                  className="flex-[2] py-2 px-3 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-md shadow-sky-500/25 transition-all"
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-3.5 h-3.5" />
                   <span>Show {filteredProducts.length} Results</span>
                 </button>
               </div>
