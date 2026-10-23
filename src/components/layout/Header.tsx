@@ -97,11 +97,24 @@ export const Header: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
 
   // Auto-hover dropdown states
   const [activeHoverMenu, setActiveHoverMenu] = useState<MegaKey | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Lock body scroll when mobile search modal is open
+  useEffect(() => {
+    if (isMobileSearchOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileSearchOpen]);
 
   // Scroll detection state:
   // - When at top of page (scrollY <= 15): social bar and header both show
@@ -111,6 +124,7 @@ export const Header: React.FC = () => {
   const [isAtTop, setIsAtTop] = useState(true);
   const lastScrollYRef = useRef(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -370,18 +384,30 @@ export const Header: React.FC = () => {
 
             {/* Right: Actions Cluster (Search, Wishlist, Cart, Account, Hamburger) */}
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-              {/* 1. Search Icon Button (triggers slide-out search) */}
+              {/* 1. Search Icon Button */}
+              {/* Desktop search toggle (slide-out in header) */}
               {!isSearchOpen && (
                 <button
                   type="button"
                   onClick={() => setIsSearchOpen(true)}
                   aria-label="Open search bar"
-                  className="w-9 h-9 rounded-full bg-[#F4F9FF] hover:bg-[#EAF7FF] text-[#0756C9] border border-[#C7E5FF] flex items-center justify-center transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+                  className="hidden md:flex w-9 h-9 rounded-full bg-[#F4F9FF] hover:bg-[#EAF7FF] text-[#0756C9] border border-[#C7E5FF] items-center justify-center transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
                   title="Search products"
                 >
                   <Search className="w-4 h-4" />
                 </button>
               )}
+
+              {/* Mobile search toggle: opens dedicated full-screen search screen */}
+              <button
+                type="button"
+                onClick={() => setIsMobileSearchOpen(true)}
+                aria-label="Open search on mobile"
+                className="flex md:hidden w-9 h-9 rounded-full bg-[#F4F9FF] hover:bg-[#EAF7FF] text-[#0756C9] border border-[#C7E5FF] items-center justify-center transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+                title="Search products"
+              >
+                <Search className="w-4 h-4" />
+              </button>
 
               {/* 2. Wishlist Link Button (links to /wishlist) */}
               <Link
@@ -814,6 +840,154 @@ export const Header: React.FC = () => {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* ======================================================== */}
+      {/* 5. FULL-SCREEN MOBILE SEARCH MODAL / OVERLAY            */}
+      {/* Opens directly on the mobile screen with fast suggestions*/}
+      {/* ======================================================== */}
+      <AnimatePresence>
+        {isMobileSearchOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[100] bg-white flex flex-col overflow-hidden"
+          >
+            {/* Top Bar with Big Search Input */}
+            <div className="p-4 border-b border-[#DFEBF8] flex items-center gap-3 bg-white shadow-xs">
+              <div className="relative flex-1 flex items-center">
+                <Search className="absolute left-3.5 w-4 h-4 text-[#0756C9] pointer-events-none" />
+                <input
+                  ref={mobileSearchInputRef}
+                  type="text"
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (searchQuery.trim().length > 0) {
+                        router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+                        setIsMobileSearchOpen(false);
+                      }
+                    }
+                  }}
+                  placeholder="Search iPhone, Samsung, iPad..."
+                  className="w-full bg-[#F4F9FF] border border-[#C7E5FF] rounded-2xl py-3 pl-10 pr-10 text-sm text-[#102A56] placeholder-[#8394AB] focus:outline-none focus:border-[#0756C9] focus:ring-4 focus:ring-[#0756C9]/10 shadow-inner"
+                />
+                {searchQuery.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 p-1 rounded-full text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileSearchOpen(false);
+                  setSearchQuery('');
+                }}
+                className="text-xs font-bold text-[#0756C9] hover:text-[#063B8E] px-2 py-2 cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {/* Suggestions & Results Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {/* Popular Searches Tags */}
+              {searchQuery.trim().length === 0 && (
+                <div>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-[#8394AB] block mb-3">
+                    🔥 Popular Searches
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      'iPhone 16 Pro Max',
+                      'Samsung S24 Ultra',
+                      'iPad Pro M4',
+                      'Apple Watch Ultra',
+                      'AirPods Pro 2',
+                      'MagSafe Charger',
+                    ].map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery(tag);
+                        }}
+                        className="px-3.5 py-2 rounded-full bg-[#F4F9FF] hover:bg-[#EAF7FF] text-[#102A56] text-xs font-semibold border border-[#C7E5FF] transition-colors shadow-xs cursor-pointer"
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Fast Instant Predictive Suggestions */}
+              {searchResults.length > 0 && (
+                <div>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-[#8394AB] block mb-3">
+                    Matching Devices ({searchResults.length})
+                  </span>
+                  <div className="space-y-2">
+                    {searchResults.map((product) => (
+                      <Link
+                        key={product.id}
+                        href={`/products/${product.id}`}
+                        onClick={() => {
+                          setIsMobileSearchOpen(false);
+                          setSearchQuery('');
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-2xl bg-[#F8FAFD] hover:bg-[#EAF7FF] border border-[#DFEBF8] transition-colors"
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-white p-1 flex items-center justify-center border border-[#DFEBF8] flex-shrink-0">
+                          <img src={product.image} alt={product.name} className="w-10 h-10 object-contain" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-bold text-[#102A56] truncate">{product.name}</h4>
+                          <p className="text-[10px] text-[#52749D] truncate">{product.subtitle}</p>
+                          <span className="text-xs font-black text-[#0756C9] font-mono block mt-0.5">
+                            Rs. {product.price.toLocaleString()}
+                          </span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-[#8394AB] flex-shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (searchQuery.trim().length > 0) {
+                        router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+                        setIsMobileSearchOpen(false);
+                      }
+                    }}
+                    className="w-full mt-4 py-3 rounded-2xl bg-[#0756C9] hover:bg-[#063B8E] text-white text-xs font-black flex items-center justify-center gap-2 shadow-md shadow-[#0756C9]/25 cursor-pointer"
+                  >
+                    <span>View All Results for &quot;{searchQuery}&quot;</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {searchQuery.trim().length > 1 && searchResults.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-xs font-semibold text-[#52749D]">
+                    No devices found matching &quot;{searchQuery}&quot;
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>
