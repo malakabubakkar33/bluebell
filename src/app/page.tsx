@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { CategoryShortcuts } from '@/components/home/CategoryShortcuts';
 import { FeaturedProducts } from '@/components/home/FeaturedProducts';
+import { PartnershipShowcase } from '@/components/home/PartnershipShowcase';
 import { PromoBanner } from '@/components/home/PromoBanner';
 import { WhyChooseUs } from '@/components/home/WhyChooseUs';
 import { Footer } from '@/components/layout/Footer';
@@ -22,7 +23,10 @@ export default function HomePage() {
       {/* 4. Best Selling Featured Products */}
       <FeaturedProducts />
 
-      {/* 5. Samsung Promotional Campaign Banner */}
+      {/* 5. Blue Bell x Mercantile Cinematic Partnership Showcase */}
+      <PartnershipShowcase />
+
+      {/* 6. Samsung Promotional Campaign Banner */}
       <PromoBanner />
 
       {/* 6. Why Choose Blue Bell? Trust Pillars */}
