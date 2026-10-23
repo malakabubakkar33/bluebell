@@ -61,7 +61,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
     <div className={`${containerClasses} ${className}`} title="Blue Bells Mobile Shop">
       <div className="relative flex items-center justify-center">
         <Image
-          src="/logo.png"
+          src="/logo-transparent.png"
           alt="Blue Bells Mobile Shop Official Logo"
           width={imgWidth}
           height={imgHeight}

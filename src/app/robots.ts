@@ -13,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
           '/products/*',
           '/contact',
           '/track-order',
+          '/wishlist',
         ],
         disallow: [
           '/admin',

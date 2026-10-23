@@ -33,34 +33,9 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Pre-populate 2 items as shown in the mockup badge "2"
-  const [cart, setCart] = useState<CartItem[]>([
-    {
-      productId: 'prod-iphone-15-pro-max',
-      name: 'iPhone 15 Pro Max',
-      slug: 'iphone-15-pro-max',
-      price: 349999,
-      originalPrice: 370000,
-      image: PRODUCTS[0].image,
-      quantity: 1,
-      selectedStorage: '256GB',
-      selectedColor: 'Natural Titanium',
-      maxStock: 14,
-    },
-    {
-      productId: 'prod-airpods-pro-2',
-      name: 'AirPods Pro (2nd Gen)',
-      slug: 'airpods-pro-2nd-gen',
-      price: 59999,
-      originalPrice: 69999,
-      image: PRODUCTS[3].image,
-      quantity: 1,
-      selectedStorage: 'Active Noise Cancellation',
-      maxStock: 35,
-    }
-  ]);
-
-  const [wishlist, setWishlist] = useState<string[]>(['prod-samsung-s24-ultra']);
+  // Initialize cart and wishlist as empty by default until user adds items
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
