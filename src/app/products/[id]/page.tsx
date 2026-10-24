@@ -827,7 +827,7 @@ export default function ProductDetailPage({
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6 w-full">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3.5 lg:gap-4 w-full">
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

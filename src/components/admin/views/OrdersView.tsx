@@ -22,15 +22,70 @@ export interface OrderItem {
   id: string;
   customer_name: string;
   customer_phone: string;
+  customer_whatsapp?: string;
   customer_email: string;
   shipping_address?: string;
   city?: string;
+  province?: string;
+  postal_code?: string;
   payment_method?: string;
+  tracking_number?: string;
   total: number;
+  subtotal?: number;
+  shipping_fee?: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   date: string;
-  items: { name: string; quantity: number; price?: number }[];
+  items: { name: string; quantity: number; price?: number; selectedStorage?: string }[];
 }
+
+export const formatWhatsAppNumber = (phone?: string) => {
+  if (!phone) return '';
+  let digits = phone.replace(/[^0-9]/g, '');
+  if (digits.startsWith('00')) {
+    digits = digits.slice(2);
+  }
+  if (digits.startsWith('0') && digits.length === 11) {
+    digits = '92' + digits.slice(1);
+  }
+  return digits;
+};
+
+export const getWhatsAppInvoiceUrl = (order: OrderItem) => {
+  const targetPhone = order.customer_whatsapp || order.customer_phone || '';
+  const cleanNumber = formatWhatsAppNumber(targetPhone);
+
+  const itemsText = Array.isArray(order.items) && order.items.length > 0
+    ? order.items.map((it, idx) => `  ${idx + 1}. *${it.name}* (Qty: ${it.quantity}) - Rs. ${((it.price || 0) * it.quantity).toLocaleString()}`).join('\n')
+    : '  • Order package items verified';
+
+  const message = `📱 *BLUE BELL MOBILE SHOP - OFFICIAL ORDER INVOICE* 📱
+━━━━━━━━━━━━━━━━━━━━━
+Dear *${order.customer_name}*,
+Thank you for shopping at Blue Bell! Aapka order receive & confirm ho chuka hai. Yeh raha aapka official order bill aur details:
+
+🧾 *Order ID:* ${order.id}
+📅 *Order Date:* ${order.date || 'Today'}
+📍 *Delivery Address:* ${order.shipping_address || 'As provided'}, ${order.city || ''}
+💳 *Payment Method:* ${(order.payment_method || 'COD').toUpperCase()}
+🚚 *Tracking Ref:* ${order.tracking_number || order.id}
+
+📦 *PURCHASED PRODUCTS:*
+${itemsText}
+
+━━━━━━━━━━━━━━━━━━━━━
+⭐ *TOTAL PAYABLE:* Rs. ${order.total.toLocaleString()}
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ 100% Genuine & PTA Approved
+🛡️ Official Brand Warranty Included
+🚚 Courier partner will update you with delivery tracking shortly.
+
+Agar aapka koi bhi question ho to isi WhatsApp par hum se rabta karein.
+*Blue Bell Mobile Shop*
+https://bluebell.pk`;
+
+  return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+};
 
 interface OrdersViewProps {
   ordersList?: any[];
@@ -203,7 +258,14 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                     {/* Customer */}
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-slate-900">{ord.customer_name}</div>
-                      <span className="text-[11px] text-slate-400 font-mono">{ord.customer_phone}</span>
+                      <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
+                        <span>{ord.customer_phone}</span>
+                        {ord.customer_whatsapp && (
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded font-sans">
+                            WA
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Total Amount */}
@@ -235,7 +297,17 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
 
                     {/* Actions */}
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <a
+                          href={getWhatsAppInvoiceUrl(ord)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm shadow-emerald-500/20 transition-all hover:scale-105"
+                          title="Send complete order invoice bill directly to customer's WhatsApp"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">WhatsApp Bill</span>
+                        </a>
                         <button
                           onClick={() => {
                             setActiveModalOrder(ord);
@@ -246,17 +318,6 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <a
-                          href={`https://wa.me/${ord.customer_phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(
-                            ord.customer_name
-                          )},%20regarding%20your%20Blue%20Bells%20order%20${ord.id}...`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
-                          title="WhatsApp Customer"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                        </a>
                         <button
                           onClick={() => handleDelete(ord.id)}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
@@ -340,6 +401,11 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                 <p className="font-bold text-slate-800">
                   Phone: <span className="text-slate-600 font-normal font-mono">{activeModalOrder.customer_phone}</span>
                 </p>
+                {activeModalOrder.customer_whatsapp && (
+                  <p className="font-bold text-emerald-800">
+                    WhatsApp: <span className="text-emerald-700 font-semibold font-mono">{activeModalOrder.customer_whatsapp}</span>
+                  </p>
+                )}
                 <p className="font-bold text-slate-800">
                   Email: <span className="text-slate-600 font-normal">{activeModalOrder.customer_email}</span>
                 </p>
@@ -384,7 +450,16 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                 </span>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                <a
+                  href={getWhatsAppInvoiceUrl(activeModalOrder)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all hover:scale-105"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Send Bill on WhatsApp</span>
+                </a>
                 <button
                   type="button"
                   onClick={() => window.print()}

@@ -11,13 +11,13 @@ export async function POST(req: NextRequest) {
     const contentType = req.headers.get('content-type') || '';
     let fileBuffer: Buffer | null = null;
     let mimeType: string = 'image/jpeg';
-    let originalName: string = `upload-${Date.now()}`;
+    let _originalName: string = `upload-${Date.now()}`;
     let fileDataUri: string = '';
 
     if (contentType.includes('application/json')) {
       const body = await req.json();
       fileDataUri = body.file || '';
-      if (body.name) originalName = body.name;
+      if (body.name) _originalName = body.name;
 
       if (fileDataUri.startsWith('data:')) {
         const matches = fileDataUri.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         const f = file as File;
         fileBuffer = Buffer.from(await f.arrayBuffer());
         mimeType = f.type || 'image/jpeg';
-        originalName = f.name || originalName;
+        _originalName = f.name || _originalName;
         fileDataUri = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
       }
     }

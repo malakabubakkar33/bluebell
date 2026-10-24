@@ -87,7 +87,7 @@ function TrackOrderContent() {
           Track Your Mobile Order
         </h1>
         <p className="text-xs text-slate-500 mt-1">
-          Enter your Blue Bells Order ID (e.g. BB-98241) to check live packaging, courier status, and estimated delivery.
+          Enter your Order ID (e.g. BB-98241) or registered Phone / WhatsApp number to check live courier tracking and delivery status.
         </p>
       </div>
 
@@ -98,7 +98,7 @@ function TrackOrderContent() {
             type="text"
             value={orderQuery}
             onChange={(e) => setOrderQuery(e.target.value)}
-            placeholder="Enter Order ID (e.g. BB-98241 or BB-98242)"
+            placeholder="Enter Order ID (e.g. BB-98241) or Phone / WhatsApp Number"
             className="flex-1 px-4 py-2.5 text-base sm:text-xs text-slate-900 placeholder-slate-400 focus:outline-none"
           />
           <button
@@ -111,7 +111,7 @@ function TrackOrderContent() {
             ) : (
               <>
                 <Search className="w-3.5 h-3.5" />
-                <span>Track</span>
+                <span>Track Order</span>
               </>
             )}
           </button>
@@ -136,6 +136,11 @@ function TrackOrderContent() {
               <h2 className="text-xl font-black text-slate-900 font-mono">{orderData.id}</h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 Recipient: <strong className="text-slate-800">{orderData.customer_name}</strong> • {orderData.city}
+                {orderData.customer_whatsapp && (
+                  <span className="ml-2 text-emerald-600 font-medium">
+                    (WA: {orderData.customer_whatsapp})
+                  </span>
+                )}
               </p>
             </div>
 

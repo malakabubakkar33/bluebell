@@ -19,22 +19,41 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Footer } from '@/components/layout/Footer';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { MessageSquare, Phone } from 'lucide-react';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const { cart, subtotal, clearCart } = useCart();
 
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    email: '',
-    address: '',
-    city: 'Islamabad',
+    fullName: user?.name || '',
+    phone: user?.phone || '',
+    whatsapp: user?.whatsapp || user?.phone || '',
+    email: user?.email || '',
+    address: user?.address || '',
+    city: user?.city || 'Islamabad',
     province: 'Punjab',
     postalCode: '',
     notes: '',
     paymentMethod: 'cod' as 'cod' | 'bank_transfer' | 'easypaisa' | 'jazzcash',
   });
+
+  // Prefill when user loads or updates
+  React.useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || user.name || '',
+        phone: prev.phone || user.phone || '',
+        whatsapp: prev.whatsapp || user.whatsapp || user.phone || '',
+        email: prev.email || user.email || '',
+        address: prev.address || user.address || '',
+        city: prev.city || user.city || 'Islamabad',
+      }));
+    }
+  }, [user]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -58,8 +77,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!formData.fullName || !formData.phone || !formData.address) {
-      setErrorMessage('Please fill in your name, contact phone number, and delivery address.');
+    if (!formData.fullName || !formData.phone || !formData.whatsapp || !formData.address) {
+      setErrorMessage('Please fill in your name, contact phone, active WhatsApp number, and delivery address.');
       return;
     }
 
@@ -72,6 +91,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           customer_name: formData.fullName,
           customer_phone: formData.phone,
+          customer_whatsapp: formData.whatsapp,
           customer_email: formData.email || 'customer@bluebell.pk',
           shipping_address: formData.address,
           city: formData.city,
@@ -194,7 +214,7 @@ export default function CheckoutPage() {
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Mobile Phone (For Courier Updates) <span className="text-rose-500">*</span>
+                    Mobile Phone (For Calls & Courier) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -207,9 +227,34 @@ export default function CheckoutPage() {
                   />
                 </div>
 
+                <div className="sm:col-span-2 bg-emerald-50/70 border border-emerald-200/90 rounded-xl p-3.5">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>WhatsApp Number (Required for Bill & Invoice)</span>
+                      <span className="text-rose-600 font-bold">*</span>
+                    </label>
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide bg-emerald-100/90 px-2 py-0.5 rounded-md">
+                      Instant WhatsApp Bill
+                    </span>
+                  </div>
+                  <input
+                    type="tel"
+                    name="whatsapp"
+                    required
+                    value={formData.whatsapp}
+                    onChange={handleInputChange}
+                    placeholder="+92 300 1234567"
+                    className="w-full bg-white border border-emerald-300 rounded-xl px-3.5 py-2.5 text-base sm:text-xs text-slate-900 font-medium focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                  <p className="text-[11px] text-emerald-900 mt-1.5">
+                    Blue Bell admin team will send your complete order confirmation, warranty receipt, and official invoice directly to this WhatsApp number.
+                  </p>
+                </div>
+
                 <div className="sm:col-span-2">
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Email Address (For Invoice & Warranty Receipt)
+                    Email Address (Optional)
                   </label>
                   <input
                     type="email"

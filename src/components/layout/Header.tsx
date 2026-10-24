@@ -159,18 +159,18 @@ export const Header: React.FC = () => {
           const prevScrollY = lastScrollYRef.current;
           const delta = currentScrollY - prevScrollY;
 
-          if (currentScrollY <= 15) {
+          if (currentScrollY <= 25) {
             setIsAtTop(true);
             setIsHeaderHidden(false);
           } else {
             setIsAtTop(false);
-            if (delta > 4) {
-              // Scrolling down: hide header immediately
+            if (delta > 6) {
+              // Scrolling down: hide header
               setIsHeaderHidden(true);
               setActiveHoverMenu(null);
               setIsSearchOpen(false);
-            } else if (delta < -8) {
-              // Scrolling up: reveal header (social bar remains hidden because isAtTop === false)
+            } else if (delta < -2) {
+              // Scrolling up: reveal header immediately!
               setIsHeaderHidden(false);
             }
           }

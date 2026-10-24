@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       customer_name: body.customer_name,
       customer_email: body.customer_email || 'guest@bluebell.pk',
       customer_phone: body.customer_phone,
+      customer_whatsapp: body.customer_whatsapp || body.customer_phone,
       shipping_address: body.shipping_address,
       city: body.city || 'Islamabad',
       province: body.province || 'Punjab',

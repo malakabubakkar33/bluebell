@@ -231,7 +231,7 @@ export const SupabaseDbService = {
     const supabase = await getSupabaseServerClient();
     if (supabase) {
       try {
-        const { data, error } = await supabase.from('products').update(updates).eq('id', id).select().single();
+        const { data, error } = await (supabase as any).from('products').update(updates).eq('id', id).select().single();
         if (!error && data) return data as ProductRow;
       } catch (e) {
         console.warn('Supabase product update failed:', e);
@@ -295,23 +295,64 @@ export const SupabaseDbService = {
     return memoryOrders;
   },
 
-  async getOrderById(id: string) {
+  async getOrderById(searchQuery: string) {
+    const q = searchQuery.trim();
+    const cleanPhone = q.replace(/[^0-9]/g, '');
     const supabase = await getSupabaseServerClient();
+
     if (supabase) {
       try {
-        const { data, error } = await supabase.from('orders').select('*').eq('id', id).single();
-        if (!error && data) return data as OrderRow;
+        // 1. Try exact or partial match on id or tracking_number
+        const { data: directData, error: directErr } = await (supabase as any)
+          .from('orders')
+          .select('*')
+          .or(`id.ilike.%${q}%,tracking_number.ilike.%${q}%`)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (!directErr && directData && directData.length > 0) {
+          return directData[0] as OrderRow;
+        }
+
+        // 2. If phone/whatsapp number entered (at least 7 digits)
+        if (cleanPhone.length >= 7) {
+          const last7 = cleanPhone.slice(-7);
+          const { data: phoneData, error: phoneErr } = await (supabase as any)
+            .from('orders')
+            .select('*')
+            .or(`customer_phone.ilike.%${last7}%,customer_whatsapp.ilike.%${last7}%,notes.ilike.%${last7}%`)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (!phoneErr && phoneData && phoneData.length > 0) {
+            return phoneData[0] as OrderRow;
+          }
+        }
       } catch (e) {
         console.warn('Supabase getOrderById failed, fallback to memory:', e);
       }
     }
-    return memoryOrders.find((o) => o.id.toLowerCase() === id.toLowerCase()) || null;
+
+    // Memory fallback
+    return (
+      memoryOrders.find((o: any) => {
+        const matchId = o.id.toLowerCase() === q.toLowerCase();
+        const matchTrk = o.tracking_number && o.tracking_number.toLowerCase() === q.toLowerCase();
+        const oPhoneClean = (o.customer_phone || '').replace(/[^0-9]/g, '');
+        const oWaClean = (o.customer_whatsapp || '').replace(/[^0-9]/g, '');
+        const matchPhone =
+          cleanPhone.length >= 7 &&
+          (oPhoneClean.includes(cleanPhone.slice(-7)) || oWaClean.includes(cleanPhone.slice(-7)));
+        return matchId || matchTrk || matchPhone;
+      }) || null
+    );
   },
 
   async createOrder(orderInput: {
     customer_name: string;
     customer_email: string;
     customer_phone: string;
+    customer_whatsapp?: string;
     shipping_address: string;
     city: string;
     province: string;
@@ -324,11 +365,13 @@ export const SupabaseDbService = {
     notes?: string;
   }) {
     const orderId = `BB-${Math.floor(100000 + Math.random() * 900000)}`;
-    const newOrder: OrderRow = {
+    const whatsapp = orderInput.customer_whatsapp || orderInput.customer_phone;
+    const newOrder: any = {
       id: orderId,
       customer_name: orderInput.customer_name,
       customer_email: orderInput.customer_email,
       customer_phone: orderInput.customer_phone,
+      customer_whatsapp: whatsapp,
       shipping_address: orderInput.shipping_address,
       city: orderInput.city,
       province: orderInput.province,
@@ -340,15 +383,18 @@ export const SupabaseDbService = {
       total: orderInput.total,
       status: 'pending',
       tracking_number: `TRK-${Math.floor(10000000 + Math.random() * 90000000)}`,
-      notes: orderInput.notes || null,
+      notes: orderInput.notes ? `${orderInput.notes} (WhatsApp: ${whatsapp})` : `WhatsApp: ${whatsapp}`,
       created_at: new Date().toISOString(),
     };
 
     const supabase = await getSupabaseServerClient();
     if (supabase) {
       try {
-        const { data, error } = await supabase.from('orders').insert(newOrder as any).select().single();
-        if (!error && data) return data as OrderRow;
+        const { data, error } = await (supabase as any).from('orders').insert(newOrder).select().single();
+        if (!error && data) {
+          memoryOrders.unshift(data as OrderRow);
+          return data as OrderRow;
+        }
       } catch (e) {
         console.warn('Supabase order creation failed, storing in memory:', e);
       }
