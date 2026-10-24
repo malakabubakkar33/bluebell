@@ -68,19 +68,81 @@ export async function POST(req: NextRequest) {
 
       if (signInData?.user && !signInError) {
         const meta = signInData.user.user_metadata || {};
+
+        // Fetch or create user record in Supabase Database `public.app_users`
+        let dbUser: any = null;
+        try {
+          const { data: existingDbUser } = await (adminClient as any)
+            .from('app_users')
+            .select('*')
+            .eq('email', trimmedEmail)
+            .single();
+
+          if (existingDbUser) {
+            dbUser = existingDbUser;
+            // Update last_login timestamp
+            await (adminClient as any)
+              .from('app_users')
+              .update({
+                last_login: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('email', trimmedEmail);
+          } else {
+            // First time login or missed sync: Insert into public.app_users
+            const { data: insertedUser } = await (adminClient as any)
+              .from('app_users')
+              .upsert(
+                {
+                  id: signInData.user.id,
+                  email: trimmedEmail,
+                  name: meta.name || trimmedEmail.split('@')[0],
+                  phone: meta.phone || '',
+                  whatsapp: meta.whatsapp || meta.phone || '',
+                  city: meta.city || 'Peshawar',
+                  address: meta.address || '',
+                  role: meta.role === 'admin' ? 'admin' : 'customer',
+                  status: 'active',
+                  orders_count: 0,
+                  total_spent: 0,
+                  last_login: new Date().toISOString(),
+                  created_at: signInData.user.created_at || new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                },
+                { onConflict: 'email' }
+              )
+              .select()
+              .single();
+            dbUser = insertedUser;
+          }
+        } catch (dbErr: any) {
+          console.warn('DB app_users login sync note:', dbErr?.message);
+        }
+
+        // Check if user is suspended in database
+        if (dbUser?.status === 'suspended') {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Your account is currently suspended. Please contact store support on WhatsApp.',
+            },
+            { status: 403 }
+          );
+        }
+
         const profile = {
-          id: signInData.user.id,
-          name: meta.name || trimmedEmail.split('@')[0],
-          email: signInData.user.email || trimmedEmail,
-          phone: meta.phone || '',
-          whatsapp: meta.whatsapp || meta.phone || '',
-          city: meta.city || 'Peshawar',
-          address: meta.address || '',
-          role: (meta.role === 'admin' ? 'admin' : 'customer') as 'admin' | 'customer',
-          status: 'active' as const,
-          created_at: signInData.user.created_at || new Date().toISOString(),
-          orders_count: 0,
-          total_spent: 0,
+          id: dbUser?.id || signInData.user.id,
+          name: dbUser?.name || meta.name || trimmedEmail.split('@')[0],
+          email: dbUser?.email || signInData.user.email || trimmedEmail,
+          phone: dbUser?.phone || meta.phone || '',
+          whatsapp: dbUser?.whatsapp || meta.whatsapp || meta.phone || '',
+          city: dbUser?.city || meta.city || 'Peshawar',
+          address: dbUser?.address || meta.address || '',
+          role: (dbUser?.role || (meta.role === 'admin' ? 'admin' : 'customer')) as 'admin' | 'customer',
+          status: (dbUser?.status || 'active') as 'active' | 'suspended',
+          created_at: dbUser?.created_at || signInData.user.created_at || new Date().toISOString(),
+          orders_count: dbUser?.orders_count || 0,
+          total_spent: dbUser?.total_spent || 0,
         };
 
         return NextResponse.json({

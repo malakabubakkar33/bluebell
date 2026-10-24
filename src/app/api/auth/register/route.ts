@@ -61,6 +61,28 @@ export async function POST(req: NextRequest) {
         } else if (newUser?.user) {
           userId = newUser.user.id;
           createdInSupabase = true;
+
+          // Explicitly save/upsert user into Supabase database table `public.app_users`
+          try {
+            await (adminClient as any).from('app_users').upsert({
+              id: userId,
+              email: trimmedEmail,
+              name: name.trim(),
+              phone: phone ? phone.trim() : '',
+              whatsapp: whatsapp ? whatsapp.trim() : (phone ? phone.trim() : ''),
+              city: city ? city.trim() : 'Peshawar',
+              address: address ? address.trim() : '',
+              role: 'customer',
+              status: 'active',
+              orders_count: 0,
+              total_spent: 0,
+              last_login: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'email' });
+          } catch (dbErr: any) {
+            console.warn('Supabase DB app_users upsert note:', dbErr?.message);
+          }
         }
       } catch (err: any) {
         console.warn('Supabase Auth error during registration:', err.message);

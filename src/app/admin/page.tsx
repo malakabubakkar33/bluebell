@@ -37,7 +37,7 @@ import { ReviewsView } from '@/components/admin/views/ReviewsView';
 import { SettingsView } from '@/components/admin/views/SettingsView';
 
 export default function AdminPage() {
-  const { user, isAdmin, login, logout, usersList, adminUpdateUserStatus, adminDeleteUser } = useAuth();
+  const { user, isAdmin, login, logout, usersList, adminUpdateUserStatus, adminDeleteUser, refreshUsers } = useAuth();
   const {
     products: productsList,
     addProduct,
@@ -81,7 +81,8 @@ export default function AdminPage() {
 
   React.useEffect(() => {
     fetchOrders();
-  }, []);
+    refreshUsers();
+  }, [activeTab]);
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     setOrdersList((prev) =>

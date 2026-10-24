@@ -75,6 +75,24 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 5. APP USERS / CUSTOMERS TABLE (Linked with Supabase Auth)
+CREATE TABLE IF NOT EXISTS public.app_users (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  phone TEXT,
+  whatsapp TEXT,
+  city TEXT DEFAULT 'Peshawar',
+  address TEXT,
+  role TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
+  orders_count INTEGER DEFAULT 0,
+  total_spent NUMERIC DEFAULT 0,
+  last_login TIMESTAMPTZ DEFAULT now(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- ========================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ========================================================
@@ -82,6 +100,12 @@ ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_users ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public select app_users" ON public.app_users FOR SELECT USING (true);
+CREATE POLICY "Public insert app_users" ON public.app_users FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update app_users" ON public.app_users FOR UPDATE USING (true);
+CREATE POLICY "Admin full app_users" ON public.app_users FOR ALL USING (true);
 
 -- Allow public read access to active products & categories
 CREATE POLICY "Public read products" ON public.products FOR SELECT USING (true);

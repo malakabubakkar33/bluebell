@@ -42,6 +42,7 @@ interface AuthContextType {
   adminUpdateUserRole: (userId: string, newRole: 'customer' | 'admin') => void;
   adminUpdateUserStatus: (userId: string, newStatus: 'active' | 'suspended') => void;
   adminDeleteUser: (userId: string) => void;
+  refreshUsers: () => Promise<void>;
 }
 
 const DEFAULT_USERS: UserProfile[] = [
@@ -69,7 +70,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
 
-  // Load user and usersList from localStorage on mount
+  const refreshUsers = async () => {
+    try {
+      const res = await fetch('/api/auth/users');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.users) && data.users.length > 0) {
+        setUsersList(data.users);
+        try {
+          localStorage.setItem('bluebell_users_list_v4', JSON.stringify(data.users));
+        } catch (e) {}
+      }
+    } catch (err) {
+      console.warn('Failed to fetch users from Supabase API', err);
+    }
+  };
+
+  // Load user and usersList from localStorage and Supabase on mount
   useEffect(() => {
     try {
       const storedUsers = localStorage.getItem('bluebell_users_list_v4');
@@ -89,6 +105,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
+
+    // Automatically sync live users from Supabase database
+    refreshUsers();
   }, []);
 
   const saveUsersList = (newList: UserProfile[]) => {
@@ -314,18 +333,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const adminUpdateUserRole = (userId: string, newRole: 'customer' | 'admin') => {
     const updatedList = usersList.map((u) => (u.id === userId ? { ...u, role: newRole } : u));
     saveUsersList(updatedList);
+    fetch('/api/auth/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: userId, role: newRole }),
+    }).catch((err) => console.warn('Supabase role update error:', err));
   };
 
   // Admin User Status
   const adminUpdateUserStatus = (userId: string, newStatus: 'active' | 'suspended') => {
     const updatedList = usersList.map((u) => (u.id === userId ? { ...u, status: newStatus } : u));
     saveUsersList(updatedList);
+    fetch('/api/auth/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: userId, status: newStatus }),
+    }).catch((err) => console.warn('Supabase status update error:', err));
   };
 
   // Admin Delete User
   const adminDeleteUser = (userId: string) => {
     const updatedList = usersList.filter((u) => u.id !== userId);
     saveUsersList(updatedList);
+    fetch(`/api/auth/users?id=${encodeURIComponent(userId)}`, {
+      method: 'DELETE',
+    }).catch((err) => console.warn('Supabase user delete error:', err));
   };
 
   return (
@@ -343,6 +375,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         adminUpdateUserRole,
         adminUpdateUserStatus,
         adminDeleteUser,
+        refreshUsers,
       }}
     >
       {children}

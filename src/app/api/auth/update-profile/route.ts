@@ -41,7 +41,29 @@ export async function POST(req: NextRequest) {
 
         if (error) {
           console.error('Supabase profile update error:', error.message);
-        } else {
+        }
+
+        // Also update Supabase database `public.app_users`
+        try {
+          const userEmail = email || data?.user?.email;
+          if (userEmail) {
+            await (adminClient as any)
+              .from('app_users')
+              .update({
+                name: name || data?.user?.user_metadata?.name || '',
+                phone: phone || data?.user?.user_metadata?.phone || '',
+                whatsapp: whatsapp || data?.user?.user_metadata?.whatsapp || phone || '',
+                city: city || 'Peshawar',
+                address: address || '',
+                updated_at: new Date().toISOString(),
+              })
+              .eq('email', userEmail.toLowerCase());
+          }
+        } catch (dbErr: any) {
+          console.warn('DB app_users update note:', dbErr?.message);
+        }
+
+        if (!error && data?.user) {
           return NextResponse.json({
             success: true,
             user: {
