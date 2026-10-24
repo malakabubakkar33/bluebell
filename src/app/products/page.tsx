@@ -214,53 +214,53 @@ function ProductsContent() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 md:py-12">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-5 sm:py-8 md:py-12">
       {/* Page Title & Breadcrumb */}
-      <div className="mb-6">
-        <span className="text-xs font-bold text-brand-600 uppercase tracking-widest">
+      <div className="mb-4 sm:mb-6">
+        <span className="text-[10px] sm:text-xs font-bold text-brand-600 uppercase tracking-widest">
           Official Store Collection
         </span>
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1">
+        <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight mt-0.5 sm:mt-1">
           Smartphones & Accessories
         </h1>
-        <p className="text-sm text-slate-500 mt-1 max-w-2xl">
+        <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
           Browse our certified collection of genuine Apple iPhones, Samsung Galaxy flagships, iPads, and original accessories with verified warranty.
         </p>
       </div>
 
       {/* Top Mobile Bar: Filter Trigger & Sorting */}
-      <div className="flex items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-2 pb-3.5 mb-5 border-b border-slate-100">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {/* Mobile Filter Button */}
           <button
             onClick={() => setIsMobileFilterOpen(true)}
-            className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-50 text-brand-600 border border-brand-200 hover:bg-brand-500 hover:text-white font-bold text-xs shadow-sm transition-all"
+            className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-sky-50 text-brand-600 border border-brand-200 hover:bg-brand-500 hover:text-white font-bold text-xs shadow-xs transition-all shrink-0"
             aria-label="Open Filter Drawer"
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Filters</span>
             {activeFilterCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-brand-500 text-white text-[10px] font-black flex items-center justify-center">
+              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-brand-500 text-white text-[9px] sm:text-[10px] font-black flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
           </button>
 
-          <span className="text-xs font-bold text-slate-500">
-            Showing <strong className="text-slate-900">{filteredProducts.length}</strong> products
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 truncate">
+            Showing <strong className="text-slate-900">{filteredProducts.length}</strong> items
           </span>
         </div>
 
         {/* Sort Dropdown */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-xs text-slate-500 font-medium hidden sm:inline">Sort:</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
             aria-label="Sort products"
-            className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 shadow-sm"
+            className="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 shadow-xs max-w-[145px] sm:max-w-none text-ellipsis"
           >
-            <option value="featured">Featured & Recommended</option>
+            <option value="featured">Featured</option>
             <option value="price-low">Price: Low to High</option>
             <option value="price-high">Price: High to Low</option>
             <option value="rating">Highest Rated</option>
@@ -270,7 +270,7 @@ function ProductsContent() {
 
       {/* Active Filter Badges */}
       {activeFilterCount > 0 && (
-        <div className="flex flex-wrap items-center gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
             Active:
           </span>
@@ -323,7 +323,7 @@ function ProductsContent() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
         {/* Desktop Sidebar Filters (Hidden on Mobile) */}
         <aside className="hidden lg:block lg:col-span-1 space-y-6">
           <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sticky top-28 shadow-sm">
@@ -344,7 +344,7 @@ function ProductsContent() {
         </aside>
 
         {/* Products Grid: 2 Columns on Mobile, 2 on Tablet, 3 on Desktop */}
-        <section className="lg:col-span-3">
+        <section className="lg:col-span-3 min-w-0 w-full">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-16 bg-slate-50/70 rounded-3xl border border-slate-100 p-6">
               <Search className="w-10 h-10 text-slate-300 mx-auto mb-2.5" />
@@ -360,7 +360,7 @@ function ProductsContent() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4 lg:gap-5 w-full">
               {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
