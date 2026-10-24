@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseDbService } from '@/lib/supabase/service';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const orders = await SupabaseDbService.getOrders();
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get('email') || undefined;
+    const orders = await SupabaseDbService.getOrders(email);
     return NextResponse.json({ success: true, count: orders.length, data: orders });
   } catch (error: any) {
     return NextResponse.json(

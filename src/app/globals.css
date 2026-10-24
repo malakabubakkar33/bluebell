@@ -4,6 +4,17 @@
 
 :root {
   --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-primary: #0866E8;
+  --color-deep: #0645B5;
+  --color-accent: #18A8F8;
+  --color-light: #EDF6FF;
+  --color-surface: #F7FBFF;
+  --color-dark: #102A50;
+  --color-muted: #647A98;
+  --color-border: #DCEBFA;
+  --color-success: #16A675;
+  --color-error: #E5485B;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 html {
@@ -12,11 +23,12 @@ html {
   overflow-x: hidden;
   max-width: 100%;
   width: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background-color: #ffffff;
-  color: #0f172a;
+  color: #102A50;
   font-family: var(--font-inter);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -24,6 +36,15 @@ body {
   max-width: 100%;
   width: 100%;
   position: relative;
+}
+
+/* Safe area utilities for mobile devices */
+.safe-bottom-nav {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
+}
+
+.pb-mobile-nav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 /* Custom Sleek Scrollbar */

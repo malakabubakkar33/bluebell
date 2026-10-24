@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
-import { PRODUCTS, CATEGORIES } from '@/lib/data/mockData';
+import { SupabaseDbService } from '@/lib/supabase/service';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bluebells.pk';
   const now = new Date();
 
@@ -15,6 +15,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/products`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/categories`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
@@ -39,21 +45,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // Dynamic category landing pages
-  const categoryRoutes: MetadataRoute.Sitemap = CATEGORIES.map((cat) => ({
-    url: `${baseUrl}/products?category=${encodeURIComponent(cat.slug)}`,
-    lastModified: now,
-    changeFrequency: 'daily',
-    priority: 0.85,
-  }));
+  try {
+    const [products, categories] = await Promise.all([
+      SupabaseDbService.getProducts(),
+      SupabaseDbService.getCategories(),
+    ]);
 
-  // Dynamic individual product pages
-  const productRoutes: MetadataRoute.Sitemap = PRODUCTS.map((prod) => ({
-    url: `${baseUrl}/products/${encodeURIComponent(prod.id)}`,
-    lastModified: now,
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  }));
+    // Dynamic category landing pages
+    const categoryRoutes: MetadataRoute.Sitemap = (categories || []).map((cat) => ({
+      url: `${baseUrl}/products?category=${encodeURIComponent(cat.slug)}`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.85,
+    }));
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+    // Dynamic individual product pages
+    const productRoutes: MetadataRoute.Sitemap = (products || []).map((prod) => ({
+      url: `${baseUrl}/products/${encodeURIComponent(prod.id)}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }));
+
+    return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+  } catch {
+    return staticRoutes;
+  }
 }
+

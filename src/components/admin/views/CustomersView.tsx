@@ -63,19 +63,17 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   });
 
   React.useEffect(() => {
-    if (usersList && usersList.length > 0) {
-      setCustomers(
-        usersList.map((u) => ({
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          phone: u.phone,
-          orders_count: u.orders_count || 0,
-          status: u.status,
-          role: u.role,
-        }))
-      );
-    }
+    setCustomers(
+      (usersList || []).map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        orders_count: u.orders_count || 0,
+        status: u.status,
+        role: u.role,
+      }))
+    );
   }, [usersList]);
 
   const [showModal, setShowModal] = useState(false);

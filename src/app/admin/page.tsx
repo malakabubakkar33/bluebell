@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useProducts } from '@/context/ProductsContext';
-import { CATEGORIES } from '@/lib/data/mockData';
 import { Product, Category } from '@/types';
 
 // Admin Components
@@ -527,8 +526,8 @@ export default function AdminPage() {
         setIsOpenMobile={setIsOpenMobile}
         onLogout={logout}
         productsCount={productsList.length}
-        ordersCount={124}
-        lowStockCount={3}
+        ordersCount={ordersList.length}
+        lowStockCount={productsList.filter((p) => (p.stock || 0) <= 3).length}
       />
 
       {/* 2. Main Content Area */}
@@ -562,6 +561,7 @@ export default function AdminPage() {
           {activeTab === 'products' && (
             <ProductsView
               productsList={productsList}
+              categoriesList={categoriesList}
               onAddProduct={handleOpenAddProduct}
               onEditProduct={handleOpenEditProduct}
               onDeleteProduct={(id, name) => {
@@ -582,9 +582,16 @@ export default function AdminPage() {
               ordersList={ordersList}
               onSelectOrder={(ord) => setSelectedOrder(ord)}
               onUpdateStatus={handleUpdateOrderStatus}
-              onDeleteOrder={(orderId) => {
-                setOrdersList((prev) => prev.filter((o) => o.id !== orderId));
-                showToast(`Order ${orderId} deleted.`);
+              onDeleteOrder={async (orderId) => {
+                if (confirm(`Are you sure you want to delete order ${orderId}?`)) {
+                  setOrdersList((prev) => prev.filter((o) => o.id !== orderId));
+                  try {
+                    await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
+                  } catch (err) {
+                    console.error('Delete order error:', err);
+                  }
+                  showToast(`Order ${orderId} deleted.`);
+                }
               }}
             />
           )}
@@ -600,6 +607,7 @@ export default function AdminPage() {
           {activeTab === 'inventory' && (
             <InventoryView
               productsList={productsList}
+              categoriesList={categoriesList}
               onQuickUpdateStock={handleQuickUpdateStock}
             />
           )}
@@ -640,7 +648,7 @@ export default function AdminPage() {
             />
           )}
 
-          {activeTab === 'reports' && <ReportsView />}
+          {activeTab === 'reports' && <ReportsView ordersList={ordersList} />}
 
           {activeTab === 'categories' && (
             <CategoriesView
@@ -719,16 +727,16 @@ export default function AdminPage() {
                     value={productForm.categorySlug}
                     onChange={(e) => {
                       const slug = e.target.value;
-                      const cat = CATEGORIES.find((c) => c.slug === slug);
+                      const cat = categoriesList.find((c) => c.slug === slug);
                       setProductForm({
                         ...productForm,
                         categorySlug: slug,
-                        category: cat ? cat.name : 'iPhone',
+                        category: cat ? cat.name : 'smartphones',
                       });
                     }}
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
                   >
-                    {CATEGORIES.map((cat) => (
+                    {categoriesList.map((cat) => (
                       <option key={cat.id} value={cat.slug}>
                         {cat.name}
                       </option>

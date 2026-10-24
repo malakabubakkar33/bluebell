@@ -17,10 +17,12 @@ import {
   PackageCheck,
   PackageX,
 } from 'lucide-react';
-import { Product } from '@/types';
+import { Product, Category } from '@/types';
+import { doesProductBelongToCategory } from '@/lib/categoryUtils';
 
 interface ProductsViewProps {
   productsList: Product[];
+  categoriesList?: Category[];
   onAddProduct: () => void;
   onEditProduct: (p: Product) => void;
   onDeleteProduct: (id: string, name: string) => void;
@@ -29,6 +31,7 @@ interface ProductsViewProps {
 
 export const ProductsView: React.FC<ProductsViewProps> = ({
   productsList,
+  categoriesList = [],
   onAddProduct,
   onEditProduct,
   onDeleteProduct,
@@ -64,6 +67,14 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
     onUpdateProduct(p.id, { stock: newStock });
   };
 
+  const availableBrands = useMemo(() => {
+    const set = new Set<string>();
+    productsList.forEach((p) => {
+      if (p.brand) set.add(p.brand);
+    });
+    return Array.from(set).sort();
+  }, [productsList]);
+
   // Filter products
   const filteredProducts = useMemo(() => {
     return productsList.filter((p) => {
@@ -74,8 +85,7 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
 
       const matchCat =
         selectedCategory === 'all' ||
-        p.categorySlug === selectedCategory ||
-        p.category.toLowerCase() === selectedCategory.toLowerCase();
+        doesProductBelongToCategory(p.categorySlug, p.brand, selectedCategory);
 
       const matchBrand =
         selectedBrand === 'all' || p.brand.toLowerCase() === selectedBrand.toLowerCase();
@@ -145,12 +155,12 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
             }}
             className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
           >
-            <option value="all">All Categories</option>
-            <option value="iphone">iPhone</option>
-            <option value="samsung">Samsung</option>
-            <option value="ipad">iPad</option>
-            <option value="smart-watches">Smart Watches</option>
-            <option value="accessories">Accessories</option>
+            <option value="all">All Categories ({productsList.length})</option>
+            {categoriesList.map((cat) => (
+              <option key={cat.id} value={cat.slug}>
+                {cat.name} ({cat.itemCount || 0})
+              </option>
+            ))}
           </select>
         </div>
 
@@ -164,11 +174,12 @@ export const ProductsView: React.FC<ProductsViewProps> = ({
             }}
             className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
           >
-            <option value="all">All Brands</option>
-            <option value="apple">Apple</option>
-            <option value="samsung">Samsung</option>
-            <option value="google">Google</option>
-            <option value="xiaomi">Xiaomi</option>
+            <option value="all">All Brands ({availableBrands.length})</option>
+            {availableBrands.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
           </select>
         </div>
 

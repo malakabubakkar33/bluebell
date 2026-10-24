@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseDbService } from '@/lib/supabase/service';
 
 export async function GET() {
@@ -6,6 +6,7 @@ export async function GET() {
     const categories = await SupabaseDbService.getCategories();
     return NextResponse.json({
       success: true,
+      count: categories.length,
       data: categories,
     });
   } catch (error: any) {
@@ -16,10 +17,18 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    return NextResponse.json({ success: true, data: body }, { status: 201 });
+    if (!body.name) {
+      return NextResponse.json(
+        { success: false, error: 'Category name is required' },
+        { status: 400 }
+      );
+    }
+
+    const created = await SupabaseDbService.createCategory(body);
+    return NextResponse.json({ success: true, data: created }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create category' },

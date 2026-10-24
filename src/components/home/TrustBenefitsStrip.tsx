@@ -75,7 +75,6 @@ export const TrustBenefitsStrip: React.FC = () => {
   const [isPaused, setIsPaused] = useState(false);
   const resumeTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Click or touch pauses the train animation and restarts it automatically after 3 seconds
   const handlePauseWithResume = () => {
     setIsPaused(true);
     if (resumeTimeoutRef.current) {
@@ -94,64 +93,89 @@ export const TrustBenefitsStrip: React.FC = () => {
     };
   }, []);
 
-  // Duplicate for seamless 100% infinite marquee loop
   const marqueeItems = [...BENEFITS, ...BENEFITS];
 
   return (
     <section
       aria-label="Trust and Reliability Guarantees"
-      className="relative w-full bg-gradient-to-r from-white via-[#F8FBFE] to-white border-b border-[#DFEBF8] py-3.5 sm:py-4 overflow-hidden select-none cursor-pointer"
-      onClick={handlePauseWithResume}
-      onTouchStart={handlePauseWithResume}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => {
-        // If not already in a click 3s timeout, resume immediately
-        if (!resumeTimeoutRef.current) {
-          setIsPaused(false);
-        }
-      }}
+      className="relative w-full bg-white border-b border-brand-border/60 py-3 sm:py-4 overflow-hidden select-none"
     >
-      {/* Edge Gradient Masks for Silky Fade In / Fade Out */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-20 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10" />
+      {/* Mobile 3-Card Strip matching Screen 1 */}
+      <div className="grid grid-cols-3 gap-2 px-4 sm:hidden">
+        <div className="bg-white rounded-2xl border border-brand-border/80 p-2.5 flex flex-col items-center text-center shadow-xs">
+          <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary mb-1">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <span className="text-[11px] font-bold text-brand-dark">Best Deals</span>
+        </div>
 
-      {/* Infinite Train-like Forward Marquee (Accelerated duration from 28s to 15s for lively responsive speed) */}
-      <motion.div
-        className="flex items-center gap-4 sm:gap-6 whitespace-nowrap will-change-transform"
-        animate={{
-          x: isPaused ? undefined : ['0%', '-50%'],
-        }}
-        transition={{
-          x: {
-            repeat: Infinity,
-            repeatType: 'loop',
-            duration: 15,
-            ease: 'linear',
-          },
+        <div className="bg-white rounded-2xl border border-brand-border/80 p-2.5 flex flex-col items-center text-center shadow-xs">
+          <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary mb-1">
+            <Truck className="w-4 h-4" />
+          </div>
+          <span className="text-[11px] font-bold text-brand-dark">Fast Delivery</span>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-brand-border/80 p-2.5 flex flex-col items-center text-center shadow-xs">
+          <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary mb-1">
+            <CreditCard className="w-4 h-4" />
+          </div>
+          <span className="text-[11px] font-bold text-brand-dark">Secure Payment</span>
+        </div>
+      </div>
+
+      {/* Desktop / Tablet Smooth Marquee */}
+      <div
+        className="hidden sm:block cursor-pointer relative"
+        onClick={handlePauseWithResume}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => {
+          if (!resumeTimeoutRef.current) {
+            setIsPaused(false);
+          }
         }}
       >
-        {marqueeItems.map((item, idx) => {
-          const Icon = item.icon;
-          return (
-            <div
-              key={`${item.id}-${idx}`}
-              className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/90 hover:bg-[#EAF7FF] border border-[#DFEBF8] hover:border-[#0756C9] shadow-xs transition-all duration-200 group flex-shrink-0 cursor-default"
-            >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#F0F7FF] group-hover:bg-[#0756C9] text-[#0756C9] group-hover:text-white flex items-center justify-center transition-colors duration-200 border border-[#DFEBF8] flex-shrink-0">
-                <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform group-hover:scale-110" />
+        {/* Edge Gradient Masks */}
+        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10" />
+
+        <motion.div
+          className="flex items-center gap-6 whitespace-nowrap will-change-transform"
+          animate={{
+            x: isPaused ? undefined : ['0%', '-50%'],
+          }}
+          transition={{
+            x: {
+              repeat: Infinity,
+              repeatType: 'loop',
+              duration: 16,
+              ease: 'linear',
+            },
+          }}
+        >
+          {marqueeItems.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={`${item.id}-${idx}`}
+                className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/90 hover:bg-brand-light/60 border border-brand-border hover:border-brand-primary shadow-xs transition-all duration-200 group flex-shrink-0 cursor-default"
+              >
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-light group-hover:bg-brand-primary text-brand-primary group-hover:text-white flex items-center justify-center transition-colors duration-200 border border-brand-border flex-shrink-0">
+                  <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform group-hover:scale-110" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs sm:text-sm font-bold text-brand-dark group-hover:text-brand-primary transition-colors leading-tight">
+                    {item.title}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] text-brand-muted font-medium leading-tight mt-0.5">
+                    {item.subtitle}
+                  </p>
+                </div>
               </div>
-              <div className="text-left">
-                <p className="text-xs sm:text-sm font-black text-[#102A56] group-hover:text-[#0756C9] transition-colors leading-tight">
-                  {item.title}
-                </p>
-                <p className="text-[10px] sm:text-[11px] text-[#52749D] font-medium leading-tight mt-0.5">
-                  {item.subtitle}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </motion.div>
+            );
+          })}
+        </motion.div>
+      </div>
     </section>
   );
 };

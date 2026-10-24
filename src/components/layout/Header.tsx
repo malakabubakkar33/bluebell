@@ -20,10 +20,17 @@ import {
   ShoppingBag,
   ArrowRight,
   Sparkles,
+  LayoutGrid,
+  Smartphone,
+  Package,
+  Wallet,
+  Settings,
+  HelpCircle,
+  ChevronLeft,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { PRODUCTS } from '@/lib/data/mockData';
+import { useProducts } from '@/context/ProductsContext';
 import { BrandLogo } from '@/components/common/BrandLogo';
 
 // Mega Dropdown Data for Categories
@@ -93,6 +100,7 @@ type MegaKey = 'iphone' | 'samsung' | 'tablets' | 'watches' | 'accessories';
 export const Header: React.FC = () => {
   const { totalItems, subtotal, wishlist, setIsDrawerOpen } = useCart();
   const { user, isAdmin } = useAuth();
+  const { products: storeCatalogProducts } = useProducts();
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -248,9 +256,9 @@ export const Header: React.FC = () => {
     }
   };
 
-  // Search filtering
+  // Search filtering from live authoritative products catalog
   const searchResults = searchQuery.trim().length > 1
-    ? PRODUCTS.filter((p) =>
+    ? (storeCatalogProducts || []).filter((p) =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -466,7 +474,7 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Right: Actions Cluster (Search, Wishlist, Cart, Account, Hamburger) */}
-            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
               {/* 1. Search Icon Button */}
               {/* Desktop search toggle (slide-out in header) */}
               {!isSearchOpen && (
@@ -474,7 +482,7 @@ export const Header: React.FC = () => {
                   type="button"
                   onClick={() => setIsSearchOpen(true)}
                   aria-label="Open search bar"
-                  className="hidden md:flex w-9 h-9 rounded-full bg-[#F4F9FF] hover:bg-[#EAF7FF] text-[#0756C9] border border-[#C7E5FF] items-center justify-center transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+                  className="hidden md:flex w-9 h-9 rounded-full bg-[#EDF6FF] hover:bg-[#DCEBFA] text-[#0866E8] border border-[#DCEBFA] items-center justify-center transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
                   title="Search products"
                 >
                   <Search className="w-4 h-4" />
@@ -486,7 +494,7 @@ export const Header: React.FC = () => {
                 type="button"
                 onClick={() => setIsMobileSearchOpen(true)}
                 aria-label="Open search on mobile"
-                className="flex md:hidden w-9 h-9 rounded-full bg-[#F4F9FF] hover:bg-[#EAF7FF] text-[#0756C9] border border-[#C7E5FF] items-center justify-center transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+                className="flex md:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] hover:bg-[#DCEBFA] text-[#0866E8] border border-[#DCEBFA] items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
                 title="Search products"
               >
                 <Search className="w-4 h-4" />
@@ -495,66 +503,82 @@ export const Header: React.FC = () => {
               {/* 2. Wishlist Link Button (links to /wishlist) */}
               <Link
                 href="/wishlist"
-                className="relative w-9 h-9 rounded-full bg-[#F4F9FF] hover:bg-rose-50 text-[#52749D] hover:text-rose-500 border border-[#C7E5FF] hover:border-rose-200 flex items-center justify-center transition-all shadow-xs cursor-pointer"
+                className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] hover:bg-rose-50 text-[#0866E8] hover:text-[#E5485B] border border-[#DCEBFA] hover:border-rose-200 flex items-center justify-center transition-all shadow-xs cursor-pointer"
                 title="View My Wishlist"
               >
                 <Heart className="w-4 h-4" />
                 {wishlist.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-xs animate-pulse">
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#E5485B] text-white text-[9px] font-black flex items-center justify-center shadow-xs">
                     {wishlist.length}
                   </span>
                 )}
               </Link>
 
-              {/* 3. Designed Cart Pill Button */}
+              {/* 3. Designed Cart Button */}
+              {/* Mobile Cart Link directly to /cart */}
+              <Link
+                href="/cart"
+                className="relative md:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] text-[#0866E8] border border-[#DCEBFA] flex items-center justify-center shadow-xs transition-transform active:scale-95"
+                title="View Shopping Cart"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#E5485B] text-white text-[9px] font-black flex items-center justify-center shadow-xs">
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
+
+              {/* Desktop Cart Pill with Drawer Open */}
               <button
                 type="button"
                 onClick={() => setIsDrawerOpen(true)}
-                className="flex items-center gap-2 bg-[#F4F9FF] hover:bg-[#EAF7FF] border border-[#C7E5FF] hover:border-[#078BEE] rounded-full py-1.5 px-3 transition-all text-[#102A56] shadow-xs cursor-pointer group"
+                className="hidden md:flex items-center gap-2 bg-[#EDF6FF] hover:bg-[#DCEBFA] border border-[#DCEBFA] rounded-full py-1.5 px-3 transition-all text-[#102A50] shadow-xs cursor-pointer group"
                 title="View Shopping Cart"
               >
-                <div className="relative w-7 h-7 rounded-full bg-white text-[#0756C9] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                <div className="relative w-7 h-7 rounded-full bg-white text-[#0866E8] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
                   <ShoppingCart className="w-3.5 h-3.5" />
                   {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#0756C9] text-white text-[9px] font-black flex items-center justify-center shadow-xs">
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#E5485B] text-white text-[9px] font-black flex items-center justify-center shadow-xs">
                       {totalItems}
                     </span>
                   )}
                 </div>
-                <div className="hidden sm:flex flex-col text-left leading-tight pr-1">
-                  <span className="text-[9px] text-[#8394AB] font-bold uppercase">Cart</span>
-                  <span className="text-xs font-black text-[#102A56] font-mono group-hover:text-[#0756C9] transition-colors">
+                <div className="flex flex-col text-left leading-tight pr-1">
+                  <span className="text-[9px] text-[#647A98] font-bold uppercase">Cart</span>
+                  <span className="text-xs font-black text-[#102A50] font-mono group-hover:text-[#0866E8] transition-colors">
                     Rs. {subtotal.toLocaleString()}
                   </span>
                 </div>
               </button>
 
-              {/* 4. Account / Login Area — Placed LAST as requested */}
+              {/* 4. Account / Login Area */}
               <Link
                 href={user ? (isAdmin ? '/admin' : '/account') : '/auth/login'}
-                className="flex items-center gap-2 p-1.5 rounded-full hover:bg-[#F4F9FF] text-[#102A56] hover:text-[#0756C9] transition-colors border border-transparent hover:border-[#C7E5FF]"
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-[#EDF6FF] text-[#102A50] hover:text-[#0866E8] transition-colors"
                 title={user ? (isAdmin ? 'Admin Dashboard' : 'My Account') : 'Sign In / Register'}
               >
-                <div className="w-8 h-8 rounded-full bg-[#EAF7FF] border border-[#C7E5FF] text-[#0756C9] flex items-center justify-center shadow-xs">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] border border-[#DCEBFA] text-[#0866E8] flex items-center justify-center shadow-xs">
                   <User className="w-4 h-4" />
                 </div>
                 <div className="hidden xl:flex flex-col text-left leading-tight pr-1">
-                  <span className="text-[9px] text-[#8394AB] font-bold uppercase">Account</span>
-                  <span className="text-xs font-bold text-[#102A56] truncate max-w-[90px]">
+                  <span className="text-[9px] text-[#647A98] font-bold uppercase">Account</span>
+                  <span className="text-xs font-bold text-[#102A50] truncate max-w-[90px]">
                     {user ? (isAdmin ? 'Admin' : user.name.split(' ')[0]) : 'Sign In'}
                   </span>
                 </div>
               </Link>
 
-              {/* 5. Mobile 2-Line Hamburger Menu Trigger */}
+              {/* 5. Mobile Hamburger Menu Trigger */}
               <button
                 type="button"
                 onClick={() => setIsSideNavOpen(true)}
-                className="md:hidden flex flex-col justify-center items-center w-9 h-9 rounded-full bg-[#F4F9FF] text-[#102A56] border border-[#C7E5FF] p-1.5 gap-1.5 shadow-xs cursor-pointer hover:bg-[#EAF7FF]"
+                className="md:hidden flex flex-col justify-center items-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] text-[#102A50] border border-[#DCEBFA] p-1.5 gap-1 shadow-xs cursor-pointer hover:bg-[#DCEBFA] active:scale-95"
                 aria-label="Toggle navigation drawer"
               >
-                <span className="w-4 h-[2px] bg-[#0756C9] rounded-full" />
-                <span className="w-3 h-[2px] bg-[#078BEE] rounded-full" />
+                <span className="w-4 h-[2px] bg-[#0866E8] rounded-full" />
+                <span className="w-3.5 h-[2px] bg-[#18A8F8] rounded-full" />
+                <span className="w-2.5 h-[2px] bg-[#0866E8] rounded-full" />
               </button>
             </div>
           </div>
@@ -807,125 +831,136 @@ export const Header: React.FC = () => {
                 isMobileScreen ? 'border-l border-[#DFEBF8] rounded-l-3xl' : 'border-r border-[#DFEBF8] rounded-r-3xl'
               }`}
             >
-              {/* Drawer Top Header */}
-              <div>
-                <div className="p-4 border-b border-[#DFEBF8] flex items-center justify-between">
-                  <BrandLogo variant="header" />
-                  <button
-                    type="button"
+              {/* Drawer Content Matching Screen 10 */}
+              <div className="flex flex-col h-full justify-between">
+                <div>
+                  {/* Top Bar: Logo & Close Button */}
+                  <div className="p-4 border-b border-[#DCEBFA] flex items-center justify-between">
+                    <BrandLogo variant="compact" />
+                    <button
+                      type="button"
+                      onClick={() => setIsSideNavOpen(false)}
+                      className="p-1.5 rounded-full bg-[#EDF6FF] hover:bg-[#DCEBFA] text-[#0866E8] border border-[#DCEBFA] transition-colors cursor-pointer"
+                      aria-label="Close Navigation"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Customer Profile Card */}
+                  <Link
+                    href={user ? '/account' : '/auth/login'}
                     onClick={() => setIsSideNavOpen(false)}
-                    className="p-1.5 rounded-full bg-[#F4F9FF] hover:bg-[#EAF7FF] text-[#52749D] border border-[#C7E5FF] transition-colors cursor-pointer"
-                    aria-label="Close Navigation"
+                    className="flex items-center gap-3 p-4 border-b border-[#DCEBFA] hover:bg-[#F7FBFF] transition-colors"
                   >
-                    <X className="w-4 h-4" />
-                  </button>
+                    <div className="w-11 h-11 rounded-full bg-[#0866E8] text-white flex items-center justify-center font-bold text-base shadow-sm">
+                      {user ? user.name.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-xs font-black text-[#102A50] truncate">
+                        {user ? user.name : 'Sign In / Register'}
+                      </h3>
+                      <p className="text-[11px] text-[#647A98] truncate">
+                        {user ? user.email : 'Manage your orders & profile'}
+                      </p>
+                    </div>
+                  </Link>
+
+                  {/* Primary Nav Links */}
+                  <div className="p-3 space-y-1">
+                    <Link
+                      href="/"
+                      onClick={() => setIsSideNavOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A50] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors"
+                    >
+                      <Home className="w-4 h-4 text-[#0866E8]" />
+                      <span>Home</span>
+                    </Link>
+
+                    <Link
+                      href="/products"
+                      onClick={() => setIsSideNavOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A50] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors"
+                    >
+                      <Smartphone className="w-4 h-4 text-[#0866E8]" />
+                      <span>Shop All Devices</span>
+                    </Link>
+
+                    <Link
+                      href="/categories"
+                      onClick={() => setIsSideNavOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A50] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors"
+                    >
+                      <LayoutGrid className="w-4 h-4 text-[#0866E8]" />
+                      <span>Categories</span>
+                    </Link>
+
+                    <Link
+                      href={user ? '/account' : '/auth/login'}
+                      onClick={() => setIsSideNavOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A50] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors"
+                    >
+                      <Package className="w-4 h-4 text-[#0866E8]" />
+                      <span>My Orders</span>
+                    </Link>
+
+                    <Link
+                      href="/wishlist"
+                      onClick={() => setIsSideNavOpen(false)}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A50] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Heart className="w-4 h-4 text-[#E5485B]" />
+                        <span>Wishlist</span>
+                      </div>
+                      {wishlist.length > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-[#E5485B] border border-rose-200">
+                          {wishlist.length}
+                        </span>
+                      )}
+                    </Link>
+
+                    <Link
+                      href="/account"
+                      onClick={() => setIsSideNavOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A50] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors"
+                    >
+                      <Wallet className="w-4 h-4 text-[#0866E8]" />
+                      <span>Wallet</span>
+                    </Link>
+
+                    <Link
+                      href="/account"
+                      onClick={() => setIsSideNavOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A50] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors"
+                    >
+                      <Settings className="w-4 h-4 text-[#0866E8]" />
+                      <span>Settings</span>
+                    </Link>
+
+                    <Link
+                      href="/contact"
+                      onClick={() => setIsSideNavOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A50] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors"
+                    >
+                      <HelpCircle className="w-4 h-4 text-[#0866E8]" />
+                      <span>Help &amp; Support</span>
+                    </Link>
+                  </div>
                 </div>
 
-                {/* Primary Nav Links */}
-                <div className="p-4 space-y-1 border-b border-[#DFEBF8]">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-[#8394AB] block mb-1.5 px-2">
-                    Navigation
-                  </span>
-
-                  <Link
-                    href="/"
-                    onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A56] hover:text-[#0756C9] hover:bg-[#EAF7FF] transition-colors"
-                  >
-                    <Home className="w-4 h-4 text-[#0756C9]" />
-                    <span>Home Page</span>
-                  </Link>
-
-                  <Link
-                    href="/products"
-                    onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A56] hover:text-[#0756C9] hover:bg-[#EAF7FF] transition-colors"
-                  >
-                    <ShoppingBag className="w-4 h-4 text-[#0756C9]" />
-                    <span>Shop All Devices</span>
-                  </Link>
-
-                  <Link
-                    href="/wishlist"
-                    onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A56] hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                  >
-                    <Heart className="w-4 h-4 text-rose-500" />
-                    <span>My Wishlist ({wishlist.length})</span>
-                  </Link>
-
-                  <Link
-                    href="/track-order"
-                    onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-[#102A56] hover:text-[#0756C9] hover:bg-[#EAF7FF] transition-colors"
-                  >
-                    <Truck className="w-4 h-4 text-[#0756C9]" />
-                    <span>Track Order</span>
-                  </Link>
+                {/* Bottom Promo Card Matching Screen 10 */}
+                <div className="p-3">
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#0866E8] to-[#18A8F8] text-white shadow-md shadow-[#0866E8]/20 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0">
+                      <Truck className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black leading-tight">Free Delivery Across Pakistan</h4>
+                      <p className="text-[10px] text-white/90 mt-0.5">On orders above Rs. 25,000</p>
+                    </div>
+                  </div>
                 </div>
-
-                {/* Categories */}
-                <div className="p-4 space-y-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-[#8394AB] block mb-1.5 px-2">
-                    Categories
-                  </span>
-
-                  <Link
-                    href="/products?brand=Apple"
-                    onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-[#102A56] hover:bg-[#EAF7FF] hover:text-[#0756C9] transition-colors"
-                  >
-                    <span>Apple iPhone</span>
-                    <span className="text-[10px] text-[#0756C9] font-bold">16 / 15 Series</span>
-                  </Link>
-
-                  <Link
-                    href="/products?brand=Samsung"
-                    onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-[#102A56] hover:bg-[#EAF7FF] hover:text-[#0756C9] transition-colors"
-                  >
-                    <span>Samsung Galaxy</span>
-                    <span className="text-[10px] text-[#0756C9] font-bold">S24 / Fold</span>
-                  </Link>
-
-                  <Link
-                    href="/products?category=tablets"
-                    onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-[#102A56] hover:bg-[#EAF7FF] hover:text-[#0756C9] transition-colors"
-                  >
-                    <span>iPad &amp; Tablets</span>
-                    <span className="text-[10px] text-[#0756C9] font-bold">M4 Pro / Air</span>
-                  </Link>
-
-                  <Link
-                    href="/products?category=smart-watches"
-                    onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-[#102A56] hover:bg-[#EAF7FF] hover:text-[#0756C9] transition-colors"
-                  >
-                    <span>Smart Watches</span>
-                    <span className="text-[10px] text-[#0756C9] font-bold">Ultra / Watch 9</span>
-                  </Link>
-
-                  <Link
-                    href="/products?category=accessories"
-                    onClick={() => setIsSideNavOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-[#102A56] hover:bg-[#EAF7FF] hover:text-[#0756C9] transition-colors"
-                  >
-                    <span>Accessories</span>
-                    <span className="text-[10px] text-[#0756C9] font-bold">Audio &amp; GaN</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Drawer Bottom Contact Strip */}
-              <div className="p-4 bg-[#F4F9FF] border-t border-[#DFEBF8] text-xs space-y-2">
-                <div className="flex items-center gap-2 text-[#52749D]">
-                  <Phone className="w-3.5 h-3.5 text-[#0756C9]" />
-                  <span className="font-semibold text-[#102A56]">+92 300 1234567</span>
-                </div>
-                <p className="text-[10px] text-[#8394AB]">
-                  Saddar Road, Peshawar • 100% PTA Approved
-                </p>
               </div>
             </motion.div>
           </div>
@@ -945,10 +980,21 @@ export const Header: React.FC = () => {
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-[100] bg-white flex flex-col overflow-hidden"
           >
-            {/* Top Bar with Big Search Input */}
-            <div className="p-4 border-b border-[#DFEBF8] flex items-center gap-3 bg-white shadow-xs">
+            {/* Top Bar with Chevron, Search Input & Cancel Matching Screen 9 */}
+            <div className="p-3 sm:p-4 border-b border-[#DCEBFA] flex items-center gap-2.5 bg-white shadow-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileSearchOpen(false);
+                  setSearchQuery('');
+                }}
+                className="w-9 h-9 rounded-full bg-[#EDF6FF] hover:bg-[#DCEBFA] text-[#0866E8] flex items-center justify-center transition-colors border border-[#DCEBFA] flex-shrink-0"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
               <div className="relative flex-1 flex items-center">
-                <Search className="absolute left-3.5 w-4 h-4 text-[#0756C9] pointer-events-none" />
+                <Search className="absolute left-3.5 w-4 h-4 text-[#0866E8] pointer-events-none" />
                 <input
                   ref={mobileSearchInputRef}
                   type="text"
@@ -963,26 +1009,27 @@ export const Header: React.FC = () => {
                       }
                     }
                   }}
-                  placeholder="Search iPhone, Samsung, iPad..."
-                  className="w-full bg-[#F4F9FF] border border-[#C7E5FF] rounded-2xl py-3 pl-10 pr-10 text-base text-[#102A56] placeholder-[#8394AB] focus:outline-none focus:border-[#0756C9] focus:ring-4 focus:ring-[#0756C9]/10 shadow-inner"
+                  placeholder="Search products..."
+                  className="w-full bg-[#EDF6FF] border border-[#DCEBFA] rounded-2xl py-2.5 pl-10 pr-9 text-base text-[#102A50] placeholder-[#647A98] focus:outline-none focus:border-[#0866E8] focus:ring-4 focus:ring-[#0866E8]/10"
                 />
                 {searchQuery.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 p-1 rounded-full text-slate-400 hover:text-slate-600"
+                    className="absolute right-2.5 p-1 rounded-full text-slate-400 hover:text-slate-600"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
+
               <button
                 type="button"
                 onClick={() => {
                   setIsMobileSearchOpen(false);
                   setSearchQuery('');
                 }}
-                className="text-xs font-bold text-[#0756C9] hover:text-[#063B8E] px-2 py-2 cursor-pointer"
+                className="text-xs font-bold text-[#0866E8] hover:text-[#0645B5] px-2 py-2 cursor-pointer flex-shrink-0"
               >
                 Cancel
               </button>
@@ -990,32 +1037,61 @@ export const Header: React.FC = () => {
 
             {/* Suggestions & Results Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {/* Popular Searches Tags */}
+              {/* Screen 9: Recent Searches & Popular Searches */}
               {searchQuery.trim().length === 0 && (
-                <div>
-                  <span className="text-[11px] font-black uppercase tracking-wider text-[#8394AB] block mb-3">
-                    🔥 Popular Searches
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      'iPhone 16 Pro Max',
-                      'Samsung S24 Ultra',
-                      'iPad Pro M4',
-                      'Apple Watch Ultra',
-                      'AirPods Pro 2',
-                      'MagSafe Charger',
-                    ].map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => {
-                          setSearchQuery(tag);
-                        }}
-                        className="px-3.5 py-2 rounded-full bg-[#F4F9FF] hover:bg-[#EAF7FF] text-[#102A56] text-xs font-semibold border border-[#C7E5FF] transition-colors shadow-xs cursor-pointer"
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                <div className="space-y-6">
+                  {/* Recent Searches */}
+                  <div>
+                    <span className="text-xs font-black text-[#102A50] block mb-2.5">
+                      Recent Searches
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {['iPhone 15', 'Samsung S24', 'Airpods'].map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setSearchQuery(tag)}
+                          className="px-3.5 py-1.5 rounded-full bg-[#EDF6FF] hover:bg-[#DCEBFA] text-[#102A50] text-xs font-semibold border border-[#DCEBFA] transition-colors"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Popular Searches */}
+                  <div>
+                    <span className="text-xs font-black text-[#102A50] block mb-2">
+                      Popular Searches
+                    </span>
+                    <div className="space-y-1">
+                      {[
+                        'iPhone 15 Pro Max',
+                        'Samsung Galaxy S24 Ultra',
+                        'iPad Air',
+                        'Smart Watches',
+                        'Mobile Accessories',
+                      ].map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => {
+                            if (item === 'Smart Watches') {
+                              router.push('/products?category=smart-watches');
+                            } else if (item === 'Mobile Accessories') {
+                              router.push('/products?category=accessories');
+                            } else {
+                              router.push(`/products?search=${encodeURIComponent(item)}`);
+                            }
+                            setIsMobileSearchOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 py-2.5 px-2 rounded-xl text-xs font-medium text-[#647A98] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors text-left"
+                        >
+                          <Search className="w-3.5 h-3.5 text-[#647A98] flex-shrink-0" />
+                          <span>{item}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}

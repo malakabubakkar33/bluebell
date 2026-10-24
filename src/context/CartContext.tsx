@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, CartItem, ProductVariant } from '@/types';
-import { PRODUCTS } from '@/lib/data/mockData';
 
 interface CartContextType {
   cart: CartItem[];

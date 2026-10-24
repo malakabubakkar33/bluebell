@@ -10,35 +10,48 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50: "#F2F8FF",  // Light Blue Background
-          100: "#DFEBF8", // Light Border
-          200: "#BAE6FD",
-          300: "#7DD3FC",
-          400: "#10A9F4", // Accent Blue
-          500: "#0878F9", // Primary Bright Blue (#0878F9)
-          600: "#0665D0", // Primary Blue Hover
-          700: "#044FA8",
-          800: "#102A56", // Dark Navy Text
-          900: "#0A192F", // Deep Navy Footer
+          primary: "#0866E8",   // Primary blue
+          deep: "#0645B5",      // Deep blue
+          accent: "#18A8F8",    // Accent blue
+          light: "#EDF6FF",     // Light blue
+          surface: "#F7FBFF",   // Very light blue
+          border: "#DCEBFA",    // Border
+          dark: "#102A50",      // Primary text
+          muted: "#647A98",     // Secondary text
+          success: "#16A675",   // Success
+          error: "#E5485B",     // Error
+          50: "#F7FBFF",
+          100: "#EDF6FF",
+          200: "#DCEBFA",
+          300: "#BAE6FD",
+          400: "#18A8F8",
+          500: "#0866E8",
+          600: "#0645B5",
+          700: "#04358C",
+          800: "#102A50",
+          900: "#0A192F",
         },
         navy: {
-          800: "#102A56", // Dark Navy Text
-          900: "#0A192F", // Footer Navy
+          800: "#102A50",
+          900: "#0A192F",
           950: "#061224",
         },
         theme: {
-          primary: "#0878F9",
-          accent: "#10A9F4",
-          navy: "#102A56",
-          body: "#536780",
-          muted: "#8394AB",
-          bgLight: "#F2F8FF",
-          border: "#DFEBF8",
+          primary: "#0866E8",
+          deep: "#0645B5",
+          accent: "#18A8F8",
+          navy: "#102A50",
+          body: "#102A50",
+          muted: "#647A98",
+          bgLight: "#EDF6FF",
+          border: "#DCEBFA",
+          success: "#16A675",
+          error: "#E5485B",
         },
         surface: {
-          50: "#F8FAFC",
-          100: "#F1F5F9",
-          200: "#E2E8F0",
+          50: "#F7FBFF",
+          100: "#EDF6FF",
+          200: "#DCEBFA",
         }
       },
       boxShadow: {

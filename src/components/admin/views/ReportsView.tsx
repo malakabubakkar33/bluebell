@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Calendar,
   Download,
@@ -8,39 +8,79 @@ import {
   DollarSign,
   ShoppingBag,
   CreditCard,
+  BarChart3,
+  Inbox,
 } from 'lucide-react';
 
-export const ReportsView: React.FC = () => {
-  const [activeSubTab, setActiveSubTab] = useState<'sales' | 'products' | 'customers' | 'orders'>('sales');
-  const [dateRange, setDateRange] = useState('Apr 1, 2026 - Apr 30, 2026');
+interface ReportsViewProps {
+  ordersList?: any[];
+}
 
-  // KPIs initialized to 0 for initial store launch
+export const ReportsView: React.FC<ReportsViewProps> = ({ ordersList = [] }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'sales' | 'products' | 'customers' | 'orders'>('sales');
+  const [dateRange] = useState('All Time (Live DB)');
+
+  // Authoritative calculations from real database orders
+  const validOrders = useMemo(() => {
+    return ordersList.filter((o) => o.status !== 'cancelled');
+  }, [ordersList]);
+
+  const totalSales = useMemo(() => {
+    return validOrders.reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+  }, [validOrders]);
+
+  const totalOrdersCount = ordersList.length;
+  const aov = totalOrdersCount > 0 ? Math.round(totalSales / totalOrdersCount) : 0;
+
+  // Real daily breakdown from actual order dates
+  const dailySalesData = useMemo(() => {
+    const map = new Map<string, number>();
+    ordersList.forEach((o) => {
+      const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today';
+      map.set(dateStr, (map.get(dateStr) || 0) + (Number(o.total) || 0));
+    });
+    return Array.from(map.entries()).map(([date, amount]) => ({ date, amount }));
+  }, [ordersList]);
+
   const REPORT_KPIS = [
     {
-      title: 'Total Sales',
-      value: 'Rs. 0',
-      change: '0%',
+      title: 'Gross Revenue',
+      value: `Rs. ${totalSales.toLocaleString()}`,
+      subtext: totalOrdersCount === 0 ? 'No completed orders' : `${validOrders.length} fulfilled orders`,
       icon: DollarSign,
       iconBg: 'bg-blue-50 text-[#1877F2]',
     },
     {
-      title: 'Total Orders',
-      value: '0',
-      change: '0%',
+      title: 'Total Order Volume',
+      value: `${totalOrdersCount}`,
+      subtext: totalOrdersCount === 0 ? 'Zero orders recorded' : 'Real database orders',
       icon: ShoppingBag,
       iconBg: 'bg-emerald-50 text-emerald-600',
     },
     {
-      title: 'Average Order Value',
-      value: 'Rs. 0',
-      change: '0%',
+      title: 'Average Order Value (AOV)',
+      value: `Rs. ${aov.toLocaleString()}`,
+      subtext: totalOrdersCount === 0 ? 'Rs. 0 per order' : 'Calculated from valid orders',
       icon: CreditCard,
       iconBg: 'bg-sky-50 text-sky-600',
     },
   ];
 
   const handleExport = () => {
-    alert('Generating Blue Bells Monthly Financial Report for ' + dateRange);
+    if (ordersList.length === 0) {
+      alert('No database orders available to export.');
+      return;
+    }
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      ['Order ID,Customer,Phone,Total,Status,Date', ...ordersList.map((o) => `"${o.id}","${o.customer_name}","${o.customer_phone}",${o.total},"${o.status}","${o.created_at || 'Today'}"`)].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `bluebell_sales_report_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -52,7 +92,7 @@ export const ReportsView: React.FC = () => {
             Reports &amp; Analytics
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            View sales reports and export data.
+            Store performance and financial summaries calculated purely from database orders.
           </p>
         </div>
 
@@ -64,10 +104,10 @@ export const ReportsView: React.FC = () => {
 
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1877F2] hover:bg-blue-600 text-white font-bold text-xs shadow-md transition-all"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1877F2] hover:bg-blue-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Export Report</span>
+            <span>Export CSV Report</span>
           </button>
         </div>
       </div>
@@ -107,71 +147,57 @@ export const ReportsView: React.FC = () => {
                   <Icon className="w-5 h-5" />
                 </div>
               </div>
-              <div className="flex items-center gap-1 mt-3 pt-3 border-t border-slate-100 text-xs font-bold text-emerald-600">
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>{kpi.change} vs previous month</span>
+              <div className="flex items-center gap-1 mt-3 pt-3 border-t border-slate-100 text-xs font-medium text-slate-500">
+                <span>{kpi.subtext}</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* 4. Large Sales Trend Graph */}
+      {/* 4. Sales Progression Chart */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200/70 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-base font-bold text-slate-900">Revenue Progression</h3>
-            <p className="text-xs text-slate-400">Daily gross revenue curve (PKR)</p>
+            <p className="text-xs text-slate-400">Order revenue recorded across date periods (PKR)</p>
           </div>
-          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-            +18% Growth
+          <span className="text-xs font-bold text-[#1877F2] bg-blue-50 px-2.5 py-1 rounded-full">
+            Authoritative DB
           </span>
         </div>
 
-        <div className="h-72 w-full pt-4 pb-2 relative">
-          <svg className="w-full h-full overflow-visible" viewBox="0 0 700 240" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="reportGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#1877F2" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#1877F2" stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
+        {totalOrdersCount === 0 ? (
+          <div className="h-64 flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+            <Inbox className="w-10 h-10 text-slate-300 mb-2" />
+            <h4 className="text-sm font-bold text-slate-700">No Sales History Recorded (Rs. 0)</h4>
+            <p className="text-xs text-slate-400 mt-1 max-w-sm">
+              As orders are created and verified through the customer website, daily revenue trends will automatically visualize here.
+            </p>
+          </div>
+        ) : (
+          <div className="h-64 w-full flex flex-col justify-end space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 items-end h-48 pt-4">
+              {dailySalesData.map((d, i) => {
+                const maxVal = Math.max(...dailySalesData.map((it) => it.amount), 1);
+                const heightPercent = Math.max(15, Math.round((d.amount / maxVal) * 100));
 
-            {/* Grid */}
-            <line x1="50" y1="20" x2="680" y2="20" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="50" y1="80" x2="680" y2="80" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="50" y1="140" x2="680" y2="140" stroke="#f1f5f9" strokeWidth="1" />
-            <line x1="50" y1="200" x2="680" y2="200" stroke="#f1f5f9" strokeWidth="1" />
-
-            {/* Y Labels */}
-            <text x="5" y="24" fill="#94a3b8" fontSize="11">Rs. 300K</text>
-            <text x="5" y="84" fill="#94a3b8" fontSize="11">Rs. 200K</text>
-            <text x="5" y="144" fill="#94a3b8" fontSize="11">Rs. 100K</text>
-            <text x="25" y="204" fill="#94a3b8" fontSize="11">Rs. 0</text>
-
-            {/* Path */}
-            <path
-              d="M 60 180 Q 180 130, 260 160 T 420 100 T 560 70 T 670 110 L 670 200 L 60 200 Z"
-              fill="url(#reportGrad)"
-            />
-            <path
-              d="M 60 180 Q 180 130, 260 160 T 420 100 T 560 70 T 670 110"
-              fill="none"
-              stroke="#1877F2"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-            />
-
-            {/* X Labels */}
-            <text x="60" y="225" fill="#64748b" fontSize="11" fontWeight="600">Apr 23</text>
-            <text x="160" y="225" fill="#64748b" fontSize="11" fontWeight="600">Apr 24</text>
-            <text x="260" y="225" fill="#64748b" fontSize="11" fontWeight="600">Apr 25</text>
-            <text x="360" y="225" fill="#64748b" fontSize="11" fontWeight="600">Apr 26</text>
-            <text x="460" y="225" fill="#64748b" fontSize="11" fontWeight="600">Apr 27</text>
-            <text x="560" y="225" fill="#64748b" fontSize="11" fontWeight="600">Apr 28</text>
-            <text x="660" y="225" fill="#64748b" fontSize="11" fontWeight="600">Apr 29</text>
-          </svg>
-        </div>
+                return (
+                  <div key={i} className="flex flex-col items-center h-full justify-end gap-2">
+                    <span className="text-[10px] font-mono font-bold text-slate-600">
+                      Rs. {d.amount >= 1000 ? `${Math.round(d.amount / 1000)}k` : d.amount}
+                    </span>
+                    <div
+                      className="w-full bg-[#1877F2] rounded-t-xl hover:bg-blue-600 transition-all"
+                      style={{ height: `${heightPercent}%` }}
+                    />
+                    <span className="text-[10px] font-bold text-slate-400">{d.date}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

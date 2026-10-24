@@ -11,7 +11,8 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import { Product } from '@/types';
+import { Product, Category } from '@/types';
+import { doesProductBelongToCategory } from '@/lib/categoryUtils';
 
 interface InventoryItem {
   id: string;
@@ -22,15 +23,19 @@ interface InventoryItem {
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   image: string;
   category: string;
+  categorySlug?: string;
+  brand?: string;
 }
 
 interface InventoryViewProps {
   productsList: Product[];
+  categoriesList?: Category[];
   onQuickUpdateStock: (productId: string, newStock: number) => void;
 }
 
 export const InventoryView: React.FC<InventoryViewProps> = ({
   productsList,
+  categoriesList = [],
   onQuickUpdateStock,
 }) => {
   const [search, setSearch] = useState('');
@@ -41,69 +46,28 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [stockInput, setStockInput] = useState<number>(0);
   const [skuInput, setSkuInput] = useState<string>('');
 
-  // Local inventory state merged with products
-  const [customInventory, setCustomInventory] = useState<InventoryItem[]>([
-    {
-      id: 'inv-1',
-      name: 'iPhone 15 Pro Max',
-      sku: 'IP15PM-128',
-      stock: 12,
-      reserved: 2,
-      status: 'In Stock',
-      image: '/categories/iphone.svg',
-      category: 'iPhone',
-    },
-    {
-      id: 'inv-2',
-      name: 'Galaxy S24 Ultra',
-      sku: 'GS24U-256',
-      stock: 3,
-      reserved: 1,
-      status: 'Low Stock',
-      image: '/categories/samsung.svg',
-      category: 'Samsung',
-    },
-    {
-      id: 'inv-3',
-      name: 'iPad Air 5th Gen',
-      sku: 'IPA5-64',
-      stock: 15,
-      reserved: 0,
-      status: 'In Stock',
-      image: '/categories/ipad.svg',
-      category: 'iPad',
-    },
-    {
-      id: 'inv-4',
-      name: 'AirPods Pro (2nd Gen)',
-      sku: 'APP2-256',
-      stock: 1,
-      reserved: 1,
-      status: 'Low Stock',
-      image: '/categories/accessories.svg',
-      category: 'Accessories',
-    },
-  ]);
-
-  // Merge with live catalog
+  // Inventory purely calculated from authoritative products catalog
   const allItems = useMemo(() => {
-    const list = [...customInventory];
-    (productsList || []).forEach((p, i) => {
-      if (!list.some((x) => x.id === p.id || x.name === p.name)) {
-        list.push({
-          id: p.id,
-          name: p.name,
-          sku: `${p.brand.slice(0, 3).toUpperCase()}-${Math.floor(100 + i * 20)}`,
-          stock: p.stock || 10,
-          reserved: 0,
-          status: (p.stock || 10) <= 3 ? 'Low Stock' : 'In Stock',
-          image: p.image,
-          category: p.category,
-        });
-      }
+    return (productsList || []).map((p, i) => {
+      const stock = p.stock ?? 10;
+      let status: 'In Stock' | 'Low Stock' | 'Out of Stock' = 'In Stock';
+      if (stock <= 0) status = 'Out of Stock';
+      else if (stock <= 3) status = 'Low Stock';
+
+      return {
+        id: p.id,
+        name: p.name,
+        sku: p.sku || `${(p.brand || 'BB').slice(0, 3).toUpperCase()}-${Math.floor(100 + i * 20)}`,
+        stock,
+        reserved: 0,
+        status,
+        image: p.image || '/categories/iphone.svg',
+        category: p.category || p.categorySlug,
+        categorySlug: p.categorySlug,
+        brand: p.brand,
+      };
     });
-    return list;
-  }, [customInventory, productsList]);
+  }, [productsList]);
 
   const filteredItems = useMemo(() => {
     return allItems.filter((item) => {
@@ -111,7 +75,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         item.name.toLowerCase().includes(search.toLowerCase()) ||
         item.sku.toLowerCase().includes(search.toLowerCase());
       const matchCat =
-        categoryFilter === 'all' || item.category.toLowerCase() === categoryFilter.toLowerCase();
+        categoryFilter === 'all' ||
+        doesProductBelongToCategory(item.categorySlug, item.brand, categoryFilter);
       const matchLow = lowStockOnly ? item.stock <= 5 : true;
       return matchSearch && matchCat && matchLow;
     });
@@ -128,17 +93,6 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     if (!editingItem) return;
 
     const newStock = Number(stockInput);
-    const newStatus: InventoryItem['status'] =
-      newStock <= 0 ? 'Out of Stock' : newStock <= 5 ? 'Low Stock' : 'In Stock';
-
-    setCustomInventory((prev) =>
-      prev.map((item) =>
-        item.id === editingItem.id
-          ? { ...item, stock: newStock, sku: skuInput, status: newStatus }
-          : item
-      )
-    );
-
     onQuickUpdateStock(editingItem.id, newStock);
     setEditingItem(null);
   };
@@ -199,11 +153,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="w-full md:w-44 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-700 outline-none"
           >
-            <option value="all">All Categories</option>
-            <option value="iphone">iPhone</option>
-            <option value="samsung">Samsung</option>
-            <option value="ipad">iPad</option>
-            <option value="accessories">Accessories</option>
+            <option value="all">All Categories ({allItems.length})</option>
+            {categoriesList.map((cat) => (
+              <option key={cat.id} value={cat.slug}>
+                {cat.name} ({cat.itemCount || 0})
+              </option>
+            ))}
           </select>
 
           {/* Low Stock Toggle Switch */}

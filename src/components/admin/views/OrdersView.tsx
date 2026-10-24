@@ -114,9 +114,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
   });
 
   React.useEffect(() => {
-    if (ordersList && ordersList.length > 0) {
-      setInternalOrders(ordersList);
-    }
+    setInternalOrders(ordersList || []);
   }, [ordersList]);
 
   const [activeModalOrder, setActiveModalOrder] = useState<OrderItem | null>(null);

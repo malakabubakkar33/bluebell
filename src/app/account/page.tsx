@@ -4,29 +4,35 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  User,
-  Mail,
-  Phone,
-  MessageCircle,
+  ChevronLeft,
+  Settings,
   Package,
-  Calendar,
-  ShieldCheck,
+  Heart,
+  MapPin,
+  CreditCard,
+  Shield,
+  HelpCircle,
   LogOut,
-  ShoppingBag,
+  ChevronRight,
   ExternalLink,
   CheckCircle2,
+  AlertCircle,
   Clock,
   ArrowRight,
+  User as UserIcon,
 } from 'lucide-react';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Footer } from '@/components/layout/Footer';
+import { BrandLogo } from '@/components/common/BrandLogo';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 
 export default function CustomerAccountPage() {
   const router = useRouter();
   const { user, logout, isAdmin, updateProfile } = useAuth();
+  const { wishlist } = useCart();
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'edit_profile'>('menu');
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -36,6 +42,22 @@ export default function CustomerAccountPage() {
   });
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
+
+  // Fetch live orders for this customer from database
+  React.useEffect(() => {
+    if (user?.email) {
+      setOrdersLoading(true);
+      fetch(`/api/orders?email=${encodeURIComponent(user.email)}`)
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.success && Array.isArray(res.data)) {
+            setUserOrders(res.data);
+          }
+        })
+        .catch((err) => console.error('Failed to load user orders:', err))
+        .finally(() => setOrdersLoading(false));
+    }
+  }, [user?.email]);
 
   // Sync state if user changes
   React.useEffect(() => {
@@ -69,344 +91,443 @@ export default function CustomerAccountPage() {
     });
 
     setSaveSuccess(true);
-    setIsEditing(false);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    setTimeout(() => {
+      setSaveSuccess(false);
+      setActiveTab('menu');
+    }, 1500);
   };
 
+  // Unauthenticated State
   if (!user) {
     return (
-      <main className="min-h-screen flex flex-col bg-slate-50 w-full max-w-full overflow-x-hidden">
-        <PageHeader title="My Account" />
-        <div className="max-w-md mx-auto my-auto text-center py-20 px-4">
-          <div className="w-16 h-16 rounded-full bg-blue-100 text-sky-600 flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8" />
+      <div className="min-h-screen bg-brand-light/30 flex flex-col justify-center items-center px-4 py-12">
+        <div className="w-full max-w-[430px] bg-white rounded-3xl shadow-sm border border-brand-border/60 p-8 text-center">
+          <div className="flex justify-center mb-6">
+            <BrandLogo variant="header" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-2">Account Required</h2>
-          <p className="text-sm text-slate-500 mb-6">
-            Please sign in to view your orders, saved addresses, and profile details.
+          <div className="w-16 h-16 rounded-full bg-brand-light text-brand-primary flex items-center justify-center mx-auto mb-4">
+            <UserIcon className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-brand-dark mb-2">Welcome to Blue Bells</h1>
+          <p className="text-sm text-brand-muted mb-6">
+            Sign in to access your orders, saved addresses, wishlist, and warranty status.
           </p>
-          <Link
-            href="/auth/login"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-bold text-sm shadow-md transition-all"
-          >
-            <span>Sign In / Create Account</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="space-y-3">
+            <Link
+              href="/auth/login"
+              className="w-full py-3 px-4 rounded-xl bg-brand-primary hover:bg-brand-deep text-white font-bold text-sm shadow-md shadow-brand-primary/20 flex items-center justify-center gap-2 transition-all"
+            >
+              <span>Sign In / Create Account</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/"
+              className="w-full py-2.5 px-4 rounded-xl bg-brand-surface text-brand-muted hover:text-brand-dark text-xs font-semibold block transition-colors"
+            >
+              Continue Shopping
+            </Link>
+          </div>
         </div>
-        <Footer />
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-[#f8faff] w-full max-w-full overflow-x-hidden">
-      <PageHeader title="My Account" />
+    <div className="min-h-screen bg-brand-light/30 pb-24 md:pb-12">
+      {/* Container matching Screen 8 */}
+      <div className="max-w-[480px] md:max-w-3xl mx-auto px-4 pt-4 sm:pt-6">
+        {/* Top App Bar matching Screen 8 */}
+        <div className="flex items-center justify-between py-2 mb-4">
+          <button
+            onClick={() => {
+              if (activeTab !== 'menu') {
+                setActiveTab('menu');
+              } else {
+                router.back();
+              }
+            }}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-brand-dark hover:bg-white transition-colors"
+            aria-label="Back"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 md:py-12 w-full flex-1">
-        {/* Top Header Banner */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-sky-100 shadow-sm mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-center gap-4 sm:gap-5">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-sky-500 to-sky-400 text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-sky-500/20">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-black text-slate-900">{user.name}</h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide bg-sky-50 text-sky-600 border border-sky-100">
-                  {user.role}
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Member since {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-              </p>
+          <BrandLogo variant="header" />
+
+          <button
+            onClick={() => setActiveTab(activeTab === 'edit_profile' ? 'menu' : 'edit_profile')}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-brand-muted hover:text-brand-dark hover:bg-white transition-colors"
+            aria-label="Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Profile Card Section */}
+        <div className="flex flex-col items-center text-center my-4">
+          <div className="relative mb-3">
+            <div className="w-20 h-20 rounded-full bg-brand-primary/10 border-2 border-brand-primary/30 flex items-center justify-center text-brand-primary text-2xl font-bold shadow-sm">
+              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
           </div>
+          <h2 className="text-xl font-bold text-brand-dark tracking-tight">{user.name}</h2>
+          <p className="text-xs text-brand-muted mt-0.5">{user.email}</p>
+          <button
+            onClick={() => setActiveTab(activeTab === 'edit_profile' ? 'menu' : 'edit_profile')}
+            className="mt-3 px-4 py-1.5 rounded-full border border-brand-border bg-white text-xs font-semibold text-brand-primary hover:bg-brand-surface shadow-xs transition-colors cursor-pointer"
+          >
+            {activeTab === 'edit_profile' ? 'View Menu' : 'Edit Profile'}
+          </button>
 
-          <div className="flex items-center gap-3">
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold shadow-md transition-all"
-              >
-                <span>Enter Admin Panel</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-dark text-white text-[11px] font-bold shadow-xs hover:bg-black transition-colors"
+            >
+              <span>Admin Dashboard</span>
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          )}
+        </div>
+
+        {/* 3-Column Stats Row matching Screen 8 */}
+        <div className="grid grid-cols-3 gap-3 my-5">
+          <button
+            onClick={() => setActiveTab('orders')}
+            className="bg-white rounded-2xl p-3 border border-brand-border/60 text-center shadow-xs hover:border-brand-primary/40 transition-all cursor-pointer"
+          >
+            <span className="block text-lg font-bold text-brand-dark">{userOrders.length}</span>
+            <span className="text-[11px] font-medium text-brand-muted">Orders</span>
+          </button>
+
+          <Link
+            href="/wishlist"
+            className="bg-white rounded-2xl p-3 border border-brand-border/60 text-center shadow-xs hover:border-brand-primary/40 transition-all block"
+          >
+            <span className="block text-lg font-bold text-brand-primary">{wishlist.length}</span>
+            <span className="text-[11px] font-medium text-brand-muted">Wishlist</span>
+          </Link>
+
+          <div className="bg-white rounded-2xl p-3 border border-brand-border/60 text-center shadow-xs">
+            <span className="block text-lg font-bold text-brand-dark">Rs. 0</span>
+            <span className="text-[11px] font-medium text-brand-muted">Wallet</span>
+          </div>
+        </div>
+
+        {/* Active Tab View */}
+        {activeTab === 'edit_profile' ? (
+          <div className="bg-white rounded-3xl border border-brand-border/60 p-6 shadow-sm mb-6 animate-fadeIn">
+            <h3 className="text-base font-bold text-brand-dark mb-4">Edit Profile</h3>
+
+            {saveSuccess && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>Profile updated successfully!</span>
+              </div>
             )}
 
-            <button
-              onClick={logout}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-rose-300 text-slate-600 hover:text-rose-600 bg-white text-xs font-bold transition-all shadow-sm"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        </div>
+            {saveError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                <span>{saveError}</span>
+              </div>
+            )}
 
-        {/* Feedback Alert for Profile Update */}
-        {saveSuccess && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-fadeIn">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span>Profile information successfully updated and synced with your account!</span>
-          </div>
-        )}
+            <form onSubmit={handleSaveProfile} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-brand-dark mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-brand-surface border border-brand-border rounded-xl text-base text-brand-dark focus:outline-none focus:border-brand-primary focus:bg-white"
+                />
+              </div>
 
-        {/* 2-Column Info Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Left Column: Contact & Editable Profile Card */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl p-6 border border-sky-100 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <User className="w-4 h-4 text-sky-500" />
-                  <span>Profile Information</span>
-                </h3>
+              <div>
+                <label className="block text-xs font-semibold text-brand-dark mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-brand-surface border border-brand-border rounded-xl text-base text-brand-dark focus:outline-none focus:border-brand-primary focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-brand-dark mb-1">WhatsApp Number</label>
+                <input
+                  type="tel"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-brand-surface border border-brand-border rounded-xl text-base text-brand-dark focus:outline-none focus:border-brand-primary focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">City</label>
+                  <input
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-brand-surface border border-brand-border rounded-xl text-base text-brand-dark focus:outline-none focus:border-brand-primary focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-brand-dark mb-1">Delivery Address</label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-brand-surface border border-brand-border rounded-xl text-base text-brand-dark focus:outline-none focus:border-brand-primary focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex gap-3">
                 <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="text-xs font-bold text-sky-600 hover:text-sky-700 hover:underline"
+                  type="submit"
+                  className="flex-1 py-2.5 bg-brand-primary text-white font-bold text-xs rounded-xl shadow-sm hover:bg-brand-deep transition-colors"
                 >
-                  {isEditing ? 'Cancel' : 'Edit Profile'}
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('menu')}
+                  className="px-4 py-2.5 border border-brand-border text-brand-muted hover:text-brand-dark text-xs font-semibold rounded-xl"
+                >
+                  Cancel
                 </button>
               </div>
-
-              {isEditing ? (
-                <form onSubmit={handleSaveProfile} className="space-y-3.5 text-xs">
-                  {saveError && (
-                    <p className="text-rose-600 font-bold text-[11px]">{saveError}</p>
-                  )}
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">
-                      WhatsApp Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.whatsapp}
-                      onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">
-                      City
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">
-                      Delivery Address
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="Street, House No, Area"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 text-base sm:text-xs outline-none focus:border-sky-500 focus:bg-white resize-none"
-                    />
-                  </div>
-
-                  <div className="pt-2 flex items-center gap-2">
-                    <button
-                      type="submit"
-                      className="flex-1 py-2 px-3 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs shadow-md shadow-sky-500/20 transition-all"
-                    >
-                      Save Changes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="py-2 px-3 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email</span>
-                      <span className="text-xs font-bold text-slate-800 break-all">{user.email}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
-                      <Phone className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mobile Phone</span>
-                      <span className="text-xs font-bold text-slate-800">{user.phone || 'Not added'}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                      <MessageCircle className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">WhatsApp</span>
-                      <span className="text-xs font-bold text-slate-800">{user.whatsapp || 'Not added'}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
-                      <Package className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">City &amp; Address</span>
-                      <span className="text-xs font-bold text-slate-800 block">
-                        {user.city || 'Peshawar'}
-                      </span>
-                      <span className="text-[11px] text-slate-500">
-                        {user.address || 'No saved delivery address'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Warranty & Guarantee Card */}
-            <div className="bg-gradient-to-br from-sky-500 to-sky-600 rounded-3xl p-6 text-white shadow-lg shadow-sky-500/20">
-              <div className="flex items-center gap-2 mb-2.5">
-                <ShieldCheck className="w-5 h-5 text-sky-200" />
-                <h4 className="text-sm font-black">Official PTA Verified</h4>
-              </div>
-              <p className="text-xs text-sky-100 leading-relaxed mb-4">
-                All devices purchased from Blue Bell Mobile Shop come with 1 Year Official Brand Warranty and authentic sealed box packaging.
-              </p>
-              <Link
-                href="/products"
-                className="inline-block px-4 py-2 rounded-xl bg-white text-sky-600 font-bold text-xs hover:bg-sky-50 transition-colors shadow-sm"
-              >
-                Browse Latest Flagships
+            </form>
+          </div>
+        ) : activeTab === 'orders' ? (
+          <div className="bg-white rounded-3xl border border-brand-border/60 p-5 shadow-sm mb-6 animate-fadeIn">
+            <div className="flex items-center justify-between pb-3 border-b border-brand-border/60 mb-4">
+              <h3 className="text-base font-bold text-brand-dark flex items-center gap-2">
+                <Package className="w-5 h-5 text-brand-primary" />
+                <span>My Orders</span>
+              </h3>
+              <Link href="/track-order" className="text-xs font-bold text-brand-primary hover:underline">
+                Track by ID
               </Link>
             </div>
-          </div>
 
-          {/* Right Column: Order History */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                  <Package className="w-5 h-5 text-brand-500" />
-                  <span>My Orders &amp; Shipments</span>
-                </h3>
+            {ordersLoading ? (
+              <div className="py-8 text-center text-xs text-brand-muted">Loading your orders...</div>
+            ) : userOrders.length === 0 ? (
+              <div className="py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-brand-light text-brand-primary flex items-center justify-center mx-auto mb-3">
+                  <Package className="w-6 h-6" />
+                </div>
+                <p className="text-xs font-bold text-brand-dark">No orders placed yet</p>
+                <p className="text-[11px] text-brand-muted mt-1 max-w-xs mx-auto">
+                  When you purchase items from Blue Bells Mobile Shop, your orders will appear here.
+                </p>
                 <Link
-                  href="/track-order"
-                  className="text-xs font-bold text-brand-600 hover:underline"
+                  href="/products"
+                  className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-primary text-white text-xs font-bold hover:bg-brand-deep transition-colors"
                 >
-                  Track By Tracking ID
+                  <span>Explore Products</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
+            ) : (
+              <div className="space-y-3">
+                {userOrders.map((order) => {
+                  const statusColors: Record<string, { bg: string; text: string; icon: any }> = {
+                    pending: { bg: 'bg-amber-50', text: 'text-amber-700', icon: Clock },
+                    confirmed: { bg: 'bg-blue-50', text: 'text-blue-700', icon: CheckCircle2 },
+                    processing: { bg: 'bg-indigo-50', text: 'text-indigo-700', icon: Clock },
+                    shipped: { bg: 'bg-purple-50', text: 'text-purple-700', icon: Clock },
+                    delivered: { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: CheckCircle2 },
+                    cancelled: { bg: 'bg-rose-50', text: 'text-rose-700', icon: AlertCircle },
+                  };
+                  const statusConf = statusColors[order.status] || statusColors.pending;
+                  const StatusIcon = statusConf.icon;
 
-              {/* Sample Order Entry */}
-              <div className="space-y-4">
-                <div className="border border-slate-100 rounded-2xl p-4 sm:p-5 hover:border-blue-200 transition-colors bg-[#fbfdff]">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-3 border-b border-slate-100 gap-2">
-                    <div>
-                      <span className="text-xs font-mono font-bold text-brand-600">ORD-98241</span>
-                      <span className="text-xs text-slate-400 block sm:inline sm:ml-2">
-                        Placed on Oct 20, 2026
-                      </span>
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 self-start sm:self-auto">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Delivered</span>
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 p-1 flex items-center justify-center">
-                        <img src="/categories/iphone.svg" alt="iPhone" className="w-9 h-9 object-contain" />
+                  return (
+                    <div
+                      key={order.id}
+                      className="border border-brand-border/70 rounded-2xl p-4 bg-brand-surface/40 hover:border-brand-primary/40 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-mono font-bold text-brand-primary">{order.id}</span>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${statusConf.bg} ${statusConf.text} capitalize`}
+                        >
+                          <StatusIcon className="w-3 h-3" />
+                          <span>{order.status}</span>
+                        </span>
                       </div>
-                      <div>
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900">Apple iPhone 15 Pro Max</h4>
-                        <p className="text-[11px] text-slate-500">256GB • Natural Titanium (Qty: 1)</p>
+                      <div className="text-xs text-brand-dark font-semibold">
+                        {order.items && order.items.length > 0
+                          ? order.items
+                              .map((it: any) => `${it.product?.name || it.name || 'Product'} (x${it.quantity || 1})`)
+                              .join(', ')
+                          : 'Order items'}
+                      </div>
+                      {order.shipping_address && (
+                        <div className="text-[11px] text-brand-muted mt-0.5">
+                          {order.shipping_address}, {order.city || ''}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-brand-border/50 text-xs">
+                        <span className="text-brand-muted">
+                          {order.created_at
+                            ? new Date(order.created_at).toLocaleDateString('en-PK', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })
+                            : 'Recent'}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-brand-dark">
+                            Rs. {Number(order.total || 0).toLocaleString()}
+                          </span>
+                          <Link
+                            href={`/track-order?id=${order.id}`}
+                            className="text-[11px] font-bold text-brand-primary hover:underline inline-flex items-center gap-0.5"
+                          >
+                            <span>Track</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block">Rs. 349,999</span>
-                      <span className="text-[11px] text-slate-400">Cash on Delivery</span>
-                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Menu List matching Screen 8 */
+          <div className="bg-white rounded-3xl border border-brand-border/60 shadow-sm overflow-hidden mb-6">
+            <div className="divide-y divide-brand-border/40">
+              {/* My Orders */}
+              <button
+                onClick={() => setActiveTab('orders')}
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-brand-surface transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary">
+                    <Package className="w-4 h-4" />
                   </div>
+                  <span className="text-sm font-semibold text-brand-dark">My Orders</span>
                 </div>
+                <ChevronRight className="w-4 h-4 text-brand-muted group-hover:text-brand-dark transition-colors" />
+              </button>
 
-                {/* Additional Sample Order */}
-                <div className="border border-slate-100 rounded-2xl p-4 sm:p-5 hover:border-blue-200 transition-colors bg-[#fbfdff]">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-3 border-b border-slate-100 gap-2">
-                    <div>
-                      <span className="text-xs font-mono font-bold text-brand-600">ORD-98242</span>
-                      <span className="text-xs text-slate-400 block sm:inline sm:ml-2">
-                        Placed on Oct 21, 2026
-                      </span>
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-brand-800 self-start sm:self-auto">
-                      <Clock className="w-3.5 h-3.5 animate-spin" />
-                      <span>Processing</span>
+              {/* Wishlist */}
+              <Link
+                href="/wishlist"
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-brand-surface transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary">
+                    <Heart className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-brand-dark">Wishlist</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {wishlist.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary text-white">
+                      {wishlist.length}
                     </span>
-                  </div>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-brand-muted group-hover:text-brand-dark transition-colors" />
+                </div>
+              </Link>
 
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 p-1 flex items-center justify-center">
-                        <img src="/categories/samsung.svg" alt="Samsung" className="w-9 h-9 object-contain" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900">Samsung Galaxy S24 Ultra</h4>
-                        <p className="text-[11px] text-slate-500">512GB • Titanium Violet (Qty: 1)</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block">Rs. 289,999</span>
-                      <span className="text-[11px] text-slate-400">Direct Bank Transfer</span>
-                    </div>
+              {/* Addresses */}
+              <button
+                onClick={() => setActiveTab('edit_profile')}
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-brand-surface transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary">
+                    <MapPin className="w-4 h-4" />
                   </div>
+                  <span className="text-sm font-semibold text-brand-dark">Addresses</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-brand-muted group-hover:text-brand-dark transition-colors" />
+              </button>
+
+              {/* Wallet */}
+              <div className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-brand-surface transition-colors group">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-brand-dark">Wallet</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-brand-muted font-medium">Rs. 0</span>
+                  <ChevronRight className="w-4 h-4 text-brand-muted group-hover:text-brand-dark transition-colors" />
                 </div>
               </div>
+
+              {/* Settings */}
+              <button
+                onClick={() => setActiveTab('edit_profile')}
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-brand-surface transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary">
+                    <Settings className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-brand-dark">Settings</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-brand-muted group-hover:text-brand-dark transition-colors" />
+              </button>
+
+              {/* Privacy & Security */}
+              <Link
+                href="/privacy"
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-brand-surface transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary">
+                    <Shield className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-brand-dark">Privacy &amp; Security</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-brand-muted group-hover:text-brand-dark transition-colors" />
+              </Link>
+
+              {/* Help & Support */}
+              <Link
+                href="/contact"
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-brand-surface transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-xl bg-brand-light flex items-center justify-center text-brand-primary">
+                    <HelpCircle className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-brand-dark">Help &amp; Support</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-brand-muted group-hover:text-brand-dark transition-colors" />
+              </Link>
+
+              {/* Log Out */}
+              <button
+                onClick={logout}
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-rose-50/50 transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500">
+                    <LogOut className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-semibold text-rose-600">Log Out</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-rose-400" />
+              </button>
             </div>
           </div>
-        </div>
+        )}
       </div>
-
-      <Footer />
-    </main>
+    </div>
   );
 }

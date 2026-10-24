@@ -8,6 +8,7 @@ import { CartDrawer } from '@/components/cart/CartDrawer';
 import { QuickViewModal } from '@/components/products/QuickViewModal';
 import { Toast } from '@/components/common/Toast';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -145,8 +146,11 @@ export default function RootLayout({
           <AuthProvider>
             <CartProvider>
               <LoadingScreen>
-                {children}
+                <div className="flex-1 flex flex-col w-full pb-20 md:pb-0">
+                  {children}
+                </div>
               </LoadingScreen>
+              <MobileBottomNav />
               <CartDrawer />
               <QuickViewModal />
               <Toast />
