@@ -102,6 +102,26 @@ export const Header: React.FC = () => {
   const [isMobileScreen, setIsMobileScreen] = useState(false);
   const [activeHoverMenu, setActiveHoverMenu] = useState<MegaKey | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSocialMarqueePaused, setIsSocialMarqueePaused] = useState(false);
+  const socialResumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSocialMarqueeClick = () => {
+    setIsSocialMarqueePaused(true);
+    if (socialResumeTimeoutRef.current) {
+      clearTimeout(socialResumeTimeoutRef.current);
+    }
+    socialResumeTimeoutRef.current = setTimeout(() => {
+      setIsSocialMarqueePaused(false);
+    }, 3000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (socialResumeTimeoutRef.current) {
+        clearTimeout(socialResumeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Responsive screen detection for drawer animation direction
   useEffect(() => {
@@ -257,23 +277,31 @@ export const Header: React.FC = () => {
               initial={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="relative overflow-hidden bg-gradient-to-r from-[#F4F9FF] via-white to-[#EAF7FF] border-b border-[#DFEBF8] text-xs text-[#102A56] py-1.5 sm:py-2 select-none"
+              className="relative overflow-hidden bg-gradient-to-r from-[#F4F9FF] via-white to-[#EAF7FF] border-b border-[#DFEBF8] text-xs text-[#102A56] py-1.5 sm:py-2 select-none cursor-pointer"
+              onClick={handleSocialMarqueeClick}
+              onTouchStart={handleSocialMarqueeClick}
+              onMouseEnter={() => setIsSocialMarqueePaused(true)}
+              onMouseLeave={() => {
+                if (!socialResumeTimeoutRef.current) {
+                  setIsSocialMarqueePaused(false);
+                }
+              }}
             >
               {/* Edge Gradient Masks for Smooth Fading */}
               <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[#F4F9FF] to-transparent pointer-events-none z-10" />
               <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[#EAF7FF] to-transparent pointer-events-none z-10" />
 
-              {/* Infinite 1-Line Forward Motion Train Marquee */}
+              {/* Infinite 1-Line Forward Motion Train Marquee (Faster 14s duration, click pauses for 3s) */}
               <motion.div
                 className="flex items-center gap-8 sm:gap-12 whitespace-nowrap will-change-transform"
                 animate={{
-                  x: ['0%', '-50%'],
+                  x: isSocialMarqueePaused ? undefined : ['0%', '-50%'],
                 }}
                 transition={{
                   x: {
                     repeat: Infinity,
                     repeatType: 'loop',
-                    duration: 25,
+                    duration: 14,
                     ease: 'linear',
                   },
                 }}

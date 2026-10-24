@@ -73,6 +73,26 @@ const BENEFITS: BenefitItem[] = [
 
 export const TrustBenefitsStrip: React.FC = () => {
   const [isPaused, setIsPaused] = useState(false);
+  const resumeTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Click or touch pauses the train animation and restarts it automatically after 3 seconds
+  const handlePauseWithResume = () => {
+    setIsPaused(true);
+    if (resumeTimeoutRef.current) {
+      clearTimeout(resumeTimeoutRef.current);
+    }
+    resumeTimeoutRef.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 3000);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (resumeTimeoutRef.current) {
+        clearTimeout(resumeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Duplicate for seamless 100% infinite marquee loop
   const marqueeItems = [...BENEFITS, ...BENEFITS];
@@ -80,17 +100,22 @@ export const TrustBenefitsStrip: React.FC = () => {
   return (
     <section
       aria-label="Trust and Reliability Guarantees"
-      className="relative w-full bg-gradient-to-r from-white via-[#F8FBFE] to-white border-b border-[#DFEBF8] py-3.5 sm:py-4 overflow-hidden select-none"
+      className="relative w-full bg-gradient-to-r from-white via-[#F8FBFE] to-white border-b border-[#DFEBF8] py-3.5 sm:py-4 overflow-hidden select-none cursor-pointer"
+      onClick={handlePauseWithResume}
+      onTouchStart={handlePauseWithResume}
       onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={() => setIsPaused(true)}
-      onTouchEnd={() => setIsPaused(false)}
+      onMouseLeave={() => {
+        // If not already in a click 3s timeout, resume immediately
+        if (!resumeTimeoutRef.current) {
+          setIsPaused(false);
+        }
+      }}
     >
       {/* Edge Gradient Masks for Silky Fade In / Fade Out */}
       <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-20 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-10" />
       <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-20 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-10" />
 
-      {/* Infinite Train-like Forward Marquee */}
+      {/* Infinite Train-like Forward Marquee (Accelerated duration from 28s to 15s for lively responsive speed) */}
       <motion.div
         className="flex items-center gap-4 sm:gap-6 whitespace-nowrap will-change-transform"
         animate={{
@@ -100,7 +125,7 @@ export const TrustBenefitsStrip: React.FC = () => {
           x: {
             repeat: Infinity,
             repeatType: 'loop',
-            duration: 28,
+            duration: 15,
             ease: 'linear',
           },
         }}

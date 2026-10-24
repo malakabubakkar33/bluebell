@@ -236,11 +236,13 @@ function TrackOrderContent() {
   );
 }
 
+import { BlueDotLoader } from '@/components/common/BlueDotLoader';
+
 export default function TrackOrderPage() {
   return (
     <main className="min-h-screen flex flex-col bg-slate-50 w-full max-w-full overflow-x-hidden">
       <PageHeader title="Track Order" />
-      <Suspense fallback={<div className="p-12 text-center text-sm">Loading tracker...</div>}>
+      <Suspense fallback={<BlueDotLoader fullScreen={false} label="Loading Tracker..." size="sm" />}>
         <TrackOrderContent />
       </Suspense>
       <Footer />

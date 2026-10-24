@@ -4,27 +4,42 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const LoadingScreen: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [progress, setProgress] = useState(18);
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(25);
 
   useEffect(() => {
-    // Realistic initial resource loading simulation
+    // Only show on the very first start of the website in this session
+    try {
+      if (sessionStorage.getItem('bluebell_site_initialized') === 'true') {
+        setIsLoading(false);
+        return;
+      }
+    } catch {
+      // sessionStorage might not be available in certain environments
+    }
+
+    setIsLoading(true);
+
+    // Fast and smooth initial branding pulse
     const interval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 92) {
+        if (prev >= 94) {
           clearInterval(interval);
-          return 92;
+          return 94;
         }
-        return prev + Math.floor(Math.random() * 18 + 12);
+        return prev + Math.floor(Math.random() * 25 + 18);
       });
-    }, 180);
+    }, 90);
 
     const timer = setTimeout(() => {
       setProgress(100);
+      try {
+        sessionStorage.setItem('bluebell_site_initialized', 'true');
+      } catch {}
       setTimeout(() => {
         setIsLoading(false);
-      }, 350);
-    }, 1600);
+      }, 250);
+    }, 750);
 
     return () => {
       clearInterval(interval);
