@@ -75,7 +75,7 @@ export default function CustomerAccountPage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen flex flex-col bg-slate-50">
+      <main className="min-h-screen flex flex-col bg-slate-50 w-full max-w-full overflow-x-hidden">
         <PageHeader title="My Account" />
         <div className="max-w-md mx-auto my-auto text-center py-20 px-4">
           <div className="w-16 h-16 rounded-full bg-blue-100 text-sky-600 flex items-center justify-center mx-auto mb-4">
@@ -99,7 +99,7 @@ export default function CustomerAccountPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-[#f8faff]">
+    <main className="min-h-screen flex flex-col bg-[#f8faff] w-full max-w-full overflow-x-hidden">
       <PageHeader title="My Account" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 md:py-12 w-full flex-1">

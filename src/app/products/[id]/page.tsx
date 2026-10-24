@@ -232,7 +232,7 @@ export default function ProductDetailPage({
   };
 
   return (
-    <main className="min-h-screen flex flex-col bg-[#fafcff]">
+    <main className="min-h-screen flex flex-col bg-[#fafcff] w-full max-w-full overflow-x-hidden">
       {/* Product & Breadcrumb Schema.org JSON-LD for Google Rich Snippets */}
       <script
         type="application/ld+json"

@@ -227,6 +227,37 @@ export const SupabaseDbService = {
     return newProd;
   },
 
+  async updateProduct(id: string, updates: any) {
+    const supabase = await getSupabaseServerClient();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from('products').update(updates).eq('id', id).select().single();
+        if (!error && data) return data as ProductRow;
+      } catch (e) {
+        console.warn('Supabase product update failed:', e);
+      }
+    }
+    const idx = memoryProducts.findIndex((p: any) => p.id === id);
+    if (idx !== -1) {
+      memoryProducts[idx] = { ...memoryProducts[idx], ...updates };
+      return memoryProducts[idx];
+    }
+    return null;
+  },
+
+  async deleteProduct(id: string) {
+    const supabase = await getSupabaseServerClient();
+    if (supabase) {
+      try {
+        await supabase.from('products').delete().eq('id', id);
+      } catch (e) {
+        console.warn('Supabase product delete failed:', e);
+      }
+    }
+    memoryProducts = memoryProducts.filter((p: any) => p.id !== id);
+    return true;
+  },
+
   // CATEGORIES
   async getCategories() {
     const supabase = await getSupabaseServerClient();

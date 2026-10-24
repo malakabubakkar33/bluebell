@@ -133,7 +133,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} scroll-smooth`} suppressHydrationWarning>
       <body
-        className="min-h-screen flex flex-col bg-white text-slate-900 font-sans antialiased"
+        className="min-h-screen flex flex-col bg-white text-slate-900 font-sans antialiased w-full max-w-full overflow-x-hidden relative"
         suppressHydrationWarning
       >
         {/* Organization / LocalBusiness Schema.org JSON-LD */}

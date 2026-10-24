@@ -56,7 +56,7 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col bg-slate-50">
+    <main className="min-h-screen flex flex-col bg-slate-50 w-full max-w-full overflow-x-hidden">
       <PageHeader title="Contact Us" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10 md:py-16 flex-1">

@@ -233,7 +233,7 @@ function TrackOrderContent() {
 
 export default function TrackOrderPage() {
   return (
-    <main className="min-h-screen flex flex-col bg-slate-50">
+    <main className="min-h-screen flex flex-col bg-slate-50 w-full max-w-full overflow-x-hidden">
       <PageHeader title="Track Order" />
       <Suspense fallback={<div className="p-12 text-center text-sm">Loading tracker...</div>}>
         <TrackOrderContent />

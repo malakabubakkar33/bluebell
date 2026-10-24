@@ -94,7 +94,7 @@ function OrderSuccessContent() {
 
 export default function OrderSuccessPage() {
   return (
-    <main className="min-h-screen flex flex-col bg-slate-50">
+    <main className="min-h-screen flex flex-col bg-slate-50 w-full max-w-full overflow-x-hidden">
       <PageHeader title="Order Confirmed" />
       <Suspense fallback={<div className="p-12 text-center text-sm">Loading order details...</div>}>
         <OrderSuccessContent />

@@ -585,7 +585,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <main className="min-h-screen flex flex-col bg-white">
+    <main className="min-h-screen flex flex-col bg-white w-full max-w-full overflow-x-hidden">
       <PageHeader title="Products" />
       <Suspense fallback={<div className="max-w-7xl mx-auto p-12 text-center text-sm font-medium text-slate-400">Loading catalog...</div>}>
         <ProductsContent />

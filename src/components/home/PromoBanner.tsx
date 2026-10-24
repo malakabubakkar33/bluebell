@@ -56,7 +56,8 @@ const DEALS: PromoDeal[] = [
 
 export const PromoBanner: React.FC = () => {
   const { deals } = useProducts();
-  const activeDeals = deals && deals.length > 0 ? deals : DEALS;
+  const filteredDeals = (deals || []).filter((d) => d.status !== 'Inactive');
+  const activeDeals = filteredDeals.length > 0 ? filteredDeals : DEALS;
   const totalDeals = activeDeals.length;
 
   const [currentIndex, setCurrentIndex] = useState(0);

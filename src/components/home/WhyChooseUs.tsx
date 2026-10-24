@@ -45,7 +45,7 @@ const BENEFIT_CARDS: BenefitCard[] = [
 
 export const WhyChooseUs: React.FC = () => {
   return (
-    <section id="why-choose-us" className="py-10 sm:py-16 bg-white border-b border-[#DFEBF8]">
+    <section id="why-choose-us" className="py-10 sm:py-16 bg-white border-b border-[#DFEBF8] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-10">
@@ -61,7 +61,7 @@ export const WhyChooseUs: React.FC = () => {
         </div>
 
         {/* Horizontal Snap Scroll on Mobile, 5-col Grid on Desktop */}
-        <div className="flex lg:grid lg:grid-cols-5 gap-3 sm:gap-4 overflow-x-auto lg:overflow-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory pb-3 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex lg:grid lg:grid-cols-5 gap-3 sm:gap-4 overflow-x-auto lg:overflow-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory pb-3 px-1 scroll-smooth">
           {BENEFIT_CARDS.map((item) => {
             const Icon = item.icon;
             return (

@@ -100,7 +100,10 @@ const HERO_SLIDES: HeroSlide[] = [
   },
 ];
 
+import { useProducts } from '@/context/ProductsContext';
+
 export const HeroBanner: React.FC = () => {
+  const { banners } = useProducts();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
@@ -108,7 +111,29 @@ export const HeroBanner: React.FC = () => {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const totalSlides = HERO_SLIDES.length;
+  const activeBanners = (banners || []).filter((b) => b.status === 'Active');
+  const displaySlides: HeroSlide[] = activeBanners.length > 0
+    ? activeBanners.map((b, idx) => ({
+        id: typeof b.id === 'number' ? b.id : idx + 1,
+        brandTag: b.tag || b.brand?.toUpperCase() || 'OFFICIAL FLAGSHIP',
+        heading: b.titlePrefix && b.titleHighlight ? `${b.titlePrefix} ${b.titleHighlight}` : b.title,
+        description: b.subtitle || b.tagline || 'Experience peak performance and official warranty.',
+        price: b.price || 'Rs. 249,999',
+        specs: b.specs && b.specs.length > 0 ? b.specs.map(s => ({ label: s.label, value: s.desc })) : [
+          { label: 'Official', value: 'PTA Approved' },
+          { label: 'Warranty', value: '1 Year Brand' },
+          { label: 'Delivery', value: 'Express 24-48h' }
+        ],
+        primaryCtaText: 'Shop Now',
+        primaryCtaLink: b.link || '/products',
+        secondaryCtaText: 'Explore Features',
+        secondaryCtaLink: b.link || '/products',
+        image: b.image,
+        alt: b.title,
+      }))
+    : HERO_SLIDES;
+
+  const totalSlides = displaySlides.length;
 
   const nextSlide = useCallback(() => {
     setDirection(1);
@@ -177,7 +202,7 @@ export const HeroBanner: React.FC = () => {
   };
 
   const currentSlideSafe = currentSlide >= totalSlides ? 0 : currentSlide;
-  const slide = HERO_SLIDES[currentSlideSafe];
+  const slide = displaySlides[currentSlideSafe] || displaySlides[0];
 
   return (
     <section
@@ -326,7 +351,7 @@ export const HeroBanner: React.FC = () => {
 
         {/* Slide Indicators (Clean Luminous Dots / Pills) */}
         <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
-          {HERO_SLIDES.map((_, idx) => (
+          {displaySlides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => goToSlide(idx)}

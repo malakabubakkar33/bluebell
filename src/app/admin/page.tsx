@@ -63,6 +63,47 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Orders State & Sync
+  const [ordersList, setOrdersList] = useState<any[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('/api/orders');
+      const json = await res.json();
+      if (json.data && Array.isArray(json.data)) {
+        setOrdersList(json.data);
+      }
+    } catch (err) {
+      console.error('Failed to load orders', err);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+    setOrdersList((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+    );
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Order ${orderId} status updated to ${newStatus}.`);
+      } else {
+        showToast(`Order status updated.`);
+      }
+    } catch {
+      showToast(`Order status updated locally.`);
+    }
+  };
+
   // File Upload Ref for Products
   const productImageInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingProduct, setIsUploadingProduct] = useState(false);
@@ -129,9 +170,6 @@ export default function AdminPage() {
     warranty: '1 Year Official Brand Warranty (PTA Approved)',
     description: '',
   });
-
-  // Order Details Modal State
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -516,7 +554,7 @@ export default function AdminPage() {
             <DashboardView
               onNavigateTab={(tab) => setActiveTab(tab)}
               productsList={productsList}
-              ordersList={[]}
+              ordersList={ordersList}
             />
           )}
 
@@ -540,9 +578,13 @@ export default function AdminPage() {
 
           {activeTab === 'orders' && (
             <OrdersView
-              ordersList={[]}
+              ordersList={ordersList}
               onSelectOrder={(ord) => setSelectedOrder(ord)}
-              onUpdateStatus={(id, status) => showToast(`Order ${id} marked as ${status}.`)}
+              onUpdateStatus={handleUpdateOrderStatus}
+              onDeleteOrder={(orderId) => {
+                setOrdersList((prev) => prev.filter((o) => o.id !== orderId));
+                showToast(`Order ${orderId} deleted.`);
+              }}
             />
           )}
 

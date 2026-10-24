@@ -11,7 +11,7 @@ import { Footer } from '@/components/layout/Footer';
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col bg-white">
+    <main className="min-h-screen flex flex-col bg-white w-full max-w-full overflow-x-hidden">
       {/* 1. Header with Announcement Bar, Search, Account, Cart, and Category Nav */}
       <Header />
 

@@ -46,12 +46,26 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Local state initialized from usersList with 0 starting dummy data
+  // Local state initialized from usersList
   const [customers, setCustomers] = useState<CustomerRecord[]>(() => {
     if (usersList && usersList.length > 0) {
-      return usersList
-        .filter((u) => u.role === 'customer')
-        .map((u) => ({
+      return usersList.map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        orders_count: u.orders_count || 0,
+        status: u.status,
+        role: u.role,
+      }));
+    }
+    return [];
+  });
+
+  React.useEffect(() => {
+    if (usersList && usersList.length > 0) {
+      setCustomers(
+        usersList.map((u) => ({
           id: u.id,
           name: u.name,
           email: u.email,
@@ -59,10 +73,10 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           orders_count: u.orders_count || 0,
           status: u.status,
           role: u.role,
-        }));
+        }))
+      );
     }
-    return [];
-  });
+  }, [usersList]);
 
   const [showModal, setShowModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerRecord | null>(null);

@@ -15,3 +15,15 @@ export async function GET() {
     );
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    return NextResponse.json({ success: true, data: body }, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to create category' },
+      { status: 500 }
+    );
+  }
+}

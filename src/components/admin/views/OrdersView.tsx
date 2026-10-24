@@ -58,6 +58,12 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
     return [];
   });
 
+  React.useEffect(() => {
+    if (ordersList && ordersList.length > 0) {
+      setInternalOrders(ordersList);
+    }
+  }, [ordersList]);
+
   const [activeModalOrder, setActiveModalOrder] = useState<OrderItem | null>(null);
 
   const handleStatusChange = (orderId: string, newStatus: OrderItem['status']) => {

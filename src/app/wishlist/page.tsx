@@ -16,7 +16,7 @@ export default function WishlistPage() {
   const wishlistProducts = products.filter((p) => wishlist.includes(p.id));
 
   return (
-    <main className="min-h-screen flex flex-col bg-[#F8FAFD]">
+    <main className="min-h-screen flex flex-col bg-[#F8FAFD] w-full max-w-full overflow-x-hidden">
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex-1 w-full">
