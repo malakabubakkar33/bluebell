@@ -46,6 +46,7 @@ export default function AdminPage() {
     addCategory,
     updateCategory,
     deleteCategory,
+    refreshCategories,
     banners: bannersList,
     addBanner,
     updateBanner,
@@ -653,20 +654,40 @@ export default function AdminPage() {
           {activeTab === 'categories' && (
             <CategoriesView
               categoriesList={categoriesList}
-              onAddCategory={(cat) => {
-                addCategory(cat);
-                showToast(`Category "${cat.name}" added successfully.`);
-              }}
-              onUpdateCategory={(id, updates) => {
-                updateCategory(id, updates);
-                showToast(`Category updated.`);
-              }}
-              onDeleteCategory={(id, name) => {
-                if (confirm(`Delete category "${name}"?`)) {
-                  deleteCategory(id);
-                  showToast(`Category "${name}" deleted.`);
+              onAddCategory={async (cat) => {
+                try {
+                  await addCategory(cat);
+                  showToast(`Category "${cat.name}" saved to database successfully.`);
+                  return true;
+                } catch (err: any) {
+                  showToast(err?.message || 'Failed to add category');
+                  return false;
                 }
               }}
+              onUpdateCategory={async (id, updates) => {
+                try {
+                  await updateCategory(id, updates);
+                  showToast(`Category updated successfully in database.`);
+                  return true;
+                } catch (err: any) {
+                  showToast(err?.message || 'Failed to update category');
+                  return false;
+                }
+              }}
+              onDeleteCategory={async (id, name) => {
+                if (confirm(`Delete category "${name}" from store database?`)) {
+                  try {
+                    await deleteCategory(id);
+                    showToast(`Category "${name}" deleted.`);
+                    return true;
+                  } catch (err: any) {
+                    showToast(err?.message || 'Failed to delete category');
+                    return false;
+                  }
+                }
+                return false;
+              }}
+              onRefresh={refreshCategories}
             />
           )}
 

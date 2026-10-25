@@ -54,6 +54,7 @@ export interface Category {
   icon?: string;
   description?: string;
   itemCount: number;
+  isActive?: boolean;
 }
 
 export interface CartItem {

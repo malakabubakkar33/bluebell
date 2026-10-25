@@ -235,9 +235,13 @@ export const SupabaseDbService = {
 
     if (client) {
       try {
-        // Fetch categories and products concurrently to compute real item counts
+        // Fetch active categories and products concurrently to compute real item counts
         const [catsRes, prodsRes] = await Promise.all([
-          (client as any).from('categories').select('*').order('name'),
+          (client as any)
+            .from('categories')
+            .select('*')
+            .eq('is_active', true)
+            .order('name'),
           (client as any).from('products').select('category_slug, brand'),
         ]);
 
@@ -253,10 +257,16 @@ export const SupabaseDbService = {
               id: c.id,
               name: c.name,
               slug: c.slug,
-              image: c.image || `/categories/${c.slug}.svg`,
+              image: c.image || (c.slug ? `/categories/${c.slug}.svg` : '/categories/iphone.svg'),
+              icon: c.icon || 'Layers',
+              description: c.description || '',
+              isActive: c.is_active !== false,
               itemCount: matchingCount, // Real, calculated product count
             };
           });
+        }
+        if (catsRes.error) {
+          console.error('Supabase getCategories error:', catsRes.error.message);
         }
       } catch (e: any) {
         console.error('getCategories error:', e?.message);
@@ -274,16 +284,32 @@ export const SupabaseDbService = {
 
     if (!client) throw new Error('Database client not configured');
 
+    if (!category.name || !category.name.trim()) {
+      throw new Error('Category name is required');
+    }
+
+    const trimmedName = category.name.trim();
+    const rawSlug = category.slug || trimmedName;
+    const cleanSlug = rawSlug
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'category';
+
     const catId = category.id || `cat-${Date.now()}`;
-    const slug = category.slug || category.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'general';
+    const image = category.image || '/categories/iphone.svg';
 
     const row = {
       id: catId,
-      name: category.name,
-      slug,
-      icon: 'Layers',
+      name: trimmedName,
+      slug: cleanSlug,
+      image,
+      icon: category.icon || 'Layers',
+      description: category.description || null,
+      is_active: category.isActive !== undefined ? category.isActive : true,
       item_count: 0,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     const { data, error } = await (client as any)
@@ -292,12 +318,19 @@ export const SupabaseDbService = {
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('createCategory database error:', error.message);
+      throw new Error(error.message);
+    }
+
     return {
       id: data.id,
       name: data.name,
       slug: data.slug,
-      image: `/categories/${data.slug}.svg`,
+      image: data.image || image,
+      icon: data.icon || 'Layers',
+      description: data.description || '',
+      isActive: data.is_active !== false,
       itemCount: 0,
     };
   },
@@ -310,9 +343,21 @@ export const SupabaseDbService = {
 
     if (!client) throw new Error('Database client not configured');
 
-    const rowUpdates: Record<string, any> = {};
-    if (updates.name !== undefined) rowUpdates.name = updates.name;
-    if (updates.slug !== undefined) rowUpdates.slug = updates.slug;
+    const rowUpdates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (updates.name !== undefined) rowUpdates.name = updates.name.trim();
+    if (updates.slug !== undefined) {
+      rowUpdates.slug = updates.slug
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+    if (updates.image !== undefined) rowUpdates.image = updates.image;
+    if (updates.icon !== undefined) rowUpdates.icon = updates.icon;
+    if (updates.description !== undefined) rowUpdates.description = updates.description;
+    if (updates.isActive !== undefined) rowUpdates.is_active = updates.isActive;
 
     const { data, error } = await (client as any)
       .from('categories')
@@ -321,12 +366,19 @@ export const SupabaseDbService = {
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('updateCategory error:', error.message);
+      throw new Error(error.message);
+    }
+
     return {
       id: data.id,
       name: data.name,
       slug: data.slug,
-      image: `/categories/${data.slug}.svg`,
+      image: data.image || `/categories/${data.slug}.svg`,
+      icon: data.icon || 'Layers',
+      description: data.description || '',
+      isActive: data.is_active !== false,
       itemCount: data.item_count || 0,
     };
   },
@@ -340,7 +392,10 @@ export const SupabaseDbService = {
     if (!client) throw new Error('Database client not configured');
 
     const { error } = await (client as any).from('categories').delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('deleteCategory error:', error.message);
+      throw new Error(error.message);
+    }
     return true;
   },
 

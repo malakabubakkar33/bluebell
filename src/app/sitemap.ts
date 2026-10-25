@@ -52,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
 
     // Dynamic category landing pages
-    const categoryRoutes: MetadataRoute.Sitemap = (categories || []).map((cat) => ({
+    const categoryRoutes: MetadataRoute.Sitemap = (categories || []).map((cat: any) => ({
       url: `${baseUrl}/products?category=${encodeURIComponent(cat.slug)}`,
       lastModified: now,
       changeFrequency: 'daily',
@@ -60,7 +60,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     // Dynamic individual product pages
-    const productRoutes: MetadataRoute.Sitemap = (products || []).map((prod) => ({
+    const productRoutes: MetadataRoute.Sitemap = (products || []).map((prod: any) => ({
       url: `${baseUrl}/products/${encodeURIComponent(prod.id)}`,
       lastModified: now,
       changeFrequency: 'weekly',

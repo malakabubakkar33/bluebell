@@ -16,8 +16,11 @@ export interface Database {
           slug: string;
           description: string | null;
           icon: string | null;
+          image: string | null;
+          is_active: boolean;
           item_count: number;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
@@ -25,8 +28,11 @@ export interface Database {
           slug: string;
           description?: string | null;
           icon?: string | null;
+          image?: string | null;
+          is_active?: boolean;
           item_count?: number;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
@@ -34,8 +40,11 @@ export interface Database {
           slug?: string;
           description?: string | null;
           icon?: string | null;
+          image?: string | null;
+          is_active?: boolean;
           item_count?: number;
           created_at?: string;
+          updated_at?: string;
         };
       };
       products: {

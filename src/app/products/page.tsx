@@ -117,6 +117,16 @@ function ProductsContent() {
 
   // Series Banner details matching Screen 3
   const bannerInfo = useMemo(() => {
+    if (selectedCategory !== 'all') {
+      const match = categoriesList.find((c) => c.slug === selectedCategory);
+      if (match) {
+        return {
+          title: match.name,
+          subtitle: match.description || '100% Genuine PTA Approved with Official Warranty',
+          image: match.image || '/categories/iphone.svg',
+        };
+      }
+    }
     if (selectedBrand.toLowerCase() === 'samsung') {
       return {
         title: 'SAMSUNG Galaxy Series',
@@ -136,7 +146,7 @@ function ProductsContent() {
       subtitle: '100% Genuine PTA Approved with Official Warranty',
       image: '/categories/iphone.svg',
     };
-  }, [selectedBrand]);
+  }, [selectedCategory, selectedBrand, categoriesList]);
 
   return (
     <div className="min-h-screen bg-[#F7FBFF] text-[#102A50] flex flex-col">

@@ -9,8 +9,11 @@ CREATE TABLE IF NOT EXISTS public.categories (
   slug TEXT UNIQUE NOT NULL,
   description TEXT,
   icon TEXT,
+  image TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
   item_count INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now()
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- 2. PRODUCTS TABLE
@@ -118,6 +121,7 @@ CREATE POLICY "Public insert inquiries" ON public.inquiries FOR INSERT WITH CHEC
 
 -- Allow authenticated/service role full access to everything
 CREATE POLICY "Admin full products" ON public.products FOR ALL USING (true);
+CREATE POLICY "Admin full categories" ON public.categories FOR ALL USING (true);
 CREATE POLICY "Admin full orders" ON public.orders FOR ALL USING (true);
 CREATE POLICY "Admin full inquiries" ON public.inquiries FOR ALL USING (true);
 

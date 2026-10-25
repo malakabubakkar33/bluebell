@@ -46,52 +46,53 @@ export const MobileBottomNav: React.FC = () => {
   ];
 
   return (
-    <nav
-      aria-label="Mobile Bottom Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-2xl border-t border-[#DCEBFA] shadow-[0_-4px_24px_rgba(8,102,232,0.08)] transition-transform duration-300 safe-bottom-nav"
-    >
-      <div className="max-w-md mx-auto grid grid-cols-4 px-2 pt-2 pb-1 items-center">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = item.isActive;
+    <div className="fixed bottom-4 inset-x-0 z-40 md:hidden flex justify-center pointer-events-none px-4 safe-bottom-nav">
+      <nav
+        aria-label="Mobile Bottom Navigation"
+        className="pointer-events-auto w-full max-w-sm bg-white/70 backdrop-blur-2xl border border-white/60 shadow-[0_12px_36px_rgba(8,102,232,0.18),0_2px_12px_rgba(0,0,0,0.06)] rounded-full px-2 py-1.5 transition-all duration-300"
+      >
+        <div className="grid grid-cols-4 items-center gap-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = item.isActive;
 
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="relative flex flex-col items-center justify-center py-1 group select-none transition-colors"
-            >
-              {/* Active top pill indicator */}
-              {active && (
-                <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-[#0866E8] shadow-[0_2px_8px_rgba(8,102,232,0.5)]" />
-              )}
-
-              <div className="relative flex items-center justify-center p-1 rounded-xl transition-transform active:scale-90">
-                <Icon
-                  className={`w-5 h-5 transition-colors duration-200 ${
-                    active ? 'text-[#0866E8] stroke-[2.4]' : 'text-[#647A98] group-hover:text-[#0866E8]'
-                  }`}
-                />
-
-                {/* Real Cart Count Badge */}
-                {typeof item.badge === 'number' && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-[#E5485B] text-white text-[10px] font-black flex items-center justify-center shadow-xs animate-fadeIn">
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </span>
-                )}
-              </div>
-
-              <span
-                className={`text-[11px] font-bold tracking-tight transition-colors duration-200 mt-0.5 ${
-                  active ? 'text-[#0866E8]' : 'text-[#647A98] group-hover:text-[#102A50]'
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`relative flex flex-col items-center justify-center py-1.5 px-1 rounded-full group select-none transition-all duration-200 active:scale-90 ${
+                  active
+                    ? 'text-[#0866E8] bg-[#0866E8]/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)]'
+                    : 'text-[#647A98] hover:text-[#0866E8] hover:bg-white/40'
                 }`}
               >
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+                <div className="relative flex items-center justify-center">
+                  <Icon
+                    className={`w-5 h-5 transition-colors duration-200 ${
+                      active ? 'text-[#0866E8] stroke-[2.4]' : 'text-[#647A98] group-hover:text-[#0866E8]'
+                    }`}
+                  />
+
+                  {/* Real Cart Count Badge */}
+                  {typeof item.badge === 'number' && item.badge > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-1 rounded-full bg-[#E5485B] text-white text-[9px] font-black flex items-center justify-center shadow-xs animate-fadeIn">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
+                </div>
+
+                <span
+                  className={`text-[10px] font-bold tracking-tight transition-colors duration-200 mt-0.5 ${
+                    active ? 'text-[#0866E8]' : 'text-[#647A98] group-hover:text-[#102A50]'
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
   );
 };

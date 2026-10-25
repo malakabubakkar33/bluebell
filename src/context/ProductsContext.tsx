@@ -51,9 +51,10 @@ interface ProductsContextType {
 
   // Categories CRUD
   categories: Category[];
-  addCategory: (category: Category) => Promise<void>;
-  updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
+  addCategory: (category: Partial<Category>) => Promise<Category>;
+  updateCategory: (id: string, updates: Partial<Category>) => Promise<Category>;
   deleteCategory: (id: string) => Promise<void>;
+  refreshCategories: () => Promise<void>;
 
   // Banners CRUD
   banners: BannerItem[];
@@ -185,50 +186,70 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   // --- Categories CRUD ---
-  const addCategory = async (newCategory: Category) => {
-    setRawCategories((prev) => [...prev, newCategory]);
-
+  const refreshCategories = async () => {
     try {
-      const res = await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCategory),
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setRawCategories((prev) =>
-          prev.map((c) => (c.id === newCategory.id ? data.data : c))
-        );
+      const res = await fetch('/api/categories', { cache: 'no-store' });
+      const json = await res.json();
+      if (json.data && Array.isArray(json.data)) {
+        setRawCategories(json.data);
       }
     } catch (e) {
-      console.error('Failed to add category to database:', e);
+      console.error('Failed to refresh categories:', e);
     }
   };
 
-  const updateCategory = async (id: string, updates: Partial<Category>) => {
-    setRawCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
-
-    try {
-      await fetch(`/api/categories/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      });
-    } catch (e) {
-      console.error('Failed to update category in database:', e);
+  const addCategory = async (newCategory: Partial<Category>): Promise<Category> => {
+    const res = await fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newCategory),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.data) {
+      throw new Error(data.error || 'Failed to save category to database');
     }
+
+    const saved = data.data as Category;
+    setRawCategories((prev) => {
+      const exists = prev.some((c) => c.id === saved.id || c.slug === saved.slug);
+      if (exists) {
+        return prev.map((c) => (c.id === saved.id || c.slug === saved.slug ? saved : c));
+      }
+      return [...prev, saved];
+    });
+
+    return saved;
   };
 
-  const deleteCategory = async (id: string) => {
+  const updateCategory = async (id: string, updates: Partial<Category>): Promise<Category> => {
+    const res = await fetch(`/api/categories/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.data) {
+      throw new Error(data.error || 'Failed to update category in database');
+    }
+
+    const updated = data.data as Category;
+    setRawCategories((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+    );
+
+    return updated;
+  };
+
+  const deleteCategory = async (id: string): Promise<void> => {
+    const res = await fetch(`/api/categories/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete category from database');
+    }
+
     setRawCategories((prev) => prev.filter((c) => c.id !== id));
-
-    try {
-      await fetch(`/api/categories/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      });
-    } catch (e) {
-      console.error('Failed to delete category from database:', e);
-    }
   };
 
   // --- Banners CRUD ---
@@ -339,6 +360,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addCategory,
         updateCategory,
         deleteCategory,
+        refreshCategories,
         banners,
         addBanner,
         updateBanner,

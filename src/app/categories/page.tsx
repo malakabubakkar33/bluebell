@@ -17,16 +17,18 @@ export default function CategoriesPage() {
 
   // Dynamically calculate actual product count per category from live database
   const categoriesWithCounts = useMemo(() => {
-    return categories.map((cat) => {
-      const count = products.filter((p) =>
-        doesProductBelongToCategory(p.categorySlug, p.brand, cat.slug)
-      ).length;
+    return categories
+      .filter((cat) => cat.isActive !== false)
+      .map((cat) => {
+        const count = products.filter((p) =>
+          doesProductBelongToCategory(p.categorySlug, p.brand, cat.slug)
+        ).length;
 
-      return {
-        ...cat,
-        calculatedCount: count,
-      };
-    });
+        return {
+          ...cat,
+          calculatedCount: count,
+        };
+      });
   }, [categories, products]);
 
   // Filter categories by user search input
@@ -137,8 +139,8 @@ export default function CategoriesPage() {
           </span>
         </div>
 
-        {/* 2-Column Grid of Category Cards Matching Screen 2 */}
-        <div className="grid grid-cols-2 gap-3.5 sm:gap-4 pb-6">
+        {/* Responsive Grid of Category Cards: 2 on mobile, 3 on tablet, 4 on desktop */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 pb-6">
           {filteredCategories.map((cat) => {
             const targetUrl = `/products?category=${encodeURIComponent(cat.slug)}`;
 
@@ -151,9 +153,12 @@ export default function CategoriesPage() {
                 {/* Visual Image inside soft light blue container */}
                 <div className="relative w-20 h-20 rounded-2xl bg-[#EDF6FF] group-hover:bg-[#DCEBFA]/60 flex items-center justify-center my-1 transition-colors">
                   <img
-                    src={cat.image}
+                    src={cat.image || '/categories/iphone.svg'}
                     alt={cat.name}
                     className="w-14 h-14 object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-sm"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/categories/iphone.svg';
+                    }}
                   />
                 </div>
 
@@ -170,6 +175,12 @@ export default function CategoriesPage() {
             );
           })}
         </div>
+
+        {filteredCategories.length === 0 && (
+          <div className="bg-white rounded-2xl border border-[#DCEBFA] p-8 text-center text-[#647A98] text-xs font-bold">
+            No categories found matching &quot;{searchQuery}&quot;.
+          </div>
+        )}
       </div>
     </main>
   );

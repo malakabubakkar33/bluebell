@@ -100,7 +100,7 @@ type MegaKey = 'iphone' | 'samsung' | 'tablets' | 'watches' | 'accessories';
 export const Header: React.FC = () => {
   const { totalItems, subtotal, wishlist, setIsDrawerOpen } = useCart();
   const { user, isAdmin } = useAuth();
-  const { products: storeCatalogProducts } = useProducts();
+  const { products: storeCatalogProducts, categories = [] } = useProducts();
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -187,18 +187,18 @@ export const Header: React.FC = () => {
           const prevScrollY = lastScrollYRef.current;
           const delta = currentScrollY - prevScrollY;
 
-          if (currentScrollY <= 25) {
+          if (currentScrollY <= 20) {
             setIsAtTop(true);
             setIsHeaderHidden(false);
           } else {
             setIsAtTop(false);
-            if (delta > 6) {
-              // Scrolling down: hide header
+            if (delta > 5 && currentScrollY > 70) {
+              // Scrolling down past 70px: hide header smoothly
               setIsHeaderHidden(true);
               setActiveHoverMenu(null);
               setIsSearchOpen(false);
-            } else if (delta < -2) {
-              // Scrolling up: reveal header immediately!
+            } else if (delta < -3) {
+              // Scrolling up: reveal header smoothly!
               setIsHeaderHidden(false);
             }
           }
@@ -268,10 +268,8 @@ export const Header: React.FC = () => {
   return (
     <>
       <header
-        className={`w-full sticky top-0 z-50 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
-          isHeaderHidden
-            ? '-translate-y-full opacity-0 pointer-events-none'
-            : 'translate-y-0 opacity-100 shadow-[0_10px_30px_rgba(7,86,201,0.06)]'
+        className={`w-full sticky top-0 z-50 transition-transform duration-300 ease-in-out will-change-transform transform ${
+          isHeaderHidden ? '-translate-y-full' : 'translate-y-0'
         }`}
       >
         {/* =========================================================================
@@ -285,7 +283,7 @@ export const Header: React.FC = () => {
               initial={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="relative overflow-hidden bg-gradient-to-r from-[#F4F9FF] via-white to-[#EAF7FF] border-b border-[#DFEBF8] text-xs text-[#102A56] py-1.5 sm:py-2 select-none cursor-pointer"
+              className="relative overflow-hidden bg-white/70 backdrop-blur-xl border-b border-white/40 text-xs text-[#102A56] py-1.5 sm:py-2 select-none cursor-pointer"
               onClick={handleSocialMarqueeClick}
               onTouchStart={handleSocialMarqueeClick}
               onMouseEnter={() => setIsSocialMarqueePaused(true)}
@@ -386,7 +384,7 @@ export const Header: React.FC = () => {
             2. MAIN HEADER BAR
             Brand Logo, Slide-Out Search, and Actions (Search, Wishlist, Cart, Account).
            ========================================================================= */}
-        <div className="bg-white/90 backdrop-blur-2xl border-b border-white/70 shadow-xs transition-all duration-300 relative">
+        <div className="bg-white/70 backdrop-blur-2xl border-b border-white/50 shadow-[0_8px_32px_rgba(8,102,232,0.08)] transition-all duration-300 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between gap-4">
             {/* Left: Brand Logo (Transparent without background box) */}
             <div className="flex items-center gap-3">
@@ -473,7 +471,7 @@ export const Header: React.FC = () => {
               </AnimatePresence>
             </div>
 
-            {/* Right: Actions Cluster (Search, Wishlist, Cart, Account, Hamburger) */}
+            {/* Right: Actions Cluster (On Mobile: ONLY Search and Hamburger; Desktop: Search, Wishlist, Cart, Account) */}
             <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
               {/* 1. Search Icon Button */}
               {/* Desktop search toggle (slide-out in header) */}
@@ -494,16 +492,16 @@ export const Header: React.FC = () => {
                 type="button"
                 onClick={() => setIsMobileSearchOpen(true)}
                 aria-label="Open search on mobile"
-                className="flex md:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] hover:bg-[#DCEBFA] text-[#0866E8] border border-[#DCEBFA] items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                className="flex md:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/60 backdrop-blur-md hover:bg-white/80 text-[#0866E8] border border-white/80 items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
                 title="Search products"
               >
                 <Search className="w-4 h-4" />
               </button>
 
-              {/* 2. Wishlist Link Button (links to /wishlist) */}
+              {/* 2. Wishlist Link Button (Desktop only) */}
               <Link
                 href="/wishlist"
-                className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] hover:bg-rose-50 text-[#0866E8] hover:text-[#E5485B] border border-[#DCEBFA] hover:border-rose-200 flex items-center justify-center transition-all shadow-xs cursor-pointer"
+                className="hidden md:flex relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] hover:bg-rose-50 text-[#0866E8] hover:text-[#E5485B] border border-[#DCEBFA] hover:border-rose-200 items-center justify-center transition-all shadow-xs cursor-pointer"
                 title="View My Wishlist"
               >
                 <Heart className="w-4 h-4" />
@@ -514,22 +512,7 @@ export const Header: React.FC = () => {
                 )}
               </Link>
 
-              {/* 3. Designed Cart Button */}
-              {/* Mobile Cart Link directly to /cart */}
-              <Link
-                href="/cart"
-                className="relative md:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] text-[#0866E8] border border-[#DCEBFA] flex items-center justify-center shadow-xs transition-transform active:scale-95"
-                title="View Shopping Cart"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#E5485B] text-white text-[9px] font-black flex items-center justify-center shadow-xs">
-                    {totalItems}
-                  </span>
-                )}
-              </Link>
-
-              {/* Desktop Cart Pill with Drawer Open */}
+              {/* 3. Desktop Cart Pill with Drawer Open (Desktop only) */}
               <button
                 type="button"
                 onClick={() => setIsDrawerOpen(true)}
@@ -552,10 +535,10 @@ export const Header: React.FC = () => {
                 </div>
               </button>
 
-              {/* 4. Account / Login Area */}
+              {/* 4. Account / Login Area (Desktop only) */}
               <Link
                 href={user ? (isAdmin ? '/admin' : '/account') : '/auth/login'}
-                className="flex items-center gap-2 p-1 rounded-full hover:bg-[#EDF6FF] text-[#102A50] hover:text-[#0866E8] transition-colors"
+                className="hidden md:flex items-center gap-2 p-1 rounded-full hover:bg-[#EDF6FF] text-[#102A50] hover:text-[#0866E8] transition-colors"
                 title={user ? (isAdmin ? 'Admin Dashboard' : 'My Account') : 'Sign In / Register'}
               >
                 <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] border border-[#DCEBFA] text-[#0866E8] flex items-center justify-center shadow-xs">
@@ -573,7 +556,7 @@ export const Header: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsSideNavOpen(true)}
-                className="md:hidden flex flex-col justify-center items-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] text-[#102A50] border border-[#DCEBFA] p-1.5 gap-1 shadow-xs cursor-pointer hover:bg-[#DCEBFA] active:scale-95"
+                className="md:hidden flex flex-col justify-center items-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/60 backdrop-blur-md text-[#102A50] border border-white/80 p-1.5 gap-1 shadow-xs cursor-pointer hover:bg-white/80 active:scale-95"
                 aria-label="Toggle navigation drawer"
               >
                 <span className="w-4 h-[2px] bg-[#0866E8] rounded-full" />
@@ -587,7 +570,7 @@ export const Header: React.FC = () => {
               3. CATEGORY NAVIGATION BAR
               2-line hamburger icon on left, clean category tabs, removed extra labels.
              ========================================================================= */}
-          <div className="border-t border-[#DFEBF8]/80 py-2 hidden md:block bg-white/85 backdrop-blur-xl relative">
+          <div className="border-t border-white/50 py-2 hidden md:block bg-white/60 backdrop-blur-xl relative">
             <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between">
               <div className="flex items-center gap-6">
                 {/* 2-LINE HAMBURGER MENU BUTTON */}
@@ -610,6 +593,10 @@ export const Header: React.FC = () => {
                 <nav className="flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-[#102A56]">
                   <Link href="/" className="hover:text-[#0756C9] py-2 transition-colors">
                     Home
+                  </Link>
+
+                  <Link href="/categories" className="hover:text-[#0756C9] py-2 transition-colors flex items-center gap-1">
+                    <span>Categories</span>
                   </Link>
 
                   {/* 1. iPhone Auto-Hover Item */}
@@ -894,6 +881,27 @@ export const Header: React.FC = () => {
                       <LayoutGrid className="w-4 h-4 text-[#0866E8]" />
                       <span>Categories</span>
                     </Link>
+
+                    {/* Dynamic categories quick list in drawer */}
+                    {categories.length > 0 && (
+                      <div className="pl-6 pr-2 py-1 space-y-0.5">
+                        {categories
+                          .filter((c) => c.isActive !== false)
+                          .map((cat) => (
+                            <Link
+                              key={cat.id}
+                              href={`/products?category=${encodeURIComponent(cat.slug)}`}
+                              onClick={() => setIsSideNavOpen(false)}
+                              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-[#647A98] hover:text-[#0866E8] hover:bg-[#EDF6FF] transition-colors"
+                            >
+                              <span className="truncate">{cat.name}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {cat.itemCount || 0}
+                              </span>
+                            </Link>
+                          ))}
+                      </div>
+                    )}
 
                     <Link
                       href={user ? '/account' : '/auth/login'}
