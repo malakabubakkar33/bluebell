@@ -296,11 +296,29 @@ export const SupabaseDbService = {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'category';
 
-    const catId = category.id || `cat-${Date.now()}`;
+    // Check if category with this slug or name already exists in database
+    let targetId = category.id;
+    try {
+      const { data: existingRows } = await (client as any)
+        .from('categories')
+        .select('id, name, slug')
+        .or(`slug.eq.${cleanSlug},name.ilike.${trimmedName}`);
+
+      if (existingRows && existingRows.length > 0) {
+        targetId = existingRows[0].id;
+      }
+    } catch (e: any) {
+      console.warn('[createCategory] existing category check notice:', e?.message);
+    }
+
+    if (!targetId) {
+      targetId = `cat-${Date.now()}`;
+    }
+
     const image = category.image || '/categories/iphone.svg';
 
     const row = {
-      id: catId,
+      id: targetId,
       name: trimmedName,
       slug: cleanSlug,
       image,
@@ -314,23 +332,29 @@ export const SupabaseDbService = {
 
     const { data, error } = await (client as any)
       .from('categories')
-      .upsert(row, { onConflict: 'slug' })
+      .upsert(row, { onConflict: 'id' })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
-      console.error('createCategory database error:', error.message);
-      throw new Error(error.message);
+      console.error('[createCategory] database error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+      });
+      throw new Error(error.message || 'Failed to create category in database');
     }
 
+    const saved = data || row;
+
     return {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      image: data.image || image,
-      icon: data.icon || 'Layers',
-      description: data.description || '',
-      isActive: data.is_active !== false,
+      id: saved.id,
+      name: saved.name,
+      slug: saved.slug,
+      image: saved.image || image,
+      icon: saved.icon || 'Layers',
+      description: saved.description || '',
+      isActive: saved.is_active !== false,
       itemCount: 0,
     };
   },
@@ -362,24 +386,30 @@ export const SupabaseDbService = {
     const { data, error } = await (client as any)
       .from('categories')
       .update(rowUpdates)
-      .eq('id', id)
+      .or(`id.eq.${id},slug.eq.${id}`)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
-      console.error('updateCategory error:', error.message);
-      throw new Error(error.message);
+      console.error('[updateCategory] database error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+      });
+      throw new Error(error.message || 'Failed to update category in database');
     }
 
+    const updated = data || { id, ...updates };
+
     return {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      image: data.image || `/categories/${data.slug}.svg`,
-      icon: data.icon || 'Layers',
-      description: data.description || '',
-      isActive: data.is_active !== false,
-      itemCount: data.item_count || 0,
+      id: updated.id,
+      name: updated.name || updates.name || '',
+      slug: updated.slug || updates.slug || '',
+      image: updated.image || updates.image || `/categories/${updated.slug || 'iphone'}.svg`,
+      icon: updated.icon || updates.icon || 'Layers',
+      description: updated.description || updates.description || '',
+      isActive: updated.is_active !== false,
+      itemCount: 0,
     };
   },
 
@@ -690,7 +720,24 @@ export const SupabaseDbService = {
           .order('created_at', { ascending: false });
 
         if (!error && Array.isArray(data)) {
-          return data;
+          return data.map((row: any) => ({
+            id: row.id,
+            image: row.image || '/banners/hero-samsung-s24.jpg',
+            mobileImage: row.mobile_image || undefined,
+            title: row.title || 'Hero Banner',
+            titlePrefix: row.title_prefix || undefined,
+            titleHighlight: row.title_highlight || undefined,
+            brand: row.brand || undefined,
+            tag: row.tag || undefined,
+            tagline: row.tagline || undefined,
+            subtitle: row.subtitle || undefined,
+            price: row.price || undefined,
+            link: row.link || '/products',
+            status: row.status === 'Inactive' ? 'Inactive' : 'Active',
+            validPeriod: row.valid_period || 'Ongoing',
+            specs: Array.isArray(row.specs) ? row.specs : [],
+            themeColor: row.theme_color || '#0284c7',
+          }));
         }
       } catch (e: any) {
         console.error('getBanners error:', e?.message);
@@ -707,14 +754,57 @@ export const SupabaseDbService = {
 
     if (!client) throw new Error('Database client not configured');
 
+    const bannerId = String(banner.id || `banner-${Date.now()}`);
+    const fullTitle = banner.title || `${banner.titlePrefix || ''}${banner.titleHighlight || ''}`.trim() || 'Hero Banner';
+    const row = {
+      id: bannerId,
+      title: fullTitle,
+      title_prefix: banner.titlePrefix || null,
+      title_highlight: banner.titleHighlight || null,
+      brand: banner.brand || null,
+      tag: banner.tag || null,
+      tagline: banner.tagline || null,
+      subtitle: banner.subtitle || null,
+      price: banner.price || null,
+      image: banner.image || '/banners/hero-samsung-s24.jpg',
+      mobile_image: banner.mobileImage || null,
+      link: banner.link || '/products',
+      status: banner.status === 'Inactive' ? 'Inactive' : 'Active',
+      valid_period: banner.validPeriod || null,
+      theme_color: banner.themeColor || banner.color || '#0284c7',
+      specs: Array.isArray(banner.specs) ? banner.specs : [],
+      created_at: new Date().toISOString(),
+    };
+
     const { data, error } = await (client as any)
       .from('banners')
-      .upsert(banner, { onConflict: 'id' })
+      .upsert(row, { onConflict: 'id' })
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) throw new Error(error.message);
-    return data;
+    if (error) {
+      console.error('[createBanner] database error:', error.message);
+      throw new Error(error.message);
+    }
+    const saved = data || row;
+    return {
+      id: saved.id,
+      image: saved.image,
+      mobileImage: saved.mobile_image || undefined,
+      title: saved.title,
+      titlePrefix: saved.title_prefix || undefined,
+      titleHighlight: saved.title_highlight || undefined,
+      brand: saved.brand || undefined,
+      tag: saved.tag || undefined,
+      tagline: saved.tagline || undefined,
+      subtitle: saved.subtitle || undefined,
+      price: saved.price || undefined,
+      link: saved.link,
+      status: saved.status,
+      validPeriod: saved.valid_period,
+      specs: saved.specs || [],
+      themeColor: saved.theme_color,
+    };
   },
 
   async updateBanner(id: string | number, updates: any) {
@@ -725,15 +815,53 @@ export const SupabaseDbService = {
 
     if (!client) throw new Error('Database client not configured');
 
+    const rowUpdates: Record<string, any> = {};
+    if (updates.title !== undefined) rowUpdates.title = updates.title;
+    if (updates.titlePrefix !== undefined) rowUpdates.title_prefix = updates.titlePrefix;
+    if (updates.titleHighlight !== undefined) rowUpdates.title_highlight = updates.titleHighlight;
+    if (updates.brand !== undefined) rowUpdates.brand = updates.brand;
+    if (updates.tag !== undefined) rowUpdates.tag = updates.tag;
+    if (updates.tagline !== undefined) rowUpdates.tagline = updates.tagline;
+    if (updates.subtitle !== undefined) rowUpdates.subtitle = updates.subtitle;
+    if (updates.price !== undefined) rowUpdates.price = updates.price;
+    if (updates.image !== undefined) rowUpdates.image = updates.image;
+    if (updates.mobileImage !== undefined) rowUpdates.mobile_image = updates.mobileImage;
+    if (updates.link !== undefined) rowUpdates.link = updates.link;
+    if (updates.status !== undefined) rowUpdates.status = updates.status;
+    if (updates.validPeriod !== undefined) rowUpdates.valid_period = updates.validPeriod;
+    if (updates.themeColor !== undefined) rowUpdates.theme_color = updates.themeColor;
+    if (updates.specs !== undefined) rowUpdates.specs = updates.specs;
+
     const { data, error } = await (client as any)
       .from('banners')
-      .update(updates)
-      .eq('id', id)
+      .update(rowUpdates)
+      .eq('id', String(id))
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) throw new Error(error.message);
-    return data;
+    if (error) {
+      console.error('[updateBanner] database error:', error.message);
+      throw new Error(error.message);
+    }
+    const updated = data || { id, ...rowUpdates };
+    return {
+      id: updated.id,
+      image: updated.image,
+      mobileImage: updated.mobile_image || undefined,
+      title: updated.title,
+      titlePrefix: updated.title_prefix || undefined,
+      titleHighlight: updated.title_highlight || undefined,
+      brand: updated.brand || undefined,
+      tag: updated.tag || undefined,
+      tagline: updated.tagline || undefined,
+      subtitle: updated.subtitle || undefined,
+      price: updated.price || undefined,
+      link: updated.link,
+      status: updated.status,
+      validPeriod: updated.valid_period,
+      specs: updated.specs || [],
+      themeColor: updated.theme_color,
+    };
   },
 
   async deleteBanner(id: string | number) {
@@ -744,7 +872,7 @@ export const SupabaseDbService = {
 
     if (!client) throw new Error('Database client not configured');
 
-    const { error } = await (client as any).from('banners').delete().eq('id', id);
+    const { error } = await (client as any).from('banners').delete().eq('id', String(id));
     if (error) throw new Error(error.message);
     return true;
   },
@@ -766,7 +894,21 @@ export const SupabaseDbService = {
           .order('created_at', { ascending: false });
 
         if (!error && Array.isArray(data)) {
-          return data;
+          return data.map((row: any) => ({
+            id: row.id,
+            badge: row.badge || 'SPECIAL OFFER',
+            badgeColor: row.badge_color || undefined,
+            title: row.title || 'Special Promotion',
+            discount: row.discount || 'Special Price',
+            subtitle: row.subtitle || '',
+            brand: row.brand || '',
+            image: row.image || '/categories/samsung.svg',
+            link: row.link || '/products',
+            bgGradient: row.bg_gradient || undefined,
+            price: row.price || undefined,
+            products: Array.isArray(row.products) ? row.products : [],
+            status: row.status === 'Inactive' ? 'Inactive' : 'Active',
+          }));
         }
       } catch (e: any) {
         console.error('getDeals error:', e?.message);
@@ -783,14 +925,50 @@ export const SupabaseDbService = {
 
     if (!client) throw new Error('Database client not configured');
 
+    const dealId = String(deal.id || `deal-${Date.now()}`);
+    const row = {
+      id: dealId,
+      badge: deal.badge || 'SPECIAL OFFER',
+      badge_color: deal.badgeColor || null,
+      title: deal.title || 'Special Promotion',
+      discount: deal.discount || 'Special Price',
+      subtitle: deal.subtitle || null,
+      brand: deal.brand || null,
+      image: deal.image || '/categories/samsung.svg',
+      link: deal.link || '/products',
+      bg_gradient: deal.bgGradient || deal.bgColor || null,
+      price: deal.price ? String(deal.price) : null,
+      status: deal.status === 'Inactive' ? 'Inactive' : 'Active',
+      products: Array.isArray(deal.products) ? deal.products : [],
+      created_at: new Date().toISOString(),
+    };
+
     const { data, error } = await (client as any)
       .from('deals')
-      .upsert(deal, { onConflict: 'id' })
+      .upsert(row, { onConflict: 'id' })
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) throw new Error(error.message);
-    return data;
+    if (error) {
+      console.error('[createDeal] database error:', error.message);
+      throw new Error(error.message);
+    }
+    const saved = data || row;
+    return {
+      id: saved.id,
+      badge: saved.badge,
+      badgeColor: saved.badge_color || undefined,
+      title: saved.title,
+      discount: saved.discount,
+      subtitle: saved.subtitle || '',
+      brand: saved.brand || '',
+      image: saved.image,
+      link: saved.link,
+      bgGradient: saved.bg_gradient || undefined,
+      price: saved.price || undefined,
+      products: saved.products || [],
+      status: saved.status,
+    };
   },
 
   async updateDeal(id: string | number, updates: any) {
@@ -801,15 +979,48 @@ export const SupabaseDbService = {
 
     if (!client) throw new Error('Database client not configured');
 
+    const rowUpdates: Record<string, any> = {};
+    if (updates.badge !== undefined) rowUpdates.badge = updates.badge;
+    if (updates.badgeColor !== undefined) rowUpdates.badge_color = updates.badgeColor;
+    if (updates.title !== undefined) rowUpdates.title = updates.title;
+    if (updates.discount !== undefined) rowUpdates.discount = updates.discount;
+    if (updates.subtitle !== undefined) rowUpdates.subtitle = updates.subtitle;
+    if (updates.brand !== undefined) rowUpdates.brand = updates.brand;
+    if (updates.image !== undefined) rowUpdates.image = updates.image;
+    if (updates.link !== undefined) rowUpdates.link = updates.link;
+    if (updates.bgGradient !== undefined) rowUpdates.bg_gradient = updates.bgGradient;
+    if (updates.bgColor !== undefined) rowUpdates.bg_gradient = updates.bgColor;
+    if (updates.price !== undefined) rowUpdates.price = updates.price ? String(updates.price) : null;
+    if (updates.status !== undefined) rowUpdates.status = updates.status;
+    if (updates.products !== undefined) rowUpdates.products = updates.products;
+
     const { data, error } = await (client as any)
       .from('deals')
-      .update(updates)
-      .eq('id', id)
+      .update(rowUpdates)
+      .eq('id', String(id))
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) throw new Error(error.message);
-    return data;
+    if (error) {
+      console.error('[updateDeal] database error:', error.message);
+      throw new Error(error.message);
+    }
+    const updated = data || { id, ...rowUpdates };
+    return {
+      id: updated.id,
+      badge: updated.badge,
+      badgeColor: updated.badge_color || undefined,
+      title: updated.title,
+      discount: updated.discount,
+      subtitle: updated.subtitle || '',
+      brand: updated.brand || '',
+      image: updated.image,
+      link: updated.link,
+      bgGradient: updated.bg_gradient || undefined,
+      price: updated.price || undefined,
+      products: updated.products || [],
+      status: updated.status,
+    };
   },
 
   async deleteDeal(id: string | number) {
@@ -820,7 +1031,7 @@ export const SupabaseDbService = {
 
     if (!client) throw new Error('Database client not configured');
 
-    const { error } = await (client as any).from('deals').delete().eq('id', id);
+    const { error } = await (client as any).from('deals').delete().eq('id', String(id));
     if (error) throw new Error(error.message);
     return true;
   },

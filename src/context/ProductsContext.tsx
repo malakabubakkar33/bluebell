@@ -135,50 +135,45 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const addProduct = async (newProduct: Product) => {
-    setProducts((prev) => [newProduct, ...prev]);
-
-    try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProduct),
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        // Replace temporary entry with authoritative database record
-        setProducts((prev) =>
-          prev.map((p) => (p.id === newProduct.id ? data.data : p))
-        );
-      }
-    } catch (e) {
-      console.error('Failed to create product in database:', e);
+    const res = await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProduct),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.data) {
+      throw new Error(data.error?.message || data.error || 'Failed to create product in database');
     }
+
+    const saved = data.data as Product;
+    setProducts((prev) => [saved, ...prev.filter((p) => p.id !== saved.id)]);
   };
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
-
-    try {
-      await fetch(`/api/products/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      });
-    } catch (e) {
-      console.error('Failed to update product in database:', e);
+    const res = await fetch(`/api/products/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.data) {
+      throw new Error(data.error || 'Failed to update product in database');
     }
+
+    const updated = data.data as Product;
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
   };
 
   const deleteProduct = async (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-
-    try {
-      await fetch(`/api/products/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      });
-    } catch (e) {
-      console.error('Failed to delete product from database:', e);
+    const res = await fetch(`/api/products/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete product from database');
     }
+
+    setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
   const refreshProducts = async () => {
@@ -254,96 +249,88 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // --- Banners CRUD ---
   const addBanner = async (newBanner: BannerItem) => {
-    setBanners((prev) => [newBanner, ...prev]);
-
-    try {
-      const res = await fetch('/api/banners', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newBanner),
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setBanners((prev) =>
-          prev.map((b) => (b.id === newBanner.id ? data.data : b))
-        );
-      }
-    } catch (e) {
-      console.error('Failed to save banner in database:', e);
+    const res = await fetch('/api/banners', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newBanner),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.data) {
+      throw new Error(data.error || 'Failed to save banner in database');
     }
+
+    const saved = data.data;
+    setBanners((prev) => [saved, ...prev.filter((b) => b.id !== saved.id)]);
   };
 
   const updateBanner = async (id: string | number, updates: Partial<BannerItem>) => {
-    setBanners((prev) => prev.map((b) => (b.id === id ? { ...b, ...updates } : b)));
-
-    try {
-      await fetch(`/api/banners/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      });
-    } catch (e) {
-      console.error('Failed to update banner in database:', e);
+    const res = await fetch(`/api/banners/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.data) {
+      throw new Error(data.error || 'Failed to update banner in database');
     }
+
+    const updated = data.data;
+    setBanners((prev) => prev.map((b) => (b.id === id ? { ...b, ...updated } : b)));
   };
 
   const deleteBanner = async (id: string | number) => {
-    setBanners((prev) => prev.filter((b) => b.id !== id));
-
-    try {
-      await fetch(`/api/banners/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      });
-    } catch (e) {
-      console.error('Failed to delete banner from database:', e);
+    const res = await fetch(`/api/banners/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete banner from database');
     }
+
+    setBanners((prev) => prev.filter((b) => b.id !== id));
   };
 
   // --- Deals CRUD ---
   const addDeal = async (newDeal: PromoDeal) => {
-    setDeals((prev) => [newDeal, ...prev]);
-
-    try {
-      const res = await fetch('/api/deals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newDeal),
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setDeals((prev) =>
-          prev.map((d) => (d.id === newDeal.id ? data.data : d))
-        );
-      }
-    } catch (e) {
-      console.error('Failed to save deal in database:', e);
+    const res = await fetch('/api/deals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newDeal),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.data) {
+      throw new Error(data.error || 'Failed to save deal in database');
     }
+
+    const saved = data.data;
+    setDeals((prev) => [saved, ...prev.filter((d) => d.id !== saved.id)]);
   };
 
   const updateDeal = async (id: string | number, updates: Partial<PromoDeal>) => {
-    setDeals((prev) => prev.map((d) => (d.id === id ? { ...d, ...updates } : d)));
-
-    try {
-      await fetch(`/api/deals/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      });
-    } catch (e) {
-      console.error('Failed to update deal in database:', e);
+    const res = await fetch(`/api/deals/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success || !data.data) {
+      throw new Error(data.error || 'Failed to update deal in database');
     }
+
+    const updated = data.data;
+    setDeals((prev) => prev.map((d) => (d.id === id ? { ...d, ...updated } : d)));
   };
 
   const deleteDeal = async (id: string | number) => {
-    setDeals((prev) => prev.filter((d) => d.id !== id));
-
-    try {
-      await fetch(`/api/deals/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      });
-    } catch (e) {
-      console.error('Failed to delete deal from database:', e);
+    const res = await fetch(`/api/deals/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete deal from database');
     }
+
+    setDeals((prev) => prev.filter((d) => d.id !== id));
   };
 
   return (

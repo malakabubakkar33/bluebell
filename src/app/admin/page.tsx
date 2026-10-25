@@ -229,51 +229,54 @@ export default function AdminPage() {
   };
 
   // Save Product
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productForm.name) return;
 
-    if (editingProduct) {
-      updateProduct(editingProduct.id, {
-        name: productForm.name,
-        brand: productForm.brand,
-        category: productForm.category,
-        categorySlug: productForm.categorySlug,
-        price: Number(productForm.price),
-        originalPrice: Number(productForm.originalPrice),
-        stock: Number(productForm.stock),
-        badge: productForm.badge,
-        image: productForm.image,
-        warranty: productForm.warranty,
-        description: productForm.description,
-      });
-      showToast(`Updated "${productForm.name}" successfully.`);
-    } else {
-      const newP: Product = {
-        id: `prod-${Date.now()}`,
-        name: productForm.name,
-        slug: productForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        subtitle: productForm.warranty || 'PTA Approved Flagship',
-        brand: productForm.brand,
-        category: productForm.category,
-        categorySlug: productForm.categorySlug,
-        price: Number(productForm.price),
-        originalPrice: Number(productForm.originalPrice),
-        stock: Number(productForm.stock),
-        badge: productForm.badge,
-        image: productForm.image,
-        gallery: [productForm.image],
-        rating: 5.0,
-        reviewCount: 1,
-        warranty: productForm.warranty,
-        description: productForm.description,
-        isFeatured: true,
-      };
-      addProduct(newP);
-      showToast(`Added "${newP.name}" to storefront!`);
+    try {
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, {
+          name: productForm.name,
+          brand: productForm.brand,
+          category: productForm.category,
+          categorySlug: productForm.categorySlug,
+          price: Number(productForm.price),
+          originalPrice: Number(productForm.originalPrice),
+          stock: Number(productForm.stock),
+          badge: productForm.badge,
+          image: productForm.image,
+          warranty: productForm.warranty,
+          description: productForm.description,
+        });
+        showToast(`Updated "${productForm.name}" successfully.`);
+      } else {
+        const newP: Product = {
+          id: `prod-${Date.now()}`,
+          name: productForm.name,
+          slug: productForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          subtitle: productForm.warranty || 'PTA Approved Flagship',
+          brand: productForm.brand,
+          category: productForm.category,
+          categorySlug: productForm.categorySlug,
+          price: Number(productForm.price),
+          originalPrice: Number(productForm.originalPrice),
+          stock: Number(productForm.stock),
+          badge: productForm.badge,
+          image: productForm.image,
+          gallery: [productForm.image],
+          rating: 5.0,
+          reviewCount: 1,
+          warranty: productForm.warranty,
+          description: productForm.description,
+          isFeatured: true,
+        };
+        await addProduct(newP);
+        showToast(`Added "${newP.name}" to storefront!`);
+      }
+      setShowProductModal(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to save product in database');
     }
-
-    setShowProductModal(false);
   };
 
   // Quick stock update from Inventory view
@@ -656,22 +659,24 @@ export default function AdminPage() {
               categoriesList={categoriesList}
               onAddCategory={async (cat) => {
                 try {
-                  await addCategory(cat);
-                  showToast(`Category "${cat.name}" saved to database successfully.`);
-                  return true;
+                  const saved = await addCategory(cat);
+                  showToast(`Category "${saved.name || cat.name}" saved to database successfully.`);
+                  return { success: true };
                 } catch (err: any) {
-                  showToast(err?.message || 'Failed to add category');
-                  return false;
+                  const msg = err?.message || 'Failed to add category';
+                  showToast(msg);
+                  return { success: false, error: msg };
                 }
               }}
               onUpdateCategory={async (id, updates) => {
                 try {
                   await updateCategory(id, updates);
                   showToast(`Category updated successfully in database.`);
-                  return true;
+                  return { success: true };
                 } catch (err: any) {
-                  showToast(err?.message || 'Failed to update category');
-                  return false;
+                  const msg = err?.message || 'Failed to update category';
+                  showToast(msg);
+                  return { success: false, error: msg };
                 }
               }}
               onDeleteCategory={async (id, name) => {

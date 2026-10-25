@@ -18,8 +18,8 @@ import { Category } from '@/types';
 
 interface CategoriesViewProps {
   categoriesList: Category[];
-  onAddCategory: (category: Partial<Category>) => Promise<boolean>;
-  onUpdateCategory: (id: string, updates: Partial<Category>) => Promise<boolean>;
+  onAddCategory: (category: Partial<Category>) => Promise<{ success: boolean; error?: string } | boolean>;
+  onUpdateCategory: (id: string, updates: Partial<Category>) => Promise<{ success: boolean; error?: string } | boolean>;
   onDeleteCategory: (id: string, name: string) => Promise<boolean>;
   onRefresh?: () => void;
   isRefreshing?: boolean;
@@ -103,11 +103,26 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
       return;
     }
 
+    // Check for duplicate category name/slug before sending
+    if (!editingCategory) {
+      const duplicate = categoriesList.find(
+        (c) =>
+          c.name.trim().toLowerCase() === trimmedName.toLowerCase() ||
+          c.slug.trim().toLowerCase() === cleanSlug.toLowerCase()
+      );
+      if (duplicate) {
+        setErrorMessage(
+          `Category "${trimmedName}" (slug: ${cleanSlug}) already exists in the store. Please choose a different name or edit the existing category.`
+        );
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
       if (editingCategory) {
-        const success = await onUpdateCategory(editingCategory.id, {
+        const res = await onUpdateCategory(editingCategory.id, {
           name: trimmedName,
           slug: cleanSlug,
           image: formImage.trim() || '/categories/iphone.svg',
@@ -115,13 +130,15 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           isActive: formIsActive,
         });
 
-        if (success) {
+        const isSuccess = typeof res === 'boolean' ? res : res.success;
+        if (isSuccess) {
           setShowModal(false);
         } else {
-          setErrorMessage('Database update failed. Please try again.');
+          const err = typeof res === 'object' && res.error ? res.error : 'Database update failed. Please try again.';
+          setErrorMessage(err);
         }
       } else {
-        const success = await onAddCategory({
+        const res = await onAddCategory({
           name: trimmedName,
           slug: cleanSlug,
           image: formImage.trim() || '/categories/iphone.svg',
@@ -129,10 +146,12 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           isActive: formIsActive,
         });
 
-        if (success) {
+        const isSuccess = typeof res === 'boolean' ? res : res.success;
+        if (isSuccess) {
           setShowModal(false);
         } else {
-          setErrorMessage('Database creation failed. Please try again.');
+          const err = typeof res === 'object' && res.error ? res.error : 'Database creation failed. Please try again.';
+          setErrorMessage(err);
         }
       }
     } catch (err: any) {
