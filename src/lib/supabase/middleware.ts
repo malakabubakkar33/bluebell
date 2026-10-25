@@ -34,18 +34,13 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  await supabase.auth.getUser();
 
-  // Protect /admin routes
+  // Redirect legacy /admin routes to homepage since old admin panel has been removed
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    // If user is not authenticated, redirect to /account/login (or allow in dev fallback if unconfigured)
-    if (!user && process.env.NODE_ENV === 'production') {
-      const url = request.nextUrl.clone();
-      url.pathname = '/contact';
-      return NextResponse.redirect(url);
-    }
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;

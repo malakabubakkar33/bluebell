@@ -39,13 +39,8 @@ export default function AuthLoginPage() {
     setIsLoading(false);
 
     if (result.success && result.user) {
-      if (result.user.role === 'admin') {
-        setSuccessMessage('Admin verified! Launching Admin Panel...');
-        setTimeout(() => router.push('/admin'), 600);
-      } else {
-        setSuccessMessage(`Welcome back, ${result.user.name}!`);
-        setTimeout(() => router.push('/account'), 600);
-      }
+      setSuccessMessage(`Welcome back, ${result.user.name}!`);
+      setTimeout(() => router.push('/account'), 600);
     } else {
       setErrorMessage(result.error || 'Invalid credentials. Please verify your email and password.');
     }

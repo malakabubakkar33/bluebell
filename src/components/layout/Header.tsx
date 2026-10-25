@@ -99,7 +99,7 @@ type MegaKey = 'iphone' | 'samsung' | 'tablets' | 'watches' | 'accessories';
 
 export const Header: React.FC = () => {
   const { totalItems, subtotal, wishlist, setIsDrawerOpen } = useCart();
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const { products: storeCatalogProducts, categories = [] } = useProducts();
   const router = useRouter();
 
@@ -537,9 +537,9 @@ export const Header: React.FC = () => {
 
               {/* 4. Account / Login Area (Desktop only) */}
               <Link
-                href={user ? (isAdmin ? '/admin' : '/account') : '/auth/login'}
+                href={user ? '/account' : '/auth/login'}
                 className="hidden md:flex items-center gap-2 p-1 rounded-full hover:bg-[#EDF6FF] text-[#102A50] hover:text-[#0866E8] transition-colors"
-                title={user ? (isAdmin ? 'Admin Dashboard' : 'My Account') : 'Sign In / Register'}
+                title={user ? 'My Account' : 'Sign In / Register'}
               >
                 <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EDF6FF] border border-[#DCEBFA] text-[#0866E8] flex items-center justify-center shadow-xs">
                   <User className="w-4 h-4" />
@@ -547,7 +547,7 @@ export const Header: React.FC = () => {
                 <div className="hidden xl:flex flex-col text-left leading-tight pr-1">
                   <span className="text-[9px] text-[#647A98] font-bold uppercase">Account</span>
                   <span className="text-xs font-bold text-[#102A50] truncate max-w-[90px]">
-                    {user ? (isAdmin ? 'Admin' : user.name.split(' ')[0]) : 'Sign In'}
+                    {user ? user.name.split(' ')[0] : 'Sign In'}
                   </span>
                 </div>
               </Link>

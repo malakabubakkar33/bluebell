@@ -14,7 +14,6 @@ import {
   HelpCircle,
   LogOut,
   ChevronRight,
-  ExternalLink,
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -27,7 +26,7 @@ import { useCart } from '@/context/CartContext';
 
 export default function CustomerAccountPage() {
   const router = useRouter();
-  const { user, logout, isAdmin, updateProfile } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
   const { wishlist } = useCart();
 
   const [activeTab, setActiveTab] = useState<'menu' | 'orders' | 'edit_profile'>('menu');
@@ -178,16 +177,6 @@ export default function CustomerAccountPage() {
           >
             {activeTab === 'edit_profile' ? 'View Menu' : 'Edit Profile'}
           </button>
-
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-dark text-white text-[11px] font-bold shadow-xs hover:bg-black transition-colors"
-            >
-              <span>Admin Dashboard</span>
-              <ExternalLink className="w-3 h-3" />
-            </Link>
-          )}
         </div>
 
         {/* 3-Column Stats Row matching Screen 8 */}
