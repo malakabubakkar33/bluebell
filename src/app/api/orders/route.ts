@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseDbService } from '@/lib/supabase/service';
 
+import { requireAdminApi } from '@/lib/auth/adminGuard';
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get('email') || undefined;
+
+    // If requesting all orders without customer email filter, enforce administrator authorization
+    if (!email) {
+      const auth = await requireAdminApi(req);
+      if ('response' in auth) {
+        return auth.response;
+      }
+    }
+
     const orders = await SupabaseDbService.getOrders(email);
     return NextResponse.json({ success: true, count: orders.length, data: orders });
   } catch (error: any) {

@@ -34,13 +34,39 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // Redirect legacy /admin routes to homepage since old admin panel has been removed
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/';
-    return NextResponse.redirect(url);
+  const pathname = request.nextUrl.pathname;
+
+  // Protect /admin routes
+  if (pathname.startsWith('/admin')) {
+    // 1. Allow access to /admin/login
+    if (pathname === '/admin/login') {
+      // If already logged in as verified admin, redirect straight to /admin
+      if (user && user.user_metadata?.role === 'admin') {
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin';
+        return NextResponse.redirect(url);
+      }
+      return supabaseResponse;
+    }
+
+    // 2. Unauthenticated visitors are redirected to /admin/login
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      return NextResponse.redirect(url);
+    }
+
+    // 3. Authenticated customer accounts attempting to access admin routes are denied
+    if (user.user_metadata?.role && user.user_metadata.role !== 'admin') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      url.searchParams.set('error', 'forbidden');
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

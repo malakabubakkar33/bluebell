@@ -22,11 +22,18 @@ export async function GET(
   }
 }
 
+import { requireAdminApi } from '@/lib/auth/adminGuard';
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdminApi(req);
+    if ('response' in auth) {
+      return auth.response;
+    }
+
     const { id } = await params;
     const body = await req.json();
 
@@ -53,6 +60,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdminApi(req);
+    if ('response' in auth) {
+      return auth.response;
+    }
+
     const { id } = await params;
     await SupabaseDbService.deleteOrder(id);
     return NextResponse.json({ success: true, message: `Order ${id} removed` });

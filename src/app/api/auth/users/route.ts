@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/supabase/admin';
+import { requireAdminApi } from '@/lib/auth/adminGuard';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdminApi(req);
+    if ('response' in auth) {
+      return auth.response;
+    }
+
     const adminClient = getSupabaseAdminClient();
     if (!adminClient) {
       return NextResponse.json({ success: true, users: [] });
@@ -30,6 +36,11 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const auth = await requireAdminApi(req);
+    if ('response' in auth) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const { id, email, status, role, name, phone, whatsapp, city, address } = body;
 
@@ -96,6 +107,11 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireAdminApi(req);
+    if ('response' in auth) {
+      return auth.response;
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     const email = searchParams.get('email');

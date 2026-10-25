@@ -16,33 +16,6 @@ export async function POST(req: NextRequest) {
 
     const trimmedEmail = email.trim().toLowerCase();
 
-    // 1. Check Admin Credentials
-    if (
-      (trimmedEmail === 'admin@bluebells.pk' ||
-        trimmedEmail === 'admin@bluebell.com' ||
-        trimmedEmail === 'admin') &&
-      (password === 'admin123' || password === 'admin' || password === 'BlueBells@2026')
-    ) {
-      const adminProfile = {
-        id: 'user-admin-1',
-        name: 'Blue Bell Admin',
-        email: 'admin@bluebells.pk',
-        phone: '+92 300 1234567',
-        whatsapp: '+92 300 1234567',
-        city: 'Peshawar',
-        address: 'Saddar Road, Blue Bell Mobile Shop',
-        role: 'admin' as const,
-        status: 'active' as const,
-        created_at: '2026-01-01T00:00:00.000Z',
-        orders_count: 0,
-        total_spent: 0,
-      };
-
-      return NextResponse.json({
-        success: true,
-        user: adminProfile,
-      });
-    }
 
     const adminClient = getSupabaseAdminClient();
 
