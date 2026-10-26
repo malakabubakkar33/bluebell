@@ -50,6 +50,20 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
 
     const adminClient = getSupabaseAdminClient();
     if (!adminClient) {
+      if (authUser.user_metadata?.role === 'admin') {
+        return {
+          authenticated: true,
+          isAdmin: true,
+          user: {
+            id: authUser.id,
+            email: authUser.email,
+            name: authUser.user_metadata?.name || 'Administrator',
+            role: 'admin',
+            phone: authUser.phone || authUser.user_metadata?.phone || undefined,
+            created_at: authUser.created_at || undefined,
+          },
+        };
+      }
       return {
         authenticated: true,
         isAdmin: false,
@@ -66,6 +80,20 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
       .maybeSingle();
 
     if (dbError || !dbUser) {
+      if (authUser.user_metadata?.role === 'admin') {
+        return {
+          authenticated: true,
+          isAdmin: true,
+          user: {
+            id: authUser.id,
+            email: authUser.email,
+            name: authUser.user_metadata?.name || 'Administrator',
+            role: 'admin',
+            phone: authUser.phone || authUser.user_metadata?.phone || undefined,
+            created_at: authUser.created_at || undefined,
+          },
+        };
+      }
       return {
         authenticated: true,
         isAdmin: false,
