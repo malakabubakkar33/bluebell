@@ -93,12 +93,24 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, [rawCategories, products]);
 
-  // Initial Data Fetch from Supabase APIs with unified bootstrap acceleration
-  const fetchAllData = async () => {
-    setIsLoading(true);
+  // Broadcast real-time catalog changes across browser tabs and client devices
+  const broadcastCatalogUpdate = () => {
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('bluebell_store_sync');
+        channel.postMessage({ type: 'CATALOG_UPDATED', timestamp: Date.now() });
+        channel.close();
+      }
+      localStorage.setItem('bluebell_last_catalog_update', Date.now().toString());
+    } catch {}
+  };
+
+  // Resilient Data Fetch from Supabase APIs with unified bootstrap acceleration
+  const fetchAllData = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       // 1. Ultra-fast path: single unified bootstrap call powered by server-side SingleFlight cache
-      const bootstrapRes = await fetch('/api/bootstrap')
+      const bootstrapRes = await fetch('/api/bootstrap', { cache: 'no-store' })
         .then((r) => r.json())
         .catch(() => null);
 
@@ -112,10 +124,10 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       // 2. Resilient fallback: parallel fetch if bootstrap is unavailable
       const [prodsRes, catsRes, bansRes, dealsRes] = await Promise.all([
-        fetch('/api/products').then((r) => r.json()).catch(() => ({ data: [] })),
-        fetch('/api/categories').then((r) => r.json()).catch(() => ({ data: [] })),
-        fetch('/api/banners').then((r) => r.json()).catch(() => ({ data: [] })),
-        fetch('/api/deals').then((r) => r.json()).catch(() => ({ data: [] })),
+        fetch('/api/products', { cache: 'no-store' }).then((r) => r.json()).catch(() => ({ data: [] })),
+        fetch('/api/categories', { cache: 'no-store' }).then((r) => r.json()).catch(() => ({ data: [] })),
+        fetch('/api/banners', { cache: 'no-store' }).then((r) => r.json()).catch(() => ({ data: [] })),
+        fetch('/api/deals', { cache: 'no-store' }).then((r) => r.json()).catch(() => ({ data: [] })),
       ]);
 
       if (prodsRes.data && Array.isArray(prodsRes.data)) {
@@ -133,12 +145,60 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (e) {
       console.error('Failed to fetch data from Supabase backend:', e);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
 
+  // Real-Time Cross-Tab / Cross-Window Synchronization
   useEffect(() => {
-    fetchAllData();
+    // Initial fetch with loader
+    fetchAllData(true);
+
+    // 1. BroadcastChannel for instant real-time sync across open browser tabs
+    let syncChannel: BroadcastChannel | null = null;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        syncChannel = new BroadcastChannel('bluebell_store_sync');
+        syncChannel.onmessage = (event) => {
+          if (event.data?.type === 'CATALOG_UPDATED') {
+            fetchAllData(false);
+          }
+        };
+      }
+    } catch (e) {
+      console.warn('BroadcastChannel sync unavailable:', e);
+    }
+
+    // 2. Storage event fallback for cross-process sync
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'bluebell_last_catalog_update') {
+        fetchAllData(false);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // 3. Tab Visibility & Focus auto-revalidation
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAllData(false);
+      }
+    };
+    window.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+
+    // 4. Background heartbeat auto-sync (polls every 15 seconds)
+    // Guarantees that any change made by admin in any browser updates client screens without manual reload!
+    const heartbeatTimer = setInterval(() => {
+      fetchAllData(false);
+    }, 15000);
+
+    return () => {
+      if (syncChannel) syncChannel.close();
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+      clearInterval(heartbeatTimer);
+    };
   }, []);
 
   // --- Products CRUD ---
@@ -161,6 +221,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const saved = data.data as Product;
     setProducts((prev) => [saved, ...prev.filter((p) => p.id !== saved.id)]);
+    broadcastCatalogUpdate();
   };
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
@@ -176,6 +237,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updated = data.data as Product;
     setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updated } : p)));
+    broadcastCatalogUpdate();
   };
 
   const deleteProduct = async (id: string) => {
@@ -188,6 +250,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     setProducts((prev) => prev.filter((p) => p.id !== id));
+    broadcastCatalogUpdate();
   };
 
   const refreshProducts = async () => {
@@ -227,6 +290,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return [...prev, saved];
     });
 
+    broadcastCatalogUpdate();
     return saved;
   };
 
@@ -246,6 +310,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
     );
 
+    broadcastCatalogUpdate();
     return updated;
   };
 
@@ -259,6 +324,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     setRawCategories((prev) => prev.filter((c) => c.id !== id));
+    broadcastCatalogUpdate();
   };
 
   // --- Banners CRUD ---

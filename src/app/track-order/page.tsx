@@ -81,49 +81,37 @@ function TrackOrderContent() {
   const currentStep = orderData ? getStepIndex(orderData.status) : 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-8 py-6 md:py-12">
-      {/* Mobile Top App Bar */}
-      <div className="md:hidden flex items-center justify-between pb-4 mb-4 border-b border-brand-border">
-        <button
-          onClick={() => router.back()}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-brand-dark hover:bg-white transition-colors"
-          aria-label="Back"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <BrandLogo variant="header" />
-        <div className="w-9" />
-      </div>
-
-      <div className="text-center max-w-lg mx-auto mb-8">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-brand-primary bg-brand-light px-3 py-1 rounded-full">
+    <div className="w-full max-w-4xl mx-auto px-3.5 sm:px-8 py-4 sm:py-8 md:py-12">
+      {/* Page Title & Badging */}
+      <div className="text-center max-w-lg mx-auto mb-6 sm:mb-8">
+        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-brand-primary bg-brand-light px-3 py-1 rounded-full">
           Live Logistics Portal
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold text-brand-dark tracking-tight mt-2">
+        <h1 className="text-xl sm:text-3xl font-bold text-brand-dark tracking-tight mt-2">
           Track Your Mobile Order
         </h1>
-        <p className="text-xs text-brand-muted mt-1">
-          Enter your Order ID (e.g. ORD-98241) or phone number to check live order and delivery status.
+        <p className="text-xs text-brand-muted mt-1 px-2">
+          Enter your Order ID (e.g. ORD-98241) to check live packaging, courier dispatch, and delivery status.
         </p>
       </div>
 
       {/* Tracking Search Input */}
-      <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-8">
-        <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-brand-border shadow-xs focus-within:border-brand-primary">
+      <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-6 sm:mb-8">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-white p-1 sm:p-1.5 rounded-2xl border border-brand-border shadow-xs focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/10">
           <input
             type="text"
             value={orderQuery}
             onChange={(e) => setOrderQuery(e.target.value)}
             placeholder="Enter Order ID (e.g. ORD-98241)"
-            className="flex-1 px-4 py-2.5 text-base sm:text-sm text-brand-dark placeholder:text-brand-muted/70 focus:outline-none"
+            className="flex-1 px-3 sm:px-4 py-2.5 text-base sm:text-sm text-brand-dark placeholder:text-brand-muted/70 focus:outline-none bg-transparent min-w-0"
           />
           <button
             type="submit"
-            disabled={loading}
-            className="px-5 py-2.5 bg-brand-primary hover:bg-brand-deep text-white font-bold text-xs sm:text-sm rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+            disabled={loading || !orderQuery.trim()}
+            className="px-4 sm:px-5 py-2.5 bg-brand-primary hover:bg-brand-deep disabled:opacity-50 text-white font-bold text-xs sm:text-sm rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
           >
             {loading ? (
-              <span className="font-bold text-xs animate-pulse">Searching...</span>
+              <span className="font-bold text-xs animate-pulse">Checking...</span>
             ) : (
               <>
                 <Search className="w-4 h-4" />
@@ -144,12 +132,12 @@ function TrackOrderContent() {
 
       {/* Order Status Display */}
       {orderData && (
-        <div className="bg-white rounded-3xl border border-brand-border shadow-sm p-5 sm:p-8 space-y-6 animate-fadeIn">
+        <div className="bg-white rounded-3xl border border-brand-border shadow-sm p-4 sm:p-8 space-y-6 animate-fadeIn">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-5 border-b border-brand-border/60">
             <div>
               <span className="text-[11px] text-brand-muted font-medium">Order Reference:</span>
-              <h2 className="text-lg font-bold text-brand-dark font-mono">{orderData.id}</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-brand-dark font-mono">{orderData.id}</h2>
               <p className="text-xs text-brand-muted mt-0.5">
                 Recipient: <strong className="text-brand-dark">{orderData.customer_name}</strong> • {orderData.city}
               </p>
@@ -162,9 +150,10 @@ function TrackOrderContent() {
             </div>
           </div>
 
-          {/* Stepper Timeline */}
+          {/* Stepper Timeline - Mobile Vertical & Desktop Horizontal */}
           <div className="py-2">
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {/* Desktop Horizontal View */}
+            <div className="hidden sm:grid sm:grid-cols-5 gap-3">
               {steps.map((step, idx) => {
                 const isPassed = idx <= currentStep;
                 const isCurrent = idx === currentStep;
@@ -188,6 +177,49 @@ function TrackOrderContent() {
                     </div>
                     <span className="text-xs font-bold text-brand-dark">{step.label}</span>
                     <span className="text-[10px] text-brand-muted mt-0.5">{step.desc}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile Vertical View */}
+            <div className="sm:hidden space-y-3 pl-2">
+              {steps.map((step, idx) => {
+                const isPassed = idx <= currentStep;
+                const isCurrent = idx === currentStep;
+
+                return (
+                  <div key={step.label} className="flex items-start gap-3 relative">
+                    {/* Connecting line */}
+                    {idx < steps.length - 1 && (
+                      <div
+                        className={`absolute left-4 top-8 bottom-0 w-0.5 -ml-px ${
+                          idx < currentStep ? 'bg-emerald-500' : 'bg-brand-border'
+                        }`}
+                        style={{ height: 'calc(100% - 8px)' }}
+                      />
+                    )}
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 z-10 transition-all ${
+                        isCurrent
+                          ? 'bg-brand-primary text-white ring-4 ring-brand-primary/20 scale-105'
+                          : isPassed
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-brand-surface text-brand-muted border border-brand-border'
+                      }`}
+                    >
+                      {isPassed && !isCurrent ? (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      ) : (
+                        <span>{idx + 1}</span>
+                      )}
+                    </div>
+                    <div className="pt-0.5">
+                      <p className={`text-xs font-bold ${isCurrent ? 'text-brand-primary' : isPassed ? 'text-brand-dark' : 'text-brand-muted'}`}>
+                        {step.label}
+                      </p>
+                      <p className="text-[11px] text-brand-muted">{step.desc}</p>
+                    </div>
                   </div>
                 );
               })}

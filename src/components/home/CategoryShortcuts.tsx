@@ -33,13 +33,13 @@ export const CategoryShortcuts: React.FC = () => {
           </Link>
         </div>
 
-        {/* Dynamic Responsive Category Grid: 3 on Mobile, 4 on Tablet, 6 on Laptop, up to 8 on Desktop */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5 sm:gap-3.5">
+        {/* Mobile Horizontal Scroll (Daraz/Amazon style swipeable row) & Tablet/Desktop Multi-Column Grid */}
+        <div className="flex sm:grid sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5 sm:gap-3.5 overflow-x-auto sm:overflow-visible no-scrollbar snap-x snap-mandatory pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
           {activeCategories.map((cat) => (
             <Link
               key={cat.id}
               href={`/products?category=${encodeURIComponent(cat.slug)}`}
-              className="group bg-white hover:bg-brand-surface border border-brand-border/80 hover:border-brand-primary rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer min-h-[130px] sm:min-h-[160px]"
+              className="group flex-shrink-0 w-28 sm:w-auto snap-start bg-white hover:bg-brand-surface border border-brand-border/80 hover:border-brand-primary rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-between text-center transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer min-h-[130px] sm:min-h-[160px]"
             >
               {/* Product Device Cutout */}
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-brand-surface group-hover:bg-brand-light/60 flex items-center justify-center my-1 transition-colors flex-shrink-0">

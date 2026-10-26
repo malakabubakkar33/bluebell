@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Menu, Store, ShieldCheck } from 'lucide-react';
 import { AdminSidebar } from './AdminSidebar';
@@ -18,6 +18,60 @@ interface AdminLayoutShellProps {
 
 export const AdminLayoutShell: React.FC<AdminLayoutShellProps> = ({ children, user }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // 5-Minute Inactivity & Reopen Security Guard
+  useEffect(() => {
+    const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+    const now = Date.now();
+    const lastActiveStr = localStorage.getItem('bluebell_admin_last_active');
+
+    if (lastActiveStr) {
+      const lastActive = parseInt(lastActiveStr, 10);
+      if (!isNaN(lastActive) && now - lastActive > INACTIVITY_TIMEOUT_MS) {
+        // Tab closed or inactive for > 5 minutes: force re-authentication
+        localStorage.removeItem('bluebell_admin_last_active');
+        fetch('/api/admin/auth/logout', { method: 'POST' }).finally(() => {
+          window.location.href = '/admin/login?error=session_timeout';
+        });
+        return;
+      }
+    }
+
+    // Refresh active session timestamp
+    localStorage.setItem('bluebell_admin_last_active', now.toString());
+
+    let lastRecorded = now;
+    const updateActivity = () => {
+      const cur = Date.now();
+      if (cur - lastRecorded > 4000) {
+        lastRecorded = cur;
+        localStorage.setItem('bluebell_admin_last_active', cur.toString());
+      }
+    };
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach((evt) => window.addEventListener(evt, updateActivity, { passive: true }));
+
+    // Periodic check every 10 seconds while tab is open
+    const interval = setInterval(() => {
+      const curStr = localStorage.getItem('bluebell_admin_last_active');
+      if (curStr) {
+        const curTime = parseInt(curStr, 10);
+        if (!isNaN(curTime) && Date.now() - curTime > INACTIVITY_TIMEOUT_MS) {
+          clearInterval(interval);
+          localStorage.removeItem('bluebell_admin_last_active');
+          fetch('/api/admin/auth/logout', { method: 'POST' }).finally(() => {
+            window.location.href = '/admin/login?error=session_timeout';
+          });
+        }
+      }
+    }, 10000);
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, updateActivity));
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex bg-[#F7FBFF] text-[#102A50] selection:bg-[#0866E8] selection:text-white">

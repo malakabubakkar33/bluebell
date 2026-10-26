@@ -35,8 +35,10 @@ function AdminLoginForm() {
       setErrorMessage(
         'Access Denied: Your account does not have administrator privileges. Only authorized store managers can access this portal.'
       );
-    } else if (errorParam === 'session_expired') {
-      setErrorMessage('Your session has expired. Please log in again to continue.');
+    } else if (errorParam === 'session_expired' || errorParam === 'session_timeout') {
+      setErrorMessage(
+        'Security Timeout: 5 minute inactivity ya tab band karne ki wajah se session expire ho gaya hai. Barah-e-karam dobara login karein.'
+      );
     } else if (errorParam === 'unauthorized') {
       setErrorMessage('Please authenticate with administrator credentials to access the Admin Panel.');
     }
@@ -81,6 +83,10 @@ function AdminLoginForm() {
       }
 
       setSuccessMessage('Administrator verified. Opening Admin Portal...');
+      // Initialize 5-minute inactivity security tracker
+      try {
+        localStorage.setItem('bluebell_admin_last_active', Date.now().toString());
+      } catch {}
       // Instant full navigation to ensure session cookies are immediately available to server layout
       window.location.href = '/admin';
     } catch (err: any) {

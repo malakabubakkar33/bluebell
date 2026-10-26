@@ -11,6 +11,7 @@ export const AdminLogoutButton: React.FC = () => {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
+      localStorage.removeItem('bluebell_admin_last_active');
       await fetch('/api/admin/auth/logout', {
         method: 'POST',
       });

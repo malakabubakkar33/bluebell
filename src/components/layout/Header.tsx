@@ -95,7 +95,7 @@ const MEGA_DROPDOWNS = {
   },
 };
 
-type MegaKey = 'iphone' | 'samsung' | 'tablets' | 'watches' | 'accessories';
+type MegaKey = string;
 
 export const Header: React.FC = () => {
   const { totalItems, subtotal, wishlist, setIsDrawerOpen } = useCart();
@@ -108,7 +108,7 @@ export const Header: React.FC = () => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isSideNavOpen, setIsSideNavOpen] = useState(false);
   const [isMobileScreen, setIsMobileScreen] = useState(false);
-  const [activeHoverMenu, setActiveHoverMenu] = useState<MegaKey | null>(null);
+  const [activeHoverMenu, setActiveHoverMenu] = useState<string | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSocialMarqueePaused, setIsSocialMarqueePaused] = useState(false);
   const socialResumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -234,8 +234,59 @@ export const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isSearchOpen]);
 
+  // Active database categories
+  const activeDbCategories = (categories || []).filter((c) => c.isActive !== false);
+
+  // Dynamic dropdown data linked directly with Supabase database categories and live products
+  const getCategoryDropdownData = (slug: string) => {
+    const foundCat = activeDbCategories.find(
+      (c) => c.slug.toLowerCase() === slug.toLowerCase() || c.name.toLowerCase() === slug.toLowerCase()
+    );
+
+    if (foundCat) {
+      const catProds = (storeCatalogProducts || []).filter((p) => {
+        const pCat = (p.category || '').toLowerCase();
+        const pBrand = (p.brand || '').toLowerCase();
+        const targetSlug = foundCat.slug.toLowerCase();
+        const targetName = foundCat.name.toLowerCase();
+        return (
+          pCat === targetSlug ||
+          pCat === targetName ||
+          pBrand === targetSlug ||
+          pBrand === targetName ||
+          pCat.includes(targetSlug) ||
+          targetName.includes(pCat)
+        );
+      });
+
+      return {
+        title: `${foundCat.name} Collection`,
+        tag: `${catProds.length} ${catProds.length === 1 ? 'Product' : 'Products'} in Catalog`,
+        viewAllLink: `/products?category=${encodeURIComponent(foundCat.slug)}`,
+        models:
+          catProds.length > 0
+            ? catProds.slice(0, 6).map((item) => ({
+                id: item.id,
+                name: item.name,
+                subtitle: item.storageOptions?.[0] ? `${item.storageOptions[0]} • PTA Approved` : 'Official PTA Approved',
+                price: item.price,
+                badge: item.isFeatured ? 'Featured' : item.discountPercent ? 'Sale' : (item.badge || 'PTA Approved'),
+                image: item.image || item.gallery?.[0] || foundCat.image || '/categories/iphone.svg',
+              }))
+            : ((MEGA_DROPDOWNS as any)[slug]?.models || []),
+      };
+    }
+
+    // Fallback to predefined mega dropdown if applicable
+    if ((MEGA_DROPDOWNS as any)[slug]) {
+      return (MEGA_DROPDOWNS as any)[slug];
+    }
+
+    return null;
+  };
+
   // Hover handlers with smooth grace delay
-  const handleMouseEnter = (key: MegaKey) => {
+  const handleMouseEnter = (key: string) => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
@@ -268,8 +319,8 @@ export const Header: React.FC = () => {
   return (
     <>
       <header
-        className={`w-full sticky top-0 z-50 transition-transform duration-300 ease-in-out will-change-transform transform ${
-          isHeaderHidden ? '-translate-y-full' : 'translate-y-0'
+        className={`w-full sticky top-0 z-50 transition-all duration-300 ease-in-out will-change-transform transform ${
+          isHeaderHidden ? '-translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
         }`}
       >
         {/* =========================================================================
@@ -589,7 +640,7 @@ export const Header: React.FC = () => {
                   </span>
                 </button>
 
-                {/* CATEGORY TABS WITH AUTO-HOVER MEGA DROPDOWNS */}
+                {/* CATEGORY TABS WITH AUTO-HOVER DYNAMIC DROPDOWNS */}
                 <nav className="flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-[#102A56]">
                   <Link href="/" className="hover:text-[#0756C9] py-2 transition-colors">
                     Home
@@ -599,110 +650,52 @@ export const Header: React.FC = () => {
                     <span>Categories</span>
                   </Link>
 
-                  {/* 1. iPhone Auto-Hover Item */}
-                  <div
-                    className="relative py-2 cursor-pointer"
-                    onMouseEnter={() => handleMouseEnter('iphone')}
-                    onMouseLeave={handleMouseLeave}
-                  >
-                    <Link
-                      href="/products?brand=Apple"
-                      className={`flex items-center gap-1 transition-colors ${
-                        activeHoverMenu === 'iphone' ? 'text-[#0756C9]' : 'hover:text-[#0756C9]'
-                      }`}
-                    >
-                      <span>iPhone</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                          activeHoverMenu === 'iphone' ? 'rotate-180 text-[#0756C9]' : ''
-                        }`}
-                      />
-                    </Link>
-                  </div>
-
-                  {/* 2. Samsung Auto-Hover Item */}
-                  <div
-                    className="relative py-2 cursor-pointer"
-                    onMouseEnter={() => handleMouseEnter('samsung')}
-                    onMouseLeave={handleMouseLeave}
-                  >
-                    <Link
-                      href="/products?brand=Samsung"
-                      className={`flex items-center gap-1 transition-colors ${
-                        activeHoverMenu === 'samsung' ? 'text-[#0756C9]' : 'hover:text-[#0756C9]'
-                      }`}
-                    >
-                      <span>Samsung</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                          activeHoverMenu === 'samsung' ? 'rotate-180 text-[#0756C9]' : ''
-                        }`}
-                      />
-                    </Link>
-                  </div>
-
-                  {/* 3. iPad & Tablets Auto-Hover Item */}
-                  <div
-                    className="relative py-2 cursor-pointer"
-                    onMouseEnter={() => handleMouseEnter('tablets')}
-                    onMouseLeave={handleMouseLeave}
-                  >
-                    <Link
-                      href="/products?category=tablets"
-                      className={`flex items-center gap-1 transition-colors ${
-                        activeHoverMenu === 'tablets' ? 'text-[#0756C9]' : 'hover:text-[#0756C9]'
-                      }`}
-                    >
-                      <span>iPad &amp; Tablets</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                          activeHoverMenu === 'tablets' ? 'rotate-180 text-[#0756C9]' : ''
-                        }`}
-                      />
-                    </Link>
-                  </div>
-
-                  {/* 4. Smart Watches Auto-Hover Item */}
-                  <div
-                    className="relative py-2 cursor-pointer"
-                    onMouseEnter={() => handleMouseEnter('watches')}
-                    onMouseLeave={handleMouseLeave}
-                  >
-                    <Link
-                      href="/products?category=smart-watches"
-                      className={`flex items-center gap-1 transition-colors ${
-                        activeHoverMenu === 'watches' ? 'text-[#0756C9]' : 'hover:text-[#0756C9]'
-                      }`}
-                    >
-                      <span>Smart Watches</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                          activeHoverMenu === 'watches' ? 'rotate-180 text-[#0756C9]' : ''
-                        }`}
-                      />
-                    </Link>
-                  </div>
-
-                  {/* 5. Accessories Auto-Hover Item */}
-                  <div
-                    className="relative py-2 cursor-pointer"
-                    onMouseEnter={() => handleMouseEnter('accessories')}
-                    onMouseLeave={handleMouseLeave}
-                  >
-                    <Link
-                      href="/products?category=accessories"
-                      className={`flex items-center gap-1 transition-colors ${
-                        activeHoverMenu === 'accessories' ? 'text-[#0756C9]' : 'hover:text-[#0756C9]'
-                      }`}
-                    >
-                      <span>Accessories</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                          activeHoverMenu === 'accessories' ? 'rotate-180 text-[#0756C9]' : ''
-                        }`}
-                      />
-                    </Link>
-                  </div>
+                  {/* Dynamic Database Connected Categories */}
+                  {activeDbCategories.length > 0 ? (
+                    activeDbCategories.slice(0, 5).map((cat) => (
+                      <div
+                        key={cat.id || cat.slug}
+                        className="relative py-2 cursor-pointer"
+                        onMouseEnter={() => handleMouseEnter(cat.slug)}
+                        onMouseLeave={handleMouseLeave}
+                      >
+                        <Link
+                          href={`/products?category=${encodeURIComponent(cat.slug)}`}
+                          className={`flex items-center gap-1 transition-colors ${
+                            activeHoverMenu === cat.slug ? 'text-[#0756C9]' : 'hover:text-[#0756C9]'
+                          }`}
+                        >
+                          <span>{cat.name}</span>
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                              activeHoverMenu === cat.slug ? 'rotate-180 text-[#0756C9]' : ''
+                            }`}
+                          />
+                        </Link>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="relative py-2 cursor-pointer" onMouseEnter={() => handleMouseEnter('iphone')} onMouseLeave={handleMouseLeave}>
+                        <Link href="/products?brand=Apple" className={`flex items-center gap-1 transition-colors ${activeHoverMenu === 'iphone' ? 'text-[#0756C9]' : 'hover:text-[#0756C9]'}`}>
+                          <span>iPhone</span>
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeHoverMenu === 'iphone' ? 'rotate-180 text-[#0756C9]' : ''}`} />
+                        </Link>
+                      </div>
+                      <div className="relative py-2 cursor-pointer" onMouseEnter={() => handleMouseEnter('samsung')} onMouseLeave={handleMouseLeave}>
+                        <Link href="/products?brand=Samsung" className={`flex items-center gap-1 transition-colors ${activeHoverMenu === 'samsung' ? 'text-[#0756C9]' : 'hover:text-[#0756C9]'}`}>
+                          <span>Samsung</span>
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeHoverMenu === 'samsung' ? 'rotate-180 text-[#0756C9]' : ''}`} />
+                        </Link>
+                      </div>
+                      <div className="relative py-2 cursor-pointer" onMouseEnter={() => handleMouseEnter('tablets')} onMouseLeave={handleMouseLeave}>
+                        <Link href="/products?category=tablets" className={`flex items-center gap-1 transition-colors ${activeHoverMenu === 'tablets' ? 'text-[#0756C9]' : 'hover:text-[#0756C9]'}`}>
+                          <span>iPad &amp; Tablets</span>
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeHoverMenu === 'tablets' ? 'rotate-180 text-[#0756C9]' : ''}`} />
+                        </Link>
+                      </div>
+                    </>
+                  )}
 
                   <Link href="/track-order" className="hover:text-[#0756C9] py-2 transition-colors">
                     Track Order
@@ -714,74 +707,95 @@ export const Header: React.FC = () => {
               </div>
             </div>
 
-            {/* AUTO-HOVER MEGA DROPDOWN PANEL */}
+            {/* AUTO-HOVER MEGA DROPDOWN PANEL (SYNCED WITH DATABASE) */}
             <AnimatePresence>
-              {activeHoverMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
-                  transition={{ duration: 0.22, ease: 'easeOut' }}
-                  onMouseEnter={() => {
-                    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-                  }}
-                  onMouseLeave={handleMouseLeave}
-                  className="absolute left-0 right-0 top-full bg-white/95 backdrop-blur-2xl border-b border-[#DFEBF8] shadow-2xl z-50 py-6 px-4 sm:px-8"
-                >
-                  <div className="max-w-7xl mx-auto">
-                    {/* Header Info inside Dropdown */}
-                    <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#DFEBF8]">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-black text-[#102A56]">
-                          {MEGA_DROPDOWNS[activeHoverMenu].title}
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-[#EAF7FF] text-[#0756C9] border border-[#C7E5FF]">
-                          {MEGA_DROPDOWNS[activeHoverMenu].tag}
-                        </span>
-                      </div>
-                      <Link
-                        href={MEGA_DROPDOWNS[activeHoverMenu].viewAllLink}
-                        onClick={() => setActiveHoverMenu(null)}
-                        className="text-xs font-bold text-[#0756C9] hover:text-[#063B8E] flex items-center gap-1 group"
-                      >
-                        <span>View All {activeHoverMenu.toUpperCase()} Models</span>
-                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </div>
-
-                    {/* Model Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                      {MEGA_DROPDOWNS[activeHoverMenu].models.map((item, idx) => (
+              {activeHoverMenu && getCategoryDropdownData(activeHoverMenu) && (() => {
+                const dropData = getCategoryDropdownData(activeHoverMenu)!;
+                return (
+                  <motion.div
+                    key={activeHoverMenu}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    onMouseEnter={() => {
+                      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                    }}
+                    onMouseLeave={handleMouseLeave}
+                    className="absolute left-0 right-0 top-full bg-white/95 backdrop-blur-2xl border-b border-[#DFEBF8] shadow-2xl z-50 py-6 px-4 sm:px-8"
+                  >
+                    <div className="max-w-7xl mx-auto">
+                      {/* Header Info inside Dropdown */}
+                      <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#DFEBF8]">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-black text-[#102A56]">
+                            {dropData.title}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-[#EAF7FF] text-[#0756C9] border border-[#C7E5FF]">
+                            {dropData.tag}
+                          </span>
+                        </div>
                         <Link
-                          key={idx}
-                          href={MEGA_DROPDOWNS[activeHoverMenu].viewAllLink}
+                          href={dropData.viewAllLink}
                           onClick={() => setActiveHoverMenu(null)}
-                          className="group/item flex flex-col items-center text-center p-3 rounded-2xl hover:bg-[#EAF7FF]/60 border border-transparent hover:border-[#C7E5FF] transition-all duration-200"
+                          className="text-xs font-bold text-[#0756C9] hover:text-[#063B8E] flex items-center gap-1 group"
                         >
-                          <div className="relative w-20 h-20 flex items-center justify-center mb-2">
-                            <div className="absolute inset-0 rounded-full bg-[#0756C9]/10 blur-md opacity-0 group-hover/item:opacity-100 transition-opacity" />
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="relative z-10 w-16 h-16 object-contain transition-transform duration-300 group-hover/item:scale-110 group-hover/item:-translate-y-1 drop-shadow-md"
-                            />
-                          </div>
-
-                          <span className="text-xs font-bold text-[#102A56] group-hover/item:text-[#0756C9] transition-colors block leading-tight">
-                            {item.name}
-                          </span>
-                          <span className="text-[10px] text-[#8394AB] block mt-0.5 truncate max-w-[130px]">
-                            {item.subtitle}
-                          </span>
-                          <span className="text-xs font-extrabold text-[#0756C9] block mt-1 font-mono">
-                            Rs. {item.price.toLocaleString()}
-                          </span>
+                          <span>Explore Full Catalog</span>
+                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                         </Link>
-                      ))}
+                      </div>
+
+                      {/* Model Grid */}
+                      {dropData.models && dropData.models.length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                          {dropData.models.map((item: any, idx: number) => (
+                            <Link
+                              key={item.id || idx}
+                              href={item.id ? `/products/${encodeURIComponent(item.id)}` : dropData.viewAllLink}
+                              onClick={() => setActiveHoverMenu(null)}
+                              className="group/item flex flex-col items-center text-center p-3 rounded-2xl hover:bg-[#EAF7FF]/60 border border-transparent hover:border-[#C7E5FF] transition-all duration-200"
+                            >
+                              <div className="relative w-20 h-20 flex items-center justify-center mb-2">
+                                <div className="absolute inset-0 rounded-full bg-[#0756C9]/10 blur-md opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="relative z-10 w-16 h-16 object-contain transition-transform duration-300 group-hover/item:scale-110 group-hover/item:-translate-y-1 drop-shadow-md"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/categories/iphone.svg';
+                                  }}
+                                />
+                              </div>
+
+                              <span className="text-xs font-bold text-[#102A56] group-hover/item:text-[#0756C9] transition-colors block leading-tight line-clamp-1">
+                                {item.name}
+                              </span>
+                              <span className="text-[10px] text-[#8394AB] block mt-0.5 truncate max-w-[130px]">
+                                {item.subtitle}
+                              </span>
+                              <span className="text-xs font-extrabold text-[#0756C9] block mt-1 font-mono">
+                                Rs. {item.price ? item.price.toLocaleString() : 'Check Price'}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-6 text-center">
+                          <p className="text-xs text-[#8394AB]">No items in this category yet.</p>
+                          <Link
+                            href={dropData.viewAllLink}
+                            onClick={() => setActiveHoverMenu(null)}
+                            className="inline-block mt-2 px-4 py-1.5 rounded-full bg-[#0756C9] text-white text-xs font-bold"
+                          >
+                            Browse All Products
+                          </Link>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </motion.div>
-              )}
+                  </motion.div>
+                );
+              })()}
             </AnimatePresence>
           </div>
         </div>

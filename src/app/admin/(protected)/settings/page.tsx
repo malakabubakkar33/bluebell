@@ -17,6 +17,10 @@ import {
   Lock,
   Server,
   RefreshCw,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  KeyRound,
 } from 'lucide-react';
 
 interface StoreSettings {
@@ -87,6 +91,62 @@ export default function AdminSettingsPage() {
       setDbStatus({ status: 'Connection Failed', latency: 0 });
     } finally {
       setTestingDb(false);
+    }
+  };
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordUpdating, setPasswordUpdating] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    if (!currentPassword) {
+      setPasswordError('Please enter your current administrator password.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New password and confirmation do not match.');
+      return;
+    }
+    if (currentPassword === newPassword) {
+      setPasswordError('New password must be different from your current password.');
+      return;
+    }
+
+    setPasswordUpdating(true);
+    try {
+      const res = await fetch('/api/admin/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setPasswordError(data.error || 'Failed to update administrator password.');
+      } else {
+        setPasswordSuccess('Password successfully updated! Your previous password has been revoked and replaced.');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch {
+      setPasswordError('Network error occurred while connecting to authentication service.');
+    } finally {
+      setPasswordUpdating(false);
     }
   };
 
@@ -337,36 +397,163 @@ export default function AdminSettingsPage() {
           </div>
         )}
 
-        {/* TAB 4: ADMIN PROFILE */}
+        {/* TAB 4: ADMIN PROFILE & PASSWORD MANAGEMENT */}
         {activeTab === 'admin' && (
-          <div className="bg-white rounded-3xl border border-[#DCEBFA] p-6 sm:p-8 shadow-xs space-y-5">
-            <h3 className="text-base font-bold text-[#102A50]">Administrator Account &amp; Access</h3>
-            <p className="text-xs text-[#647A98]">Authoritative administrator credentials in public.app_users.</p>
+          <div className="space-y-6">
+            <div className="bg-white rounded-3xl border border-[#DCEBFA] p-6 sm:p-8 shadow-xs space-y-5">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-[#EDF6FF] text-[#0866E8]">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#102A50]">Administrator Account &amp; Access</h3>
+                  <p className="text-xs text-[#647A98]">Authoritative administrator credentials in public.app_users.</p>
+                </div>
+              </div>
 
-            <div className="p-4 rounded-2xl bg-[#F7FBFF] border border-[#DCEBFA] space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#647A98]">Active Admin Email:</span>
-                <strong className="font-mono text-[#0866E8]">admin@bluebell.pk</strong>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#647A98]">Secondary Alias:</span>
-                <strong className="font-mono text-[#102A50]">admin@bluebell.com</strong>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#647A98]">Security Role:</span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#102A50] text-white">
-                  Super Administrator
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#647A98]">Authoritative Table:</span>
-                <span className="font-mono text-[11px] text-[#647A98]">public.app_users (role = 'admin')</span>
+              <div className="p-4 rounded-2xl bg-[#F7FBFF] border border-[#DCEBFA] space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#647A98]">Active Admin Email:</span>
+                  <strong className="font-mono text-[#0866E8]">admin@bluebell.pk</strong>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#647A98]">Secondary Alias:</span>
+                  <strong className="font-mono text-[#102A50]">admin@bluebell.com</strong>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#647A98]">Security Role:</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#102A50] text-white">
+                    Super Administrator
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#647A98]">Authoritative Table:</span>
+                  <span className="font-mono text-[11px] text-[#647A98]">public.app_users (role = 'admin')</span>
+                </div>
               </div>
             </div>
 
-            <p className="text-xs text-[#647A98] leading-relaxed">
-              To update administrator passwords, use the secure Supabase Dashboard or authenticated API route.
-            </p>
+            {/* Change Password Panel */}
+            <div className="bg-white rounded-3xl border border-[#DCEBFA] p-6 sm:p-8 shadow-xs space-y-5">
+              <div className="flex items-center gap-2 pb-2 border-b border-[#DCEBFA]">
+                <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-200">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#102A50]">Change Administrator Password</h3>
+                  <p className="text-xs text-[#647A98]">
+                    Verify current credentials before securely establishing a new administrator password.
+                  </p>
+                </div>
+              </div>
+
+              {passwordError && (
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2.5">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>{passwordSuccess}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Current Password */}
+                <div>
+                  <label className="block text-xs font-bold text-[#102A50] mb-1.5">
+                    Current Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter existing password"
+                      className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-[#DCEBFA] text-xs text-[#102A50] focus:outline-none focus:border-[#0866E8]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#647A98] hover:text-[#102A50]"
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-[#647A98] mt-1 block">Verified against authoritative auth</span>
+                </div>
+
+                {/* New Password */}
+                <div>
+                  <label className="block text-xs font-bold text-[#102A50] mb-1.5">
+                    New Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-[#DCEBFA] text-xs text-[#102A50] focus:outline-none focus:border-[#0866E8]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#647A98] hover:text-[#102A50]"
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-[#647A98] mt-1 block">Min 6 chars, alphanumeric</span>
+                </div>
+
+                {/* Confirm New Password */}
+                <div>
+                  <label className="block text-xs font-bold text-[#102A50] mb-1.5">
+                    Confirm New Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-type new password"
+                      className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-[#DCEBFA] text-xs text-[#102A50] focus:outline-none focus:border-[#0866E8]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#647A98] hover:text-[#102A50]"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-[#647A98] mt-1 block">Must match new password exactly</span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-[11px] text-amber-900 leading-relaxed flex items-start gap-2.5">
+                <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Security Advisory:</strong> Jab aap naya password update karenge, website aapka purana password check karegi. Agar theek hua toh naya password set ho jayega aur purana password hamesha ke liye khatam (revoke) ho jayega.
+                </span>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={handlePasswordChange}
+                  disabled={passwordUpdating || !currentPassword || !newPassword}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#102A50] hover:bg-[#0d2242] disabled:opacity-50 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                >
+                  <KeyRound className={`w-4 h-4 ${passwordUpdating ? 'animate-spin' : ''}`} />
+                  <span>{passwordUpdating ? 'Verifying & Updating...' : 'Update Password & Revoke Old'}</span>
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -416,16 +603,18 @@ export default function AdminSettingsPage() {
           </div>
         )}
 
-        {/* Save Action */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DCEBFA]">
-          <button
-            type="submit"
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0866E8] hover:bg-[#0756C4] text-white text-xs font-bold transition-all shadow-md shadow-[#0866E8]/20 cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>Save Store Settings</span>
-          </button>
-        </div>
+        {/* Save Action for Store Configuration */}
+        {(activeTab === 'store' || activeTab === 'shipping' || activeTab === 'pta') && (
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#DCEBFA]">
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0866E8] hover:bg-[#0756C4] text-white text-xs font-bold transition-all shadow-md shadow-[#0866E8]/20 cursor-pointer"
+            >
+              <Save className="w-4 h-4" />
+              <span>Save Store Settings</span>
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

@@ -73,9 +73,9 @@ export default function AdminOrdersPage() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const fetchOrders = useCallback(async (isManual = false) => {
+  const fetchOrders = useCallback(async (isManual = false, isSilent = false) => {
     if (isManual) setRefreshing(true);
-    else setLoading(true);
+    else if (!isSilent) setLoading(true);
 
     try {
       const res = await fetch('/api/orders', { cache: 'no-store' });
@@ -84,16 +84,41 @@ export default function AdminOrdersPage() {
         setOrders(data.data);
       }
     } catch (err: any) {
-      console.error('Failed to fetch orders:', err);
-      showToast('error', 'Could not load orders from database.');
+      if (!isSilent) {
+        console.error('Failed to fetch orders:', err);
+        showToast('error', 'Could not load orders from database.');
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!isSilent) setLoading(false);
+      if (isManual) setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
     fetchOrders();
+
+    // Real-Time Orders BroadcastChannel Listener
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        channel = new BroadcastChannel('bluebell_store_sync');
+        channel.onmessage = (event) => {
+          if (event.data?.type === 'ORDER_UPDATED') {
+            fetchOrders(false, true);
+          }
+        };
+      }
+    } catch {}
+
+    // Auto-sync polling every 12 seconds in background for real-time incoming orders
+    const timer = setInterval(() => {
+      fetchOrders(false, true);
+    }, 12000);
+
+    return () => {
+      if (channel) channel.close();
+      clearInterval(timer);
+    };
   }, [fetchOrders]);
 
   // Update order status
@@ -114,6 +139,16 @@ export default function AdminOrdersPage() {
       if (viewingOrder && viewingOrder.id === orderId) {
         setViewingOrder({ ...viewingOrder, status: newStatus as any });
       }
+
+      // Broadcast update to all other open admin windows/tabs
+      try {
+        if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+          const ch = new BroadcastChannel('bluebell_store_sync');
+          ch.postMessage({ type: 'ORDER_UPDATED' });
+          ch.close();
+        }
+      } catch {}
+
       showToast('success', `Order #${orderId.substring(0, 8)} status set to ${newStatus}.`);
     } catch (err: any) {
       showToast('error', err.message || 'Status update failed.');
