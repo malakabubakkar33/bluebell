@@ -44,6 +44,7 @@ export interface Product {
   isFeatured?: boolean;
   isBestSeller?: boolean;
   isNewArrival?: boolean;
+  inStock?: boolean;
 }
 
 export interface Category {

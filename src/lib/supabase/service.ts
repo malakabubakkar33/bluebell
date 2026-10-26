@@ -28,6 +28,8 @@ export const SupabaseDbService = {
     query?: string;
     isBestSeller?: boolean;
     isFeatured?: boolean;
+    inStockOnly?: boolean;
+    status?: 'all' | 'published' | 'unpublished';
   }) {
     let client = getDbClient();
     if (!client) {
@@ -37,6 +39,12 @@ export const SupabaseDbService = {
     if (client) {
       try {
         let query = (client as any).from('products').select('*').order('created_at', { ascending: false });
+
+        if (params?.status === 'published' || params?.inStockOnly) {
+          query = query.eq('in_stock', true);
+        } else if (params?.status === 'unpublished') {
+          query = query.eq('in_stock', false);
+        }
 
         if (params?.categorySlug && params.categorySlug !== 'all') {
           const cat = params.categorySlug.toLowerCase();
@@ -67,7 +75,7 @@ export const SupabaseDbService = {
         }
         if (params?.query) {
           query = query.or(
-            `name.ilike.%${params.query}%,brand.ilike.%${params.query}%,subtitle.ilike.%${params.query}%`
+            `name.ilike.%${params.query}%,brand.ilike.%${params.query}%,subtitle.ilike.%${params.query}%,sku.ilike.%${params.query}%`
           );
         }
 
@@ -122,6 +130,10 @@ export const SupabaseDbService = {
     }
 
     const productId = product.id || `prod-${Date.now()}`;
+    const inStock = (product as any).inStock !== undefined
+      ? Boolean((product as any).inStock)
+      : (product.stock !== undefined ? Number(product.stock) > 0 : true);
+
     const row = {
       id: productId,
       name: product.name,
@@ -138,16 +150,16 @@ export const SupabaseDbService = {
       rating: product.rating || 5.0,
       reviews_count: product.reviewCount || 0,
       badge: product.badge || null,
-      in_stock: (product.stock ?? 10) > 0,
-      stock_count: product.stock ?? 10,
+      in_stock: inStock,
+      stock_count: product.stock !== undefined ? Number(product.stock) : 10,
       is_best_seller: Boolean(product.isBestSeller),
       is_featured: Boolean(product.isFeatured ?? true),
-      is_new_arrival: Boolean(product.badge === 'New'),
-      specs: {},
-      storage_options: ['128GB', '256GB', '512GB'],
-      color_options: [],
+      is_new_arrival: Boolean(product.badge === 'New' || product.isNewArrival),
+      specs: product.specs || {},
+      storage_options: product.storageOptions || ['128GB', '256GB', '512GB'],
+      color_options: product.colorOptions || [],
       warranty: product.warranty || '1 Year Official Brand Warranty (PTA Approved)',
-      sku: `BB-${productId.toUpperCase()}`,
+      sku: product.sku?.trim() || `BB-${productId.toUpperCase()}`,
       description: product.description || product.subtitle || '',
       created_at: new Date().toISOString(),
     };
@@ -182,14 +194,28 @@ export const SupabaseDbService = {
     if (updates.categorySlug !== undefined) rowUpdates.category_slug = updates.categorySlug;
     if (updates.price !== undefined) rowUpdates.price = Number(updates.price);
     if (updates.originalPrice !== undefined) rowUpdates.original_price = Number(updates.originalPrice);
+    if (updates.discountPercent !== undefined) rowUpdates.discount_percent = Number(updates.discountPercent);
     if (updates.stock !== undefined) {
       rowUpdates.stock_count = Number(updates.stock);
-      rowUpdates.in_stock = Number(updates.stock) > 0;
+      // Only auto-derive in_stock if inStock wasn't explicitly supplied
+      if ((updates as any).inStock === undefined) {
+        rowUpdates.in_stock = Number(updates.stock) > 0;
+      }
+    }
+    if ((updates as any).inStock !== undefined) {
+      rowUpdates.in_stock = Boolean((updates as any).inStock);
     }
     if (updates.badge !== undefined) rowUpdates.badge = updates.badge;
     if (updates.image !== undefined) rowUpdates.image = updates.image;
+    if (updates.gallery !== undefined) rowUpdates.gallery = updates.gallery;
     if (updates.warranty !== undefined) rowUpdates.warranty = updates.warranty;
     if (updates.description !== undefined) rowUpdates.description = updates.description;
+    if (updates.subtitle !== undefined) rowUpdates.subtitle = updates.subtitle;
+    if (updates.sku !== undefined) rowUpdates.sku = updates.sku;
+    if (updates.isFeatured !== undefined) rowUpdates.is_featured = Boolean(updates.isFeatured);
+    if (updates.isBestSeller !== undefined) rowUpdates.is_best_seller = Boolean(updates.isBestSeller);
+    if (updates.isNewArrival !== undefined) rowUpdates.is_new_arrival = Boolean(updates.isNewArrival);
+    if (updates.specs !== undefined) rowUpdates.specs = updates.specs;
 
     const { data, error } = await (client as any)
       .from('products')
@@ -216,12 +242,45 @@ export const SupabaseDbService = {
       throw new Error('Database client not configured');
     }
 
+    // 1. Check if product is referenced in orders to preserve historical integrity
+    try {
+      const { data: orderData } = await (client as any)
+        .from('orders')
+        .select('id, items')
+        .limit(100);
+
+      const hasOrderHistory = Array.isArray(orderData) && orderData.some((order: any) => {
+        if (!Array.isArray(order.items)) return false;
+        return order.items.some((item: any) => item.id === id || item.productId === id);
+      });
+
+      if (hasOrderHistory) {
+        // Safe archive: unpublish and zero stock to preserve historical order references
+        await (client as any)
+          .from('products')
+          .update({ in_stock: false, stock_count: 0 })
+          .eq('id', id);
+        return {
+          success: true,
+          archived: true,
+          message: 'Product is referenced in historical customer orders. Safely archived and unpublished instead of hard-deleted.',
+        };
+      }
+    } catch (checkErr) {
+      console.warn('Order check before delete warning:', checkErr);
+    }
+
+    // 2. Safe to delete permanently if no historical references
     const { error } = await (client as any).from('products').delete().eq('id', id);
     if (error) {
       console.error('deleteProduct error:', error.message);
       throw new Error(error.message);
     }
-    return true;
+    return {
+      success: true,
+      archived: false,
+      message: 'Product permanently removed from database.',
+    };
   },
 
   // ==========================================
@@ -1258,6 +1317,7 @@ function mapProductRowToModel(r: any): Product {
     id: r.id,
     name: r.name,
     slug: r.id,
+    sku: r.sku || r.id,
     brand: r.brand,
     category: r.category_slug,
     categorySlug: r.category_slug,
@@ -1265,15 +1325,19 @@ function mapProductRowToModel(r: any): Product {
     description: r.description || '',
     price: Number(r.price),
     originalPrice: r.original_price ? Number(r.original_price) : undefined,
+    discountPercent: r.discount_percent ? Number(r.discount_percent) : undefined,
     rating: Number(r.rating || 5.0),
     reviewCount: Number(r.reviews_count || 0),
     badge: r.badge || undefined,
     image: r.image,
     gallery: Array.isArray(r.gallery) && r.gallery.length > 0 ? r.gallery : [r.image],
     stock: Number(r.stock_count ?? (r.in_stock ? 10 : 0)),
+    inStock: Boolean(r.in_stock),
     warranty: r.warranty || '1 Year Official Warranty',
     isBestSeller: Boolean(r.is_best_seller),
     isFeatured: Boolean(r.is_featured),
+    isNewArrival: Boolean(r.is_new_arrival),
+    specs: r.specs || {},
     variants: [],
   };
 }

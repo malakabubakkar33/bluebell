@@ -39,8 +39,7 @@ const NAV_ITEMS: NavItem[] = [
     name: 'Products',
     href: '/admin/products',
     icon: Package,
-    phase: 'Phase 4',
-    enabled: false,
+    enabled: true,
   },
   {
     name: 'Categories',

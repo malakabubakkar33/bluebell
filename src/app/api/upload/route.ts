@@ -3,11 +3,18 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
+import { requireAdminApi } from '@/lib/auth/adminGuard';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. Authorize: Enforce administrator permission on server
+    const auth = await requireAdminApi(req);
+    if ('response' in auth) {
+      return auth.response;
+    }
+
     const contentType = req.headers.get('content-type') || '';
     let fileBuffer: Buffer | null = null;
     let mimeType: string = 'image/jpeg';
