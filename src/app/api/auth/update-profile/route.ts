@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       if (!targetUserId || targetUserId.startsWith('user-')) {
         const { data: usersData } = await adminClient.auth.admin.listUsers();
         const found = usersData?.users?.find(
-          (u) => u.email?.toLowerCase() === email?.toLowerCase()
+          (u: any) => u.email?.toLowerCase() === email?.toLowerCase()
         );
         if (found) {
           targetUserId = found.id;

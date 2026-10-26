@@ -104,10 +104,7 @@ export const ProductDeleteModal: React.FC<ProductDeleteModalProps> = ({
             className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-60 cursor-pointer"
           >
             {deleting ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Removing...</span>
-              </>
+              <span className="animate-pulse font-bold">Removing...</span>
             ) : (
               <>
                 <Trash2 className="w-3.5 h-3.5" />

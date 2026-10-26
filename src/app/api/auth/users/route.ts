@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/supabase/admin';
 import { requireAdminApi } from '@/lib/auth/adminGuard';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireAdminApi(req);
@@ -14,7 +17,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, users: [] });
     }
 
-    const { data: users, error } = await (adminClient as any)
+    // 1. Fetch from public.app_users
+    const { data: dbUsers, error } = await (adminClient as any)
       .from('app_users')
       .select('*')
       .order('created_at', { ascending: false });
@@ -24,10 +28,109 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      users: users || [],
-    });
+    // 2. Fetch from Supabase Auth admin to ensure all registered accounts appear
+    let authUsersList: any[] = [];
+    try {
+      const { data: authData } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 100 });
+      if (authData && Array.isArray(authData.users)) {
+        authUsersList = authData.users;
+      }
+    } catch (authErr) {
+      console.warn('Auth admin.listUsers note:', authErr);
+    }
+
+    // 3. Fetch distinct customer accounts from orders table to ensure all ordering shoppers appear
+    let orderShoppers: any[] = [];
+    try {
+      const { data: ordersData } = await (adminClient as any)
+        .from('orders')
+        .select('customer_name, customer_email, customer_phone, customer_whatsapp, city, shipping_address, total, created_at');
+      if (ordersData && Array.isArray(ordersData)) {
+        orderShoppers = ordersData;
+      }
+    } catch (orderErr) {
+      console.warn('Orders query note in users endpoint:', orderErr);
+    }
+
+    const existingEmails = new Set((dbUsers || []).map((u: any) => u.email?.toLowerCase()));
+    const missingUsers: any[] = [];
+
+    // Reconcile from Auth users
+    for (const au of authUsersList) {
+      const email = au.email?.toLowerCase();
+      if (email && !existingEmails.has(email)) {
+        existingEmails.add(email);
+        const meta = au.user_metadata || {};
+        const newUserRow = {
+          id: au.id,
+          email: email,
+          name: meta.name || email.split('@')[0],
+          phone: meta.phone || au.phone || '',
+          whatsapp: meta.whatsapp || meta.phone || au.phone || '',
+          city: meta.city || 'Peshawar',
+          address: meta.address || '',
+          role: meta.role || 'customer',
+          status: meta.status || 'active',
+          orders_count: 0,
+          total_spent: 0,
+          created_at: au.created_at || new Date().toISOString(),
+          updated_at: au.updated_at || new Date().toISOString(),
+        };
+        missingUsers.push(newUserRow);
+        try {
+          await (adminClient as any).from('app_users').upsert(newUserRow, { onConflict: 'email' });
+        } catch (insertErr) {
+          console.warn('Failed to upsert missing auth user to app_users:', insertErr);
+        }
+      }
+    }
+
+    // Reconcile from Orders customers
+    for (const ord of orderShoppers) {
+      const email = ord.customer_email?.toLowerCase();
+      if (email && email.includes('@') && !existingEmails.has(email)) {
+        existingEmails.add(email);
+        const shopperRow = {
+          id: `cust-ord-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          email: email,
+          name: ord.customer_name || email.split('@')[0],
+          phone: ord.customer_phone || '',
+          whatsapp: ord.customer_whatsapp || ord.customer_phone || '',
+          city: ord.city || 'Peshawar',
+          address: ord.shipping_address || '',
+          role: 'customer',
+          status: 'active',
+          orders_count: 1,
+          total_spent: Number(ord.total) || 0,
+          created_at: ord.created_at || new Date().toISOString(),
+          updated_at: ord.created_at || new Date().toISOString(),
+        };
+        missingUsers.push(shopperRow);
+        try {
+          await (adminClient as any).from('app_users').upsert(shopperRow, { onConflict: 'email' });
+        } catch (upsertErr) {
+          console.warn('Failed to upsert order shopper into app_users:', upsertErr);
+        }
+      }
+    }
+
+    const combined = [...(dbUsers || []), ...missingUsers];
+
+    return new NextResponse(
+      JSON.stringify({
+        success: true,
+        users: combined,
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('GET /api/auth/users error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

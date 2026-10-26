@@ -25,6 +25,14 @@ import {
   ArrowRight,
   Database,
   Store,
+  Package,
+  FolderTree,
+  ShoppingBag,
+  Users,
+  Boxes,
+  Sparkles,
+  BarChart3,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -185,32 +193,191 @@ export default function AdminDashboardPage() {
         </section>
       </div>
 
-      {/* 4. Architecture & Roadmap Notice Card */}
-      <div className="rounded-3xl bg-white border border-[#DCEBFA] p-6 sm:p-8 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#0866E8] mb-1">
-              <Database className="w-4 h-4 text-[#0866E8]" />
-              <span>Phase 3 Foundation Active</span>
-            </div>
-            <h3 className="text-lg font-bold text-[#102A50]">
-              Next Phase: Phase 4 &mdash; Product Management Rebuild
-            </h3>
-            <p className="text-xs text-[#647A98] mt-1 leading-relaxed">
-              Phase 3 establishes real database metrics and verified admin controls. In accordance with strict project guidelines, full CRUD workflows for products (Phase 4), categories (Phase 5), orders (Phase 6), customers (Phase 7), and inventory (Phase 8) will be unlocked in their respective phases upon approval.
-            </p>
+      {/* 4. Real Management Modules Quick Access */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-[#102A50]">Store Management Modules</h3>
+            <p className="text-xs text-[#647A98]">Authoritative CRUD controls connected to live PostgreSQL tables</p>
           </div>
+          <Link
+            href="/"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#DCEBFA] text-xs font-bold text-[#102A50] hover:bg-[#EDF6FF] hover:text-[#0866E8] transition-colors"
+          >
+            <Store className="w-3.5 h-3.5 text-[#0866E8]" />
+            <span>Storefront</span>
+          </Link>
+        </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <Link
-              href="/"
-              target="_blank"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#DCEBFA] text-xs font-bold text-[#102A50] hover:bg-[#EDF6FF] hover:text-[#0866E8] transition-colors"
-            >
-              <Store className="w-4 h-4 text-[#0866E8]" />
-              <span>Visit Customer Store</span>
-            </Link>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Link
+            href="/admin/products"
+            className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-[#EDF6FF] text-[#0866E8] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <Package className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
+                Products &amp; Mobiles
+              </h4>
+              <p className="text-xs text-[#647A98] mt-1">
+                Add mobiles, multi-colors, storage GB, PTA status &amp; variants.
+              </p>
+            </div>
+            <div className="mt-4 flex items-center text-xs font-bold text-[#0866E8]">
+              <span>Manage Products</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/categories"
+            className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <FolderTree className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
+                Categories
+              </h4>
+              <p className="text-xs text-[#647A98] mt-1">
+                Organize phones, accessories, brands &amp; display ordering.
+              </p>
+            </div>
+            <div className="mt-4 flex items-center text-xs font-bold text-purple-600">
+              <span>Manage Categories</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/orders"
+            className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <ShoppingBag className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
+                Orders &amp; Dispatch
+              </h4>
+              <p className="text-xs text-[#647A98] mt-1">
+                Inspect customer orders, addresses, WhatsApp &amp; update status.
+              </p>
+            </div>
+            <div className="mt-4 flex items-center text-xs font-bold text-emerald-600">
+              <span>Manage Orders</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/customers"
+            className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <Users className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
+                Customers
+              </h4>
+              <p className="text-xs text-[#647A98] mt-1">
+                Review shoppers, active accounts, contact profiles &amp; status.
+              </p>
+            </div>
+            <div className="mt-4 flex items-center text-xs font-bold text-blue-600">
+              <span>Manage Customers</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/inventory"
+            className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <Boxes className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
+                Inventory &amp; Stock
+              </h4>
+              <p className="text-xs text-[#647A98] mt-1">
+                Real-time physical stock counts, threshold alerts &amp; restock.
+              </p>
+            </div>
+            <div className="mt-4 flex items-center text-xs font-bold text-amber-600">
+              <span>Manage Inventory</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/promotions"
+            className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
+                Deals &amp; Banners
+              </h4>
+              <p className="text-xs text-[#647A98] mt-1">
+                Hero carousel banners, flash sale ribbons &amp; deal badges.
+              </p>
+            </div>
+            <div className="mt-4 flex items-center text-xs font-bold text-rose-600">
+              <span>Manage Deals</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/reports"
+            className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
+                Financial Reports
+              </h4>
+              <p className="text-xs text-[#647A98] mt-1">
+                Sales volume, AOV, category shares &amp; printable invoices.
+              </p>
+            </div>
+            <div className="mt-4 flex items-center text-xs font-bold text-indigo-600">
+              <span>View Reports</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/settings"
+            className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <SettingsIcon className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
+                Store Settings
+              </h4>
+              <p className="text-xs text-[#647A98] mt-1">
+                Shop profile, WhatsApp order desk, delivery fee &amp; database.
+              </p>
+            </div>
+            <div className="mt-4 flex items-center text-xs font-bold text-slate-700">
+              <span>Configure Settings</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
         </div>
       </div>
     </div>

@@ -45,50 +45,43 @@ const NAV_ITEMS: NavItem[] = [
     name: 'Categories',
     href: '/admin/categories',
     icon: FolderTree,
-    phase: 'Phase 5',
-    enabled: false,
+    enabled: true,
   },
   {
     name: 'Orders',
     href: '/admin/orders',
     icon: ShoppingBag,
-    phase: 'Phase 6',
-    enabled: false,
+    enabled: true,
   },
   {
     name: 'Customers',
     href: '/admin/customers',
     icon: Users,
-    phase: 'Phase 7',
-    enabled: false,
+    enabled: true,
   },
   {
     name: 'Inventory',
     href: '/admin/inventory',
     icon: Boxes,
-    phase: 'Phase 8',
-    enabled: false,
+    enabled: true,
   },
   {
     name: 'Deals & Banners',
     href: '/admin/promotions',
     icon: Sparkles,
-    phase: 'Phase 9',
-    enabled: false,
+    enabled: true,
   },
   {
     name: 'Reports',
     href: '/admin/reports',
     icon: BarChart3,
-    phase: 'Phase 11',
-    enabled: false,
+    enabled: true,
   },
   {
     name: 'Settings',
     href: '/admin/settings',
     icon: Settings,
-    phase: 'Phase 11',
-    enabled: false,
+    enabled: true,
   },
 ];
 
@@ -127,7 +120,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         {/* Brand Header */}
         <div className="h-16 px-6 border-b border-[#DCEBFA] flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-2 group" onClick={onClose}>
-            <BrandLogo variant="compact" />
+            <BrandLogo variant="compact" showLink={false} />
             <div className="flex flex-col text-left leading-tight pl-2 border-l border-[#DCEBFA]">
               <span className="text-[10px] font-black uppercase tracking-wider text-[#0866E8]">
                 Admin Portal

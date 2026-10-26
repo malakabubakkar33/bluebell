@@ -188,10 +188,7 @@ function AdminLoginForm() {
             className="w-full mt-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#0866E8] to-[#0645B5] hover:from-[#0645B5] hover:to-[#04358C] text-white font-bold text-sm shadow-lg shadow-[#0866E8]/25 hover:shadow-xl hover:shadow-[#0866E8]/35 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Verifying Credentials...</span>
-              </>
+              <span className="animate-pulse font-bold">Verifying Credentials...</span>
             ) : (
               <>
                 <span>Sign In to Admin Portal</span>

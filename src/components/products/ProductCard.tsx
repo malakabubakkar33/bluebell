@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Star, Heart, ShoppingCart, Check } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Check, XCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Product } from '@/types';
 
@@ -17,6 +17,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) {
+      addToCart(product);
+      return;
+    }
+    if (isAdded) return;
     addToCart(product);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1800);
@@ -47,7 +52,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   const inWish = isInWishlist(product.id);
-  const isOutOfStock = (product.stock ?? 10) <= 0;
+  const isOutOfStock =
+    product.inStock === false ||
+    (product.stock !== undefined && product.stock !== null && product.stock <= 0);
 
   return (
     <Link
@@ -133,22 +140,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         </div>
 
-        {/* Circular Blue Shopping Cart Button */}
+        {/* Circular Shopping Cart or Out of Stock Action Button */}
         <button
           onClick={handleAddToCart}
           type="button"
-          disabled={isOutOfStock || isAdded}
-          aria-label={isAdded ? 'Added to cart' : 'Add to cart'}
+          disabled={isAdded}
+          title={isOutOfStock ? 'Out of Stock - Click for details' : 'Add to cart'}
+          aria-label={isAdded ? 'Added to cart' : isOutOfStock ? 'Out of stock' : 'Add to cart'}
           className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0 shadow-xs cursor-pointer ${
             isAdded
               ? 'bg-[#16A675] text-white scale-105'
               : isOutOfStock
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              ? 'bg-rose-50 text-rose-500 border border-rose-200 hover:bg-rose-100 hover:border-rose-400 active:scale-90'
               : 'bg-[#0866E8] hover:bg-[#0645B5] text-white active:scale-90 hover:scale-105'
           }`}
         >
           {isAdded ? (
             <Check className="w-3.5 h-3.5" />
+          ) : isOutOfStock ? (
+            <XCircle className="w-3.5 h-3.5 text-rose-500" />
           ) : (
             <ShoppingCart className="w-3.5 h-3.5" />
           )}

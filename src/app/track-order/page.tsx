@@ -123,7 +123,7 @@ function TrackOrderContent() {
             className="px-5 py-2.5 bg-brand-primary hover:bg-brand-deep text-white font-bold text-xs sm:text-sm rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
           >
             {loading ? (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span className="font-bold text-xs animate-pulse">Searching...</span>
             ) : (
               <>
                 <Search className="w-4 h-4" />

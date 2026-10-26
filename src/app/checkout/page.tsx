@@ -84,6 +84,16 @@ export default function CheckoutPage() {
       return;
     }
 
+    const outOfStockItem = cart.find(
+      (item) => item.maxStock !== undefined && item.maxStock <= 0
+    );
+    if (outOfStockItem) {
+      setErrorMessage(
+        `Out of Stock: "${outOfStockItem.name}" is currently unavailable. Please remove it from your cart before placing your order.`
+      );
+      return;
+    }
+
     if (!formData.fullName || !formData.phone || !formData.whatsapp || !formData.address) {
       setErrorMessage('Please provide your name, phone, WhatsApp number, and delivery address.');
       setIsEditingAddress(true);

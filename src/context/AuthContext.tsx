@@ -98,16 +98,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const activeUser = localStorage.getItem('bluebell_active_user');
       if (activeUser) {
-        setUser(JSON.parse(activeUser));
+        const parsed = JSON.parse(activeUser);
+        setUser(parsed);
+        if (parsed?.role === 'admin') {
+          refreshUsers();
+        }
       }
     } catch (e) {
       console.error('Failed to load auth state', e);
     } finally {
       setIsLoading(false);
     }
-
-    // Automatically sync live users from Supabase database
-    refreshUsers();
   }, []);
 
   const saveUsersList = (newList: UserProfile[]) => {

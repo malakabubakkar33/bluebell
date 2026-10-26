@@ -256,17 +256,9 @@ export default function AdminProductsPage() {
       throw new Error(data.error || 'Failed to delete product.');
     }
 
-    if (data.archived) {
-      // Safe archived: unpublish and zero stock
-      setProducts((prev) =>
-        prev.map((p) => (p.id === productId ? { ...p, inStock: false, stock: 0 } : p))
-      );
-      showToast('success', data.message || 'Product safely archived to preserve customer order history.');
-    } else {
-      // Hard deleted
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
-      showToast('success', 'Product permanently removed from database.');
-    }
+    // Hard deleted from database and state
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
+    showToast('success', data.message || 'Product permanently removed from database.');
   };
 
   return (

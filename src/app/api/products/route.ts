@@ -3,6 +3,8 @@ import { SupabaseDbService } from '@/lib/supabase/service';
 import { getSupabaseAdminClient } from '@/lib/supabase/admin';
 import { requireAdminApi } from '@/lib/auth/adminGuard';
 
+import { serverCache } from '@/lib/cache';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
@@ -15,20 +17,38 @@ export async function GET(req: NextRequest) {
     const isFeatured = searchParams.get('featured') === 'true';
     const statusParam = searchParams.get('status') as 'all' | 'published' | 'unpublished' | null;
 
-    const products = await SupabaseDbService.getProducts({
-      categorySlug: category,
-      brand,
-      query,
-      isBestSeller,
-      isFeatured,
-      status: statusParam || undefined,
-    });
+    const cacheKey = `products:${category || 'all'}:${brand || 'all'}:${query || ''}:${isBestSeller}:${isFeatured}:${statusParam || 'published'}`;
 
-    return NextResponse.json({
-      success: true,
-      count: products.length,
-      data: products,
-    });
+    const products = await serverCache.getOrSet(
+      cacheKey,
+      60,
+      async () => {
+        return await SupabaseDbService.getProducts({
+          categorySlug: category,
+          brand,
+          query,
+          isBestSeller,
+          isFeatured,
+          status: statusParam || undefined,
+        });
+      },
+      300
+    );
+
+    return new NextResponse(
+      JSON.stringify({
+        success: true,
+        count: products.length,
+        data: products,
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      }
+    );
   } catch (error: any) {
     return NextResponse.json(
       {
@@ -121,6 +141,10 @@ export async function POST(req: NextRequest) {
       stock: body.stock !== undefined ? Math.max(0, parseInt(body.stock, 10)) : 10,
       inStock: body.inStock !== undefined ? Boolean(body.inStock) : true,
     });
+
+    // Invalidate product & bootstrap caches so new product is immediately live
+    serverCache.invalidatePrefix('products');
+    serverCache.invalidatePrefix('bootstrap');
 
     return NextResponse.json({ success: true, data: created }, { status: 201 });
   } catch (error: any) {

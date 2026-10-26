@@ -14,6 +14,7 @@ export interface ProductVariant {
 export interface ColorOption {
   name: string;
   hex: string;
+  image?: string;
 }
 
 export interface Product {
@@ -39,6 +40,9 @@ export interface Product {
   sku?: string;
   specs?: Record<string, any>;
   storageOptions?: string[];
+  storageGb?: number | string;
+  ptaStatus?: 'PTA Approved' | 'Non-PTA' | 'Blocked' | 'JV';
+  colors?: string[];
   colorOptions?: ColorOption[];
   variants?: ProductVariant[];
   isFeatured?: boolean;

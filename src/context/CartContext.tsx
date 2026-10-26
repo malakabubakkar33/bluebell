@@ -76,6 +76,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addToCart = (product: Product, quantity = 1, variant?: ProductVariant) => {
+    // Check if out of stock
+    const isOut =
+      (product.stock !== undefined && product.stock <= 0) ||
+      product.inStock === false ||
+      (variant?.stock !== undefined && variant.stock <= 0);
+
+    if (isOut) {
+      showToast(`Out of Stock! "${product.name}" is currently unavailable.`);
+      return;
+    }
+
     setCart((prev) => {
       const variantKey = variant ? variant.id : 'default';
       const existingIndex = prev.findIndex(

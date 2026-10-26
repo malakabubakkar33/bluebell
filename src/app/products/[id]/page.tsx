@@ -22,6 +22,8 @@ import {
   Camera,
   BatteryCharging,
   Award,
+  XCircle,
+  AlertCircle,
 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -120,6 +122,10 @@ export default function ProductDetailPage({
   const activeImageIndex = Math.max(0, allImages.indexOf(selectedImage));
 
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      addToCart(product);
+      return;
+    }
     const variant = {
       id: `var-${selectedStorage}-${selectedColor?.name || 'standard'}`,
       sku: `${product.sku || 'BB'}-${selectedStorage}`,
@@ -135,6 +141,10 @@ export default function ProductDetailPage({
   };
 
   const handleBuyNow = () => {
+    if (isOutOfStock) {
+      addToCart(product);
+      return;
+    }
     const variant = {
       id: `var-${selectedStorage}-${selectedColor?.name || 'standard'}`,
       sku: `${product.sku || 'BB'}-${selectedStorage}`,
@@ -179,7 +189,9 @@ export default function ProductDetailPage({
     Condition: '100% Brand New Original Sealed Pack Box',
   };
 
-  const isOutOfStock = (product.stock || 1) <= 0;
+  const isOutOfStock =
+    product.inStock === false ||
+    (product.stock !== undefined && product.stock !== null && product.stock <= 0);
 
   return (
     <main className="min-h-screen flex flex-col bg-[#F7FBFF] text-[#102A50] w-full max-w-full overflow-x-hidden">
@@ -318,51 +330,114 @@ export default function ProductDetailPage({
                 </div>
               </div>
 
-              {/* Price & In Stock Row Matching Screen 4 */}
-              <div className="flex items-center gap-3 pt-1">
+              {/* Price & PTA Status / In Stock Row */}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
                 <span className="text-2xl sm:text-3xl font-black text-[#102A50] font-mono">
                   Rs. {product.price.toLocaleString()}
                 </span>
-                <span className="px-3 py-1 rounded-full bg-emerald-50 text-[#16A675] text-xs font-black border border-emerald-200 shadow-xs">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-black border shadow-xs ${
+                    isOutOfStock
+                      ? 'bg-rose-50 text-rose-600 border-rose-200'
+                      : 'bg-emerald-50 text-[#16A675] border-emerald-200'
+                  }`}
+                >
                   {isOutOfStock ? 'Out of Stock' : 'In Stock'}
                 </span>
+
+                {/* PTA Registration Status Badge */}
+                {(() => {
+                  const status = product.ptaStatus || (product.specs as any)?.ptaStatus || 'PTA Approved';
+                  const isApproved = status === 'PTA Approved';
+                  const isNonPta = status === 'Non-PTA';
+                  const isBlocked = status === 'Blocked';
+                  const isJV = status === 'JV';
+
+                  return (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border shadow-xs ${
+                        isApproved
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                          : isNonPta
+                          ? 'bg-amber-50 border-amber-300 text-amber-800'
+                          : isBlocked
+                          ? 'bg-rose-50 border-rose-300 text-rose-800'
+                          : 'bg-blue-50 border-blue-300 text-blue-800'
+                      }`}
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>
+                        {isApproved
+                          ? 'Official PTA Approved (100% Tax Paid)'
+                          : isNonPta
+                          ? 'Non-PTA (Factory Unlocked)'
+                          : isBlocked
+                          ? 'Non-PTA / Blocked'
+                          : 'JV (SIM-Locked / Gevey)'}
+                      </span>
+                    </span>
+                  );
+                })()}
               </div>
 
-              {/* Trust Indicators Matching Screen 4 */}
+              {/* Trust Indicators */}
               <div className="flex flex-wrap items-center gap-4 py-2 text-xs font-bold text-[#647A98] border-y border-[#DCEBFA]/60">
                 <div className="flex items-center gap-1.5 text-[#102A50]">
                   <ShieldCheck className="w-4 h-4 text-[#0866E8]" />
-                  <span>100% Original</span>
+                  <span>100% Original Device</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[#102A50]">
                   <Award className="w-4 h-4 text-[#0866E8]" />
-                  <span>Official Warranty</span>
+                  <span>{product.warranty || 'Official Brand Warranty'}</span>
                 </div>
               </div>
 
-              {/* Select Color Swatches Matching Screen 4 */}
+              {/* Select Color Swatches - Click switches to that color's image! */}
               {product.colorOptions && product.colorOptions.length > 0 && (
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-[#102A50] uppercase tracking-wider block">
-                    Select Color
-                  </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-[#102A50] uppercase tracking-wider block">
+                      Select Color:{' '}
+                      <span className="text-[#0866E8] normal-case font-bold ml-1">
+                        {selectedColor?.name || product.colorOptions[0]?.name}
+                      </span>
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
                     {product.colorOptions.map((color) => {
                       const isSelected = selectedColor?.name === color.name;
                       return (
                         <button
                           key={color.name}
                           type="button"
-                          onClick={() => setSelectedColor(color)}
-                          title={color.name}
-                          className={`w-8 h-8 rounded-full border-2 transition-transform cursor-pointer flex items-center justify-center ${
+                          onClick={() => {
+                            setSelectedColor(color);
+                            // If this color has an associated image, switch showcase image!
+                            if (color.image) {
+                              setSelectedImage(color.image);
+                            }
+                          }}
+                          title={`${color.name}${color.image ? ' (Click to view color photo)' : ''}`}
+                          className={`group flex items-center gap-2 px-3 py-1.5 rounded-full border-2 transition-all cursor-pointer ${
                             isSelected
-                              ? 'border-[#0866E8] ring-4 ring-[#0866E8]/20 scale-110'
-                              : 'border-slate-300 hover:scale-105'
+                              ? 'border-[#0866E8] bg-[#EDF6FF] ring-2 ring-[#0866E8]/20 shadow-xs'
+                              : 'border-[#DCEBFA] bg-white hover:border-slate-300'
                           }`}
-                          style={{ backgroundColor: color.hex }}
                         >
-                          {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[3] drop-shadow-sm" />}
+                          <span
+                            className="w-4 h-4 rounded-full border border-black/20 shrink-0"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          <span
+                            className={`text-xs font-bold ${
+                              isSelected ? 'text-[#0866E8]' : 'text-[#102A50]'
+                            }`}
+                          >
+                            {color.name}
+                          </span>
+                          {isSelected && (
+                            <Check className="w-3.5 h-3.5 text-[#0866E8] stroke-[3]" />
+                          )}
                         </button>
                       );
                     })}
@@ -370,33 +445,40 @@ export default function ProductDetailPage({
                 </div>
               )}
 
-              {/* Storage Variant Pills Matching Screen 4 */}
-              {product.storageOptions && product.storageOptions.length > 0 && (
-                <div className="space-y-2">
+              {/* Memory / Storage Variant Pills */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-[#102A50] uppercase tracking-wider block">
-                    Storage
+                    Memory / Storage:{' '}
+                    <span className="text-[#0866E8] font-mono font-bold ml-1">
+                      {selectedStorage || `${product.storageGb || 256} GB`}
+                    </span>
                   </label>
-                  <div className="flex flex-wrap gap-2.5">
-                    {product.storageOptions.map((storage) => {
-                      const isSelected = selectedStorage === storage;
-                      return (
-                        <button
-                          key={storage}
-                          type="button"
-                          onClick={() => setSelectedStorage(storage)}
-                          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                            isSelected
-                              ? 'bg-[#EDF6FF] text-[#0866E8] border-2 border-[#0866E8] font-black shadow-xs'
-                              : 'bg-white border border-[#DCEBFA] text-[#647A98] hover:border-slate-300'
-                          }`}
-                        >
-                          {storage}
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
-              )}
+                <div className="flex flex-wrap gap-2.5">
+                  {(product.storageOptions && product.storageOptions.length > 0
+                    ? product.storageOptions
+                    : [`${product.storageGb || 256}GB`]
+                  ).map((storage) => {
+                    const isSelected = selectedStorage === storage;
+                    return (
+                      <button
+                        key={storage}
+                        type="button"
+                        onClick={() => setSelectedStorage(storage)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-[#EDF6FF] text-[#0866E8] border-2 border-[#0866E8] font-black shadow-xs'
+                            : 'bg-white border border-[#DCEBFA] text-[#647A98] hover:border-slate-300'
+                        }`}
+                      >
+                        <Cpu className="w-3.5 h-3.5 text-[#0866E8]" />
+                        <span>{storage.includes('GB') || storage.includes('TB') ? storage : `${storage} GB`}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Quantity Selector Matching Screen 4 */}
               <div className="space-y-1.5 pt-1">
@@ -426,18 +508,31 @@ export default function ProductDetailPage({
                 </div>
               </div>
 
+              {/* Out of Stock Notice Banner */}
+              {isOutOfStock && (
+                <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-2.5">
+                  <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="text-xs">
+                    <p className="font-bold text-rose-700">Out of Stock!</p>
+                    <p className="text-rose-600 mt-0.5">
+                      This mobile is currently unavailable in our inventory. Adding to cart or ordering is disabled until new stock arrives.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Purchase CTA Buttons Matching Screen 4 */}
               <div className="space-y-2.5 pt-3">
-                {/* 1. Add to Cart Button (Primary Solid Blue) */}
+                {/* 1. Add to Cart Button */}
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  disabled={isOutOfStock || isAdded}
+                  disabled={isAdded}
                   className={`w-full py-3.5 px-6 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer ${
                     isAdded
                       ? 'bg-[#16A675] text-white'
                       : isOutOfStock
-                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      ? 'bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 shadow-none'
                       : 'bg-[#0866E8] hover:bg-[#0645B5] text-white shadow-[#0866E8]/25 active:scale-98'
                   }`}
                 >
@@ -445,6 +540,11 @@ export default function ProductDetailPage({
                     <>
                       <Check className="w-4 h-4 stroke-[3]" />
                       <span>Added to Cart!</span>
+                    </>
+                  ) : isOutOfStock ? (
+                    <>
+                      <XCircle className="w-4 h-4 text-rose-600" />
+                      <span>Add to Cart &mdash; Out of Stock</span>
                     </>
                   ) : (
                     <>
@@ -454,8 +554,17 @@ export default function ProductDetailPage({
                   )}
                 </button>
 
-                {/* 2. Buy Now Button (Secondary Light Blue) */}
-                {!isOutOfStock && (
+                {/* 2. Buy Now / Order Button */}
+                {isOutOfStock ? (
+                  <button
+                    type="button"
+                    onClick={handleBuyNow}
+                    className="w-full py-3.5 px-6 rounded-2xl font-black text-sm bg-rose-100/70 hover:bg-rose-200 text-rose-700 border border-rose-200 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-98"
+                  >
+                    <XCircle className="w-4 h-4 text-rose-600" />
+                    <span>Order Now &mdash; Out of Stock</span>
+                  </button>
+                ) : (
                   <button
                     type="button"
                     onClick={handleBuyNow}

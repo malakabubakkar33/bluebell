@@ -161,8 +161,8 @@ export const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
             {/* Preview Box */}
             <div className="relative w-28 h-28 rounded-2xl border-2 border-dashed border-[#DCEBFA] bg-[#F7FBFF] overflow-hidden flex items-center justify-center shrink-0 group">
               {uploadingMain ? (
-                <div className="flex flex-col items-center justify-center text-xs text-[#0866E8]">
-                  <Loader2 className="w-6 h-6 animate-spin mb-1" />
+                <div className="flex flex-col items-center justify-center text-xs text-[#0866E8] animate-pulse">
+                  <UploadCloud className="w-6 h-6 mb-1 text-[#0866E8]" />
                   <span className="text-[10px] font-bold">Uploading...</span>
                 </div>
               ) : image ? (
@@ -245,10 +245,7 @@ export const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
               className="text-[11px] font-bold text-[#0866E8] hover:underline flex items-center gap-1 cursor-pointer"
             >
               {uploadingGallery ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  <span>Uploading...</span>
-                </>
+                <span className="animate-pulse">Uploading Photos...</span>
               ) : (
                 <>
                   <Plus className="w-3 h-3" />

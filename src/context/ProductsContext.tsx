@@ -93,10 +93,24 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, [rawCategories, products]);
 
-  // Initial Data Fetch from Supabase APIs
+  // Initial Data Fetch from Supabase APIs with unified bootstrap acceleration
   const fetchAllData = async () => {
     setIsLoading(true);
     try {
+      // 1. Ultra-fast path: single unified bootstrap call powered by server-side SingleFlight cache
+      const bootstrapRes = await fetch('/api/bootstrap')
+        .then((r) => r.json())
+        .catch(() => null);
+
+      if (bootstrapRes && bootstrapRes.success) {
+        if (Array.isArray(bootstrapRes.products)) setProducts(bootstrapRes.products);
+        if (Array.isArray(bootstrapRes.categories)) setRawCategories(bootstrapRes.categories);
+        if (Array.isArray(bootstrapRes.banners)) setBanners(bootstrapRes.banners);
+        if (Array.isArray(bootstrapRes.deals)) setDeals(bootstrapRes.deals);
+        return;
+      }
+
+      // 2. Resilient fallback: parallel fetch if bootstrap is unavailable
       const [prodsRes, catsRes, bansRes, dealsRes] = await Promise.all([
         fetch('/api/products').then((r) => r.json()).catch(() => ({ data: [] })),
         fetch('/api/categories').then((r) => r.json()).catch(() => ({ data: [] })),

@@ -29,16 +29,24 @@ export const isSupabaseAdminConfigured = Boolean(
   (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
 );
 
+let cachedAdminClient: any = null;
+
 export function getSupabaseAdminClient() {
+  if (cachedAdminClient) {
+    return cachedAdminClient;
+  }
+
   const { url, secretKey, isConfigured } = getAdminSupabaseConfig();
   if (!isConfigured || !url || !secretKey) {
     return null;
   }
 
-  return createClient<Database>(url, secretKey, {
+  cachedAdminClient = createClient<Database>(url, secretKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
     },
   });
+
+  return cachedAdminClient;
 }

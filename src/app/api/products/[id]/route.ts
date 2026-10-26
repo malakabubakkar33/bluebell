@@ -3,6 +3,8 @@ import { SupabaseDbService } from '@/lib/supabase/service';
 import { getSupabaseAdminClient } from '@/lib/supabase/admin';
 import { requireAdminApi } from '@/lib/auth/adminGuard';
 
+import { serverCache } from '@/lib/cache';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(
@@ -11,7 +13,14 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const product = await SupabaseDbService.getProductBySlugOrId(id);
+    const product = await serverCache.getOrSet(
+      `product:${id}`,
+      60,
+      async () => {
+        return await SupabaseDbService.getProductBySlugOrId(id);
+      },
+      300
+    );
 
     if (!product) {
       return NextResponse.json(
@@ -20,7 +29,16 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ success: true, data: product });
+    return new NextResponse(
+      JSON.stringify({ success: true, data: product }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      }
+    );
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch product.' },
@@ -92,6 +110,11 @@ export async function PATCH(
     }
 
     const updated = await SupabaseDbService.updateProduct(id, updates);
+
+    // Invalidate product & bootstrap caches so changes are immediately live
+    serverCache.invalidatePrefix('products');
+    serverCache.invalidatePrefix('bootstrap');
+
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
     console.error(`[PATCH /api/products/[id]] error:`, error);
@@ -115,6 +138,10 @@ export async function DELETE(
 
     const { id } = await params;
     const result = await SupabaseDbService.deleteProduct(id);
+
+    // Invalidate product & bootstrap caches so removal is immediately live
+    serverCache.invalidatePrefix('products');
+    serverCache.invalidatePrefix('bootstrap');
 
     return NextResponse.json({
       success: true,

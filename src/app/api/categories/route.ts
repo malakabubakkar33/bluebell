@@ -1,21 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { SupabaseDbService } from '@/lib/supabase/service';
+import { serverCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const categories = await SupabaseDbService.getCategories();
-    return NextResponse.json(
-      {
+    const { searchParams } = new URL(req.url);
+    const includeInactive = searchParams.get('all') === 'true';
+    const categories = await serverCache.getOrSet(
+      `categories:${includeInactive}`,
+      60,
+      () => SupabaseDbService.getCategories(includeInactive),
+      300
+    );
+
+    return new NextResponse(
+      JSON.stringify({
         success: true,
         count: categories.length,
         data: categories,
-      },
+      }),
       {
+        status: 200,
         headers: {
-          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
         },
       }
     );
@@ -38,6 +49,10 @@ export async function POST(req: NextRequest) {
     }
 
     const created = await SupabaseDbService.createCategory(body);
+
+    // Invalidate caches
+    serverCache.invalidatePrefix('categories');
+    serverCache.invalidatePrefix('bootstrap');
 
     // Revalidate affected storefront pages and cache
     try {

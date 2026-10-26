@@ -11,6 +11,7 @@ import {
   Heart,
   Check,
   ShoppingBag,
+  XCircle,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { ProductVariant } from '@/types';
@@ -45,8 +46,15 @@ export const QuickViewModal: React.FC = () => {
   const currentPrice = selectedVariant ? selectedVariant.price : quickViewProduct.price;
   const currentOriginalPrice = selectedVariant?.originalPrice || quickViewProduct.originalPrice;
   const currentStock = selectedVariant ? selectedVariant.stock : quickViewProduct.stock;
+  const isOutOfStock =
+    quickViewProduct.inStock === false ||
+    (currentStock !== undefined && currentStock !== null && currentStock <= 0);
 
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      addToCart(quickViewProduct, quantity, selectedVariant);
+      return;
+    }
     addToCart(quickViewProduct, quantity, selectedVariant);
     setJustAdded(true);
     setTimeout(() => {
@@ -207,6 +215,8 @@ export const QuickViewModal: React.FC = () => {
                   className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
                     justAdded
                       ? 'bg-emerald-600 text-white'
+                      : isOutOfStock
+                      ? 'bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100'
                       : 'bg-brand-500 hover:bg-brand-600 text-white shadow-md shadow-brand-500/20 active:scale-95'
                   }`}
                 >
@@ -214,6 +224,11 @@ export const QuickViewModal: React.FC = () => {
                     <>
                       <Check className="w-4 h-4" />
                       <span>Added to Cart!</span>
+                    </>
+                  ) : isOutOfStock ? (
+                    <>
+                      <XCircle className="w-4 h-4 text-rose-600" />
+                      <span>Add to Cart &mdash; Out of Stock</span>
                     </>
                   ) : (
                     <>

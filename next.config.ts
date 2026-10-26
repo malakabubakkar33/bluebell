@@ -12,8 +12,12 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'recharts', '@supabase/supabase-js'],
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 86400, // 24 hours image optimization cache for high concurrent throughput
     remotePatterns: [
       {
         protocol: 'https',

@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       // Find user in Supabase Auth
       const { data: usersData } = await adminClient.auth.admin.listUsers();
       const existingUser = usersData?.users?.find(
-        (u) => u.email?.toLowerCase() === trimmedEmail
+        (u: any) => u.email?.toLowerCase() === trimmedEmail
       );
 
       // If user exists in Supabase but their email is not confirmed, auto-confirm it now

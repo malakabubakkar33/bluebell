@@ -31,7 +31,7 @@ export const AdminLogoutButton: React.FC = () => {
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all cursor-pointer disabled:opacity-60"
     >
       {isLoggingOut ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <LogOut className="w-3.5 h-3.5 animate-pulse" />
       ) : (
         <LogOut className="w-3.5 h-3.5" />
       )}

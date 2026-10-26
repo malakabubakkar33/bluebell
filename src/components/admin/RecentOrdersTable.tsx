@@ -1,7 +1,6 @@
-'use client';
-
 import React from 'react';
-import { ShoppingBag, Clock, CheckCircle2, XCircle, AlertCircle, Calendar } from 'lucide-react';
+import Link from 'next/link';
+import { ShoppingBag, Clock, CheckCircle2, XCircle, AlertCircle, Calendar, ArrowRight } from 'lucide-react';
 
 export interface RecentOrder {
   id: string;
@@ -165,9 +164,15 @@ export const RecentOrdersTable: React.FC<RecentOrdersTableProps> = ({
         )}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-[#F0F5FA] flex items-center justify-between text-[11px] text-[#647A98]">
-        <span>Full order management &amp; actions arriving in Phase 6</span>
-        <span className="font-mono text-[#0866E8]">Table: public.orders</span>
+      <div className="mt-4 pt-3 border-t border-[#F0F5FA] flex items-center justify-between text-xs">
+        <Link
+          href="/admin/orders"
+          className="inline-flex items-center gap-1.5 font-bold text-[#0866E8] hover:text-[#0756C4] transition-colors"
+        >
+          <span>View all orders &amp; update status</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+        <span className="font-mono text-[11px] text-[#647A98]">Table: public.orders</span>
       </div>
     </div>
   );

@@ -155,8 +155,12 @@ export const SupabaseDbService = {
       is_best_seller: Boolean(product.isBestSeller),
       is_featured: Boolean(product.isFeatured ?? true),
       is_new_arrival: Boolean(product.badge === 'New' || product.isNewArrival),
-      specs: product.specs || {},
-      storage_options: product.storageOptions || ['128GB', '256GB', '512GB'],
+      specs: {
+        ...(product.specs || {}),
+        storageGb: product.storageGb !== undefined ? product.storageGb : (product.specs?.storageGb || '256'),
+        ptaStatus: product.ptaStatus || product.specs?.ptaStatus || 'PTA Approved',
+      },
+      storage_options: product.storageOptions || (product.storageGb ? [`${product.storageGb}GB`] : ['128GB', '256GB', '512GB']),
       color_options: product.colorOptions || [],
       warranty: product.warranty || '1 Year Official Brand Warranty (PTA Approved)',
       sku: product.sku?.trim() || `BB-${productId.toUpperCase()}`,
@@ -215,7 +219,18 @@ export const SupabaseDbService = {
     if (updates.isFeatured !== undefined) rowUpdates.is_featured = Boolean(updates.isFeatured);
     if (updates.isBestSeller !== undefined) rowUpdates.is_best_seller = Boolean(updates.isBestSeller);
     if (updates.isNewArrival !== undefined) rowUpdates.is_new_arrival = Boolean(updates.isNewArrival);
-    if (updates.specs !== undefined) rowUpdates.specs = updates.specs;
+    if (updates.storageOptions !== undefined) rowUpdates.storage_options = updates.storageOptions;
+    if (updates.colorOptions !== undefined) rowUpdates.color_options = updates.colorOptions;
+    if (updates.storageGb !== undefined || updates.ptaStatus !== undefined || updates.specs !== undefined) {
+      rowUpdates.specs = {
+        ...(updates.specs || {}),
+        ...(updates.storageGb !== undefined ? { storageGb: updates.storageGb } : {}),
+        ...(updates.ptaStatus !== undefined ? { ptaStatus: updates.ptaStatus } : {}),
+      };
+      if (updates.storageGb !== undefined && !updates.storageOptions) {
+        rowUpdates.storage_options = [`${updates.storageGb}GB`];
+      }
+    }
 
     const { data, error } = await (client as any)
       .from('products')
@@ -242,35 +257,6 @@ export const SupabaseDbService = {
       throw new Error('Database client not configured');
     }
 
-    // 1. Check if product is referenced in orders to preserve historical integrity
-    try {
-      const { data: orderData } = await (client as any)
-        .from('orders')
-        .select('id, items')
-        .limit(100);
-
-      const hasOrderHistory = Array.isArray(orderData) && orderData.some((order: any) => {
-        if (!Array.isArray(order.items)) return false;
-        return order.items.some((item: any) => item.id === id || item.productId === id);
-      });
-
-      if (hasOrderHistory) {
-        // Safe archive: unpublish and zero stock to preserve historical order references
-        await (client as any)
-          .from('products')
-          .update({ in_stock: false, stock_count: 0 })
-          .eq('id', id);
-        return {
-          success: true,
-          archived: true,
-          message: 'Product is referenced in historical customer orders. Safely archived and unpublished instead of hard-deleted.',
-        };
-      }
-    } catch (checkErr) {
-      console.warn('Order check before delete warning:', checkErr);
-    }
-
-    // 2. Safe to delete permanently if no historical references
     const { error } = await (client as any).from('products').delete().eq('id', id);
     if (error) {
       console.error('deleteProduct error:', error.message);
@@ -286,7 +272,7 @@ export const SupabaseDbService = {
   // ==========================================
   // CATEGORIES WITH DYNAMIC PRODUCT COUNTS
   // ==========================================
-  async getCategories() {
+  async getCategories(includeInactive: boolean = false) {
     let client = getDbClient();
     if (!client) {
       client = (await getSupabaseServerClient()) as any;
@@ -294,13 +280,18 @@ export const SupabaseDbService = {
 
     if (client) {
       try {
+        let catsQuery = (client as any)
+          .from('categories')
+          .select('*')
+          .order('name');
+
+        if (!includeInactive) {
+          catsQuery = catsQuery.eq('is_active', true);
+        }
+
         // Fetch active categories and products concurrently to compute real item counts
         const [catsRes, prodsRes] = await Promise.all([
-          (client as any)
-            .from('categories')
-            .select('*')
-            .eq('is_active', true)
-            .order('name'),
+          catsQuery,
           (client as any).from('products').select('category_slug, brand'),
         ]);
 
@@ -1313,6 +1304,11 @@ export const SupabaseDbService = {
 
 // Converters
 function mapProductRowToModel(r: any): Product {
+  const specs = r.specs || {};
+  const storageGb = specs.storageGb || specs.storage_gb || (r.storage_options?.[0] ? String(r.storage_options[0]).replace(/[^0-9]/g, '') : '256');
+  const ptaStatus = specs.ptaStatus || specs.pta_status || 'PTA Approved';
+  const colorOptions = r.color_options || specs.colorOptions || [];
+
   return {
     id: r.id,
     name: r.name,
@@ -1337,7 +1333,12 @@ function mapProductRowToModel(r: any): Product {
     isBestSeller: Boolean(r.is_best_seller),
     isFeatured: Boolean(r.is_featured),
     isNewArrival: Boolean(r.is_new_arrival),
-    specs: r.specs || {},
+    specs: specs,
+    storageOptions: r.storage_options || (storageGb ? [`${storageGb}GB`] : ['128GB', '256GB', '512GB']),
+    storageGb: storageGb,
+    ptaStatus: ptaStatus,
+    colorOptions: colorOptions,
+    colors: Array.isArray(colorOptions) ? colorOptions.map((c: any) => typeof c === 'string' ? c : c.name) : [],
     variants: [],
   };
 }
