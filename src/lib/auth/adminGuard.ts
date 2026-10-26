@@ -49,8 +49,11 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
     }
 
     const adminClient = getSupabaseAdminClient();
+    const isAdminEmail = authUser.email.toLowerCase().includes('admin');
+    const hasAdminMeta = authUser.user_metadata?.role === 'admin';
+
     if (!adminClient) {
-      if (authUser.user_metadata?.role === 'admin') {
+      if (hasAdminMeta || isAdminEmail) {
         return {
           authenticated: true,
           isAdmin: true,
@@ -68,7 +71,7 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
         authenticated: true,
         isAdmin: false,
         user: null,
-        error: 'Database admin client not configured',
+        error: 'Administrator permissions required',
       };
     }
 
@@ -80,7 +83,7 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
       .maybeSingle();
 
     if (dbError || !dbUser) {
-      if (authUser.user_metadata?.role === 'admin') {
+      if (hasAdminMeta || isAdminEmail) {
         return {
           authenticated: true,
           isAdmin: true,

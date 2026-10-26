@@ -73,6 +73,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [categorySlug, setCategorySlug] = useState('smartphones');
   const [sku, setSku] = useState('');
   const [price, setPrice] = useState<string>('');
+  const [costPrice, setCostPrice] = useState<string>('');
   const [originalPrice, setOriginalPrice] = useState<string>('');
   const [stock, setStock] = useState<string>('10');
   const [inStock, setInStock] = useState<boolean>(true);
@@ -106,6 +107,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setCategorySlug(product.categorySlug || product.category || 'smartphones');
       setSku(product.sku || product.id || '');
       setPrice(product.price ? product.price.toString() : '');
+      setCostPrice(product.specs?.costPrice ? String(product.specs.costPrice) : '');
       setOriginalPrice(product.originalPrice ? product.originalPrice.toString() : '');
       setStock(product.stock !== undefined ? product.stock.toString() : '10');
       setInStock(product.inStock !== undefined ? product.inStock : (product.stock || 0) > 0);
@@ -246,6 +248,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           ...(product?.specs || {}),
           storageGb: storageGb.trim().replace(/[^0-9]/g, '') || '256',
           ptaStatus,
+          costPrice: costPrice ? Number(costPrice) : undefined,
         },
         isFeatured,
         isBestSeller,
@@ -460,6 +463,29 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     value={originalPrice}
                     onChange={(e) => setOriginalPrice(e.target.value)}
                     className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-xl border border-[#DCEBFA] bg-white focus:outline-none focus:ring-2 focus:ring-[#0866E8]/30 focus:border-[#0866E8]"
+                  />
+                </div>
+              </div>
+
+              {/* Wholesale Cost Price (Kharid Qeemat) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-emerald-800">
+                    Cost Price (Kharid)
+                  </label>
+                  <span className="text-[10px] text-emerald-600 font-bold">For Profit Tracking</span>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs font-bold text-[#647A98]">
+                    Rs.
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 430000"
+                    value={costPrice}
+                    onChange={(e) => setCostPrice(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2.5 text-xs font-medium rounded-xl border border-emerald-300 bg-emerald-50/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
                   />
                 </div>
               </div>

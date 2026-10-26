@@ -132,16 +132,35 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                 </p>
               )}
 
-              <div className="flex items-baseline gap-3 pt-2">
-                <span className="text-2xl font-black text-[#0866E8]">
-                  Rs. {Number(product.price || 0).toLocaleString('en-PK')}
-                </span>
-                {product.originalPrice && product.originalPrice > product.price && (
-                  <span className="text-sm font-semibold text-[#647A98] line-through">
-                    Rs. {Number(product.originalPrice).toLocaleString('en-PK')}
-                  </span>
-                )}
-              </div>
+              {(() => {
+                const sell = Number(product.price || 0);
+                const cost = Number(product.specs?.costPrice || (product.originalPrice && product.originalPrice < sell ? product.originalPrice : Math.round(sell * 0.88)));
+                const unitProfit = Math.max(0, sell - cost);
+                const margin = sell > 0 ? Math.round((unitProfit / sell) * 100) : 12;
+
+                return (
+                  <div className="space-y-1 pt-2">
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-2xl font-black text-[#0866E8]">
+                        Rs. {sell.toLocaleString('en-PK')}
+                      </span>
+                      {product.originalPrice && product.originalPrice > product.price && (
+                        <span className="text-sm font-semibold text-[#647A98] line-through">
+                          Rs. {Number(product.originalPrice).toLocaleString('en-PK')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
+                        Munafa / Profit: +Rs. {unitProfit.toLocaleString('en-PK')} ({margin}% margin)
+                      </span>
+                      <span className="text-[11px] text-[#647A98]">
+                        Wholesale Cost: Rs. {cost.toLocaleString('en-PK')}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Status Chips */}
               <div className="pt-2 flex flex-wrap items-center gap-3 text-xs">

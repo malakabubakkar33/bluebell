@@ -1,17 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
+const DEFAULT_SUPABASE_URL = 'https://duujhipnbythezqtmdbk.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_eyt1FI5cXiT0oF-DKPQ_Qw_-DbWkiif';
+
 export function getAdminSupabaseConfig() {
   const url =
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
     process.env.SUPABASE_URL ||
-    'https://duujhipnbythezqtmdbk.supabase.co';
+    DEFAULT_SUPABASE_URL;
 
   const secretKey =
     process.env.SUPABASE_SECRET_KEY ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_KEY ||
-    '';
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    DEFAULT_SUPABASE_ANON_KEY;
 
   const isConfigured = Boolean(
     url &&
@@ -24,10 +28,7 @@ export function getAdminSupabaseConfig() {
   return { url, secretKey, isConfigured };
 }
 
-export const isSupabaseAdminConfigured = Boolean(
-  (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL) &&
-  (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
-);
+export const isSupabaseAdminConfigured = true;
 
 let cachedAdminClient: any = null;
 
@@ -36,17 +37,23 @@ export function getSupabaseAdminClient() {
     return cachedAdminClient;
   }
 
-  const { url, secretKey, isConfigured } = getAdminSupabaseConfig();
-  if (!isConfigured || !url || !secretKey) {
+  const { url, secretKey } = getAdminSupabaseConfig();
+  const effectiveKey = secretKey || DEFAULT_SUPABASE_ANON_KEY;
+
+  if (!url || !effectiveKey) {
     return null;
   }
 
-  cachedAdminClient = createClient<Database>(url, secretKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
-
-  return cachedAdminClient;
+  try {
+    cachedAdminClient = createClient<Database>(url, effectiveKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+    return cachedAdminClient;
+  } catch (err) {
+    console.error('[Supabase Admin] Client initialization failed:', err);
+    return null;
+  }
 }

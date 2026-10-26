@@ -21,9 +21,6 @@ import {
   RefreshCw,
   AlertCircle,
   ShieldCheck,
-  Layers,
-  ArrowRight,
-  Database,
   Store,
   Package,
   FolderTree,
@@ -33,8 +30,26 @@ import {
   Sparkles,
   BarChart3,
   Settings as SettingsIcon,
+  Coins,
+  ArrowRight,
+  TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
+
+export interface ProductProfitStats {
+  id: string;
+  name: string;
+  brand: string;
+  categorySlug?: string;
+  image?: string;
+  sellingPrice: number;
+  costPrice: number;
+  unitProfit: number;
+  unitsSold: number;
+  totalRevenue: number;
+  totalProfit: number;
+  marginPercent: number;
+}
 
 interface DashboardResponse {
   success: boolean;
@@ -43,6 +58,7 @@ interface DashboardResponse {
   lowStockItems: LowStockProduct[];
   recentOrders: RecentOrder[];
   salesChartData: DailySalesData[];
+  productProfitList?: ProductProfitStats[];
   error?: string;
 }
 
@@ -56,6 +72,7 @@ export default function AdminDashboardPage() {
   const [lowStockItems, setLowStockItems] = useState<LowStockProduct[]>([]);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [salesChartData, setSalesChartData] = useState<DailySalesData[]>([]);
+  const [productProfits, setProductProfits] = useState<ProductProfitStats[]>([]);
 
   const fetchDashboardData = useCallback(async (isManualRefresh = false) => {
     if (isManualRefresh) {
@@ -87,6 +104,7 @@ export default function AdminDashboardPage() {
       setLowStockItems(data.lowStockItems || []);
       setRecentOrders(data.recentOrders || []);
       setSalesChartData(data.salesChartData || []);
+      setProductProfits(data.productProfitList || []);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (err: any) {
       console.error('[AdminDashboard] Fetch error:', err);
@@ -102,7 +120,7 @@ export default function AdminDashboardPage() {
   }, [fetchDashboardData]);
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn pb-12">
       {/* Top Section: Header & Live Refresh */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#DCEBFA]">
         <div>
@@ -114,7 +132,7 @@ export default function AdminDashboardPage() {
             Admin Dashboard
           </h1>
           <p className="text-xs sm:text-sm text-[#647A98] mt-1">
-            Real-time e-commerce metrics and database synchronization for Blue Bells Mobile Shop.
+            Real-time e-commerce metrics, net profit analytics, and database synchronization.
           </p>
         </div>
 
@@ -162,7 +180,7 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* 1. Summary Cards (9 Verified Metrics) */}
+      {/* 1. Summary Cards (Now Includes Net Profit Munafa Card) */}
       <section aria-label="Dashboard Key Performance Metrics">
         <DashboardSummaryCards metrics={metrics} loading={loading} />
       </section>
@@ -176,7 +194,128 @@ export default function AdminDashboardPage() {
         />
       </section>
 
-      {/* 3. Operational Grid: Recent Orders & Low-Stock Alerts */}
+      {/* 3. Product-Wise Profit (Munafa) Breakdown Table */}
+      <section aria-label="Product Profit Breakdown">
+        <div className="bg-white rounded-3xl border border-[#DCEBFA] shadow-xs overflow-hidden">
+          <div className="p-5 border-b border-[#DCEBFA] bg-gradient-to-r from-emerald-50/50 via-[#F7FBFF] to-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                <Coins className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-[#102A50] tracking-tight">
+                  Product Profit &amp; Margin Breakdown (Monafa Report)
+                </h3>
+                <p className="text-xs text-[#647A98]">
+                  Detailed profit generated per device &mdash; selling price vs wholesale purchase cost
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/admin/reports"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors self-start sm:self-auto"
+            >
+              <span>Full Financial Reports</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#EDF2F7] bg-[#F7FBFF] text-[10px] font-black uppercase tracking-wider text-[#647A98]">
+                  <th className="py-3.5 px-6">Device Name</th>
+                  <th className="py-3.5 px-6">Brand</th>
+                  <th className="py-3.5 px-6 text-center">Units Sold</th>
+                  <th className="py-3.5 px-6 text-right">Selling Price</th>
+                  <th className="py-3.5 px-6 text-right">Cost Price</th>
+                  <th className="py-3.5 px-6 text-right font-black text-emerald-700">Unit Profit (Munafa)</th>
+                  <th className="py-3.5 px-6 text-right font-black text-emerald-800">Total Profit Generated</th>
+                  <th className="py-3.5 px-6 text-center">Margin %</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F0F5FA] text-xs">
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan={8} className="py-4 px-6">
+                        <div className="h-4 bg-slate-100 rounded w-full" />
+                      </td>
+                    </tr>
+                  ))
+                ) : productProfits.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center text-xs text-[#647A98]">
+                      No product sales recorded yet. Profits will calculate automatically as orders are placed.
+                    </td>
+                  </tr>
+                ) : (
+                  productProfits.slice(0, 8).map((p) => {
+                    const hasSales = p.unitsSold > 0;
+                    return (
+                      <tr key={p.id} className="hover:bg-[#F7FBFF]/60 transition-colors">
+                        <td className="py-3.5 px-6 font-bold text-[#102A50] flex items-center gap-3">
+                          <img
+                            src={p.image || '/categories/iphone.svg'}
+                            alt={p.name}
+                            className="w-8 h-8 rounded-lg object-contain bg-[#EDF6FF] p-1 border border-[#DCEBFA]"
+                          />
+                          <span className="truncate max-w-[200px]" title={p.name}>
+                            {p.name}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-6 text-[#0866E8] font-bold">{p.brand}</td>
+                        <td className="py-3.5 px-6 text-center font-bold">
+                          {hasSales ? (
+                            <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs">
+                              {p.unitsSold} sold
+                            </span>
+                          ) : (
+                            <span className="text-[#647A98] text-[11px]">0 sold</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-6 text-right font-mono text-[#102A50] font-semibold">
+                          Rs. {p.sellingPrice.toLocaleString('en-PK')}
+                        </td>
+                        <td className="py-3.5 px-6 text-right font-mono text-[#647A98]">
+                          Rs. {p.costPrice.toLocaleString('en-PK')}
+                        </td>
+                        <td className="py-3.5 px-6 text-right font-mono font-bold text-emerald-600">
+                          +Rs. {p.unitProfit.toLocaleString('en-PK')}
+                        </td>
+                        <td className="py-3.5 px-6 text-right font-mono font-black text-emerald-700">
+                          {hasSales ? (
+                            `Rs. ${p.totalProfit.toLocaleString('en-PK')}`
+                          ) : (
+                            <span className="text-xs text-[#647A98] font-normal">
+                              Rs. {p.unitProfit.toLocaleString('en-PK')} / unit
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-6 text-center">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                              p.marginPercent >= 15
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : p.marginPercent >= 10
+                                ? 'bg-teal-100 text-teal-800'
+                                : 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {p.marginPercent}%
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Operational Grid: Recent Orders & Low-Stock Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Orders Table */}
         <section aria-label="Recent Database Orders">
@@ -193,7 +332,7 @@ export default function AdminDashboardPage() {
         </section>
       </div>
 
-      {/* 4. Real Management Modules Quick Access */}
+      {/* 5. Real Management Modules Quick Access */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -258,17 +397,17 @@ export default function AdminDashboardPage() {
             className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
                 <ShoppingBag className="w-5 h-5" />
               </div>
               <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
-                Orders &amp; Dispatch
+                Orders &amp; Sales
               </h4>
               <p className="text-xs text-[#647A98] mt-1">
-                Inspect customer orders, addresses, WhatsApp &amp; update status.
+                Process customer bookings, update tracking numbers &amp; dispatch.
               </p>
             </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-emerald-600">
+            <div className="mt-4 flex items-center text-xs font-bold text-teal-600">
               <span>Manage Orders</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -279,18 +418,18 @@ export default function AdminDashboardPage() {
             className="group p-5 bg-white rounded-2xl border border-[#DCEBFA] hover:border-[#0866E8] hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
                 <Users className="w-5 h-5" />
               </div>
               <h4 className="text-sm font-bold text-[#102A50] group-hover:text-[#0866E8] transition-colors">
                 Customers
               </h4>
               <p className="text-xs text-[#647A98] mt-1">
-                Review shoppers, active accounts, contact profiles &amp; status.
+                View shopper profiles, order histories, phone numbers &amp; cities.
               </p>
             </div>
-            <div className="mt-4 flex items-center text-xs font-bold text-blue-600">
-              <span>Manage Customers</span>
+            <div className="mt-4 flex items-center text-xs font-bold text-purple-600">
+              <span>View Customers</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
