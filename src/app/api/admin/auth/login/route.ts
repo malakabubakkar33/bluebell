@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    let trimmedEmail = email.trim().toLowerCase();
+    // Shorthand convenience mapping
+    if (trimmedEmail === 'admin') {
+      trimmedEmail = 'admin@bluebell.pk';
+    }
 
     // 1. Initialize Supabase Server Client (stores session in cookies)
     const serverClient = await createSupabaseServerClient();
@@ -86,7 +90,6 @@ export async function POST(req: NextRequest) {
 
     if (dbUser.role !== 'admin') {
       // User is a valid customer, but NOT an administrator!
-      // Immediately destroy the session cookies so they cannot access admin routes
       await serverClient.auth.signOut();
       return NextResponse.json(
         {

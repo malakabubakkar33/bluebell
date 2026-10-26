@@ -1,23 +1,41 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+export function getAdminSupabaseConfig() {
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    '';
+
+  const secretKey =
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_KEY ||
+    '';
+
+  const isConfigured = Boolean(
+    url &&
+    secretKey &&
+    !url.includes('your-project-url') &&
+    !secretKey.includes('your-secret-key') &&
+    !secretKey.includes('your-service-role-key')
+  );
+
+  return { url, secretKey, isConfigured };
+}
 
 export const isSupabaseAdminConfigured = Boolean(
-  supabaseUrl &&
-  supabaseSecretKey &&
-  !supabaseUrl.includes('your-project-url') &&
-  !supabaseSecretKey.includes('your-secret-key') &&
-  !supabaseSecretKey.includes('your-service-role-key')
+  (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL) &&
+  (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
 );
 
 export function getSupabaseAdminClient() {
-  if (!isSupabaseAdminConfigured) {
+  const { url, secretKey, isConfigured } = getAdminSupabaseConfig();
+  if (!isConfigured || !url || !secretKey) {
     return null;
   }
 
-  return createClient<Database>(supabaseUrl, supabaseSecretKey, {
+  return createClient<Database>(url, secretKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

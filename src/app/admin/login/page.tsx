@@ -80,12 +80,9 @@ function AdminLoginForm() {
         return;
       }
 
-      setSuccessMessage('Administrator verified. Loading Admin Portal...');
-      // Allow auth cookies to settle and transition smoothly
-      setTimeout(() => {
-        router.push('/admin');
-        router.refresh();
-      }, 500);
+      setSuccessMessage('Administrator verified. Opening Admin Portal...');
+      // Instant full navigation to ensure session cookies are immediately available to server layout
+      window.location.href = '/admin';
     } catch (err: any) {
       console.error('Admin login error:', err);
       setErrorMessage('Unable to connect to the authentication server. Please check your network.');
