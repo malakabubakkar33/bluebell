@@ -8,6 +8,10 @@ import { useProducts, BannerItem } from '@/context/ProductsContext';
 
 interface DisplaySlide {
   id: string | number;
+  brandTag: string;
+  heading: string;
+  description: string;
+  price?: string;
   image: string;
   link: string;
   alt: string;
@@ -16,24 +20,40 @@ interface DisplaySlide {
 const DEFAULT_FALLBACK_SLIDES: DisplaySlide[] = [
   {
     id: 'default-1',
+    brandTag: 'APPLE TITANIUM',
+    heading: 'iPhone 16 Pro Max',
+    description: 'A18 Pro chip, Grade 5 Titanium design, and advanced 48MP Pro camera.',
+    price: 'Rs. 449,999',
     image: '/banners/hero-slide-1.jpg',
     link: '/products?brand=Apple',
     alt: 'iPhone 16 Pro Max Flagship Showcase',
   },
   {
     id: 'default-2',
+    brandTag: 'GALAXY AI',
+    heading: 'Samsung Galaxy S24 Ultra',
+    description: 'Epic 200MP camera zoom with built-in S-Pen in titanium casing.',
+    price: 'Rs. 389,999',
     image: '/banners/hero-slide-2.jpg',
     link: '/products?brand=Samsung',
     alt: 'Samsung Galaxy S24 Ultra Flagship Showcase',
   },
   {
     id: 'default-3',
+    brandTag: 'FOLDABLE INNOVATION',
+    heading: 'Galaxy Z Fold5 & Flip5',
+    description: 'Massive immersive screen that folds to fit in your pocket.',
+    price: 'Rs. 349,999',
     image: '/banners/hero-slide-3.jpg',
     link: '/products?category=smartphones',
-    alt: 'Galaxy Z Foldable Innovation Showcase',
+    alt: 'Galaxy Z Foldable Showcase',
   },
   {
     id: 'default-4',
+    brandTag: 'M4 PERFORMANCE',
+    heading: 'iPad Pro M4 Series',
+    description: 'Outrageous power in an ultrathin design with Ultra Retina XDR OLED.',
+    price: 'Rs. 329,999',
     image: '/banners/hero-slide-4.jpg',
     link: '/products?category=tablets',
     alt: 'Apple iPad Pro M4 Showcase',
@@ -50,20 +70,21 @@ export const HeroBanner: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // If active banners exist in database/context, display ONLY those active banners!
-  // No old hardcoded default slides will remain once custom active banners exist.
   const displaySlides: DisplaySlide[] = useMemo(() => {
-    // 1. Try context banners
     const activeFromContext = (banners || []).filter((b) => b && b.status === 'Active' && b.image);
     if (activeFromContext.length > 0) {
       return activeFromContext.map((b, idx) => ({
         id: b.id || idx + 1,
+        brandTag: b.tag || b.brand?.toUpperCase() || 'OFFICIAL FLAGSHIP',
+        heading: b.title || 'Special Promotion',
+        description: b.subtitle || b.tagline || '',
+        price: b.price || '',
         image: b.image,
         link: b.link || '/products',
         alt: b.title || `Advertisement Banner ${idx + 1}`,
       }));
     }
 
-    // 2. Try localStorage cache for instant hydration
     if (typeof window !== 'undefined') {
       try {
         const cachedRaw = localStorage.getItem('bluebell_cached_banners');
@@ -73,6 +94,10 @@ export const HeroBanner: React.FC = () => {
           if (activeFromCache.length > 0) {
             return activeFromCache.map((b, idx) => ({
               id: b.id || idx + 1,
+              brandTag: b.tag || b.brand?.toUpperCase() || 'OFFICIAL FLAGSHIP',
+              heading: b.title || 'Special Promotion',
+              description: b.subtitle || b.tagline || '',
+              price: b.price || '',
               image: b.image,
               link: b.link || '/products',
               alt: b.title || `Advertisement Banner ${idx + 1}`,
@@ -82,7 +107,6 @@ export const HeroBanner: React.FC = () => {
       } catch {}
     }
 
-    // 3. Fallback only if database is completely empty
     return DEFAULT_FALLBACK_SLIDES;
   }, [banners]);
 
@@ -166,10 +190,10 @@ export const HeroBanner: React.FC = () => {
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      aria-label="Promotional Ad Banner Showcase"
+      aria-label="Promotional Showcase"
     >
-      {/* Full Advertisement Banner Container */}
-      <div className="relative w-full h-[220px] xs:h-[280px] sm:h-[360px] md:h-[440px] lg:h-[520px] xl:h-[580px] overflow-hidden">
+      {/* Banner Sizing Container */}
+      <div className="relative w-full h-[260px] xs:h-[320px] sm:h-[400px] md:h-[480px] lg:h-[560px] xl:h-[620px] overflow-hidden">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={String(slide.id)}
@@ -180,22 +204,59 @@ export const HeroBanner: React.FC = () => {
             exit="exit"
             className="absolute inset-0 w-full h-full"
           >
+            {/* Clickable Banner Link */}
             <Link
               href={slide.link || '/products'}
               className="block w-full h-full relative group cursor-pointer"
-              title={slide.alt}
+              title={slide.heading || slide.alt}
             >
+              {/* 1. Background Image */}
               <img
                 src={slide.image}
                 alt={slide.alt}
                 onError={(e) => {
-                  // Fallback in case of broken external image URL
                   (e.target as HTMLImageElement).src = '/banners/hero-slide-1.jpg';
                 }}
                 className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.01]"
                 loading={currentSlideSafe === 0 ? 'eager' : 'lazy'}
                 fetchPriority={currentSlideSafe === 0 ? 'high' : 'auto'}
               />
+
+              {/* 2. Soft Gradient Overlay to guarantee text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-black/85 via-black/45 to-transparent sm:via-black/35 pointer-events-none" />
+
+              {/* 3. Short & Clean Details (Heading, Brief info, Price - NO Shop Now buttons) */}
+              <div className="absolute inset-0 z-20 flex flex-col justify-end sm:justify-center px-4 sm:px-12 md:px-16 pb-8 sm:pb-0 pointer-events-none">
+                <div className="max-w-lg space-y-1.5 sm:space-y-3">
+                  {/* Brand Tag */}
+                  {slide.brandTag && (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/20 text-sky-300 text-[9px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
+                      <span>{slide.brandTag}</span>
+                    </div>
+                  )}
+
+                  {/* Main Heading */}
+                  <h2 className="text-lg xs:text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+                    {slide.heading}
+                  </h2>
+
+                  {/* Short Subtitle / Details */}
+                  {slide.description && (
+                    <p className="text-[11px] sm:text-sm text-slate-200/90 font-medium leading-relaxed drop-shadow-sm line-clamp-2 max-w-md">
+                      {slide.description}
+                    </p>
+                  )}
+
+                  {/* Price Badge */}
+                  {slide.price && (
+                    <div className="pt-0.5">
+                      <span className="inline-block px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 text-white font-mono font-black text-[11px] sm:text-base shadow-sm">
+                        {slide.price}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </Link>
           </motion.div>
         </AnimatePresence>
@@ -234,7 +295,7 @@ export const HeroBanner: React.FC = () => {
                   key={idx}
                   type="button"
                   onClick={() => goToSlide(idx)}
-                  aria-label={`Go to ad slide ${idx + 1}`}
+                  aria-label={`Go to slide ${idx + 1}`}
                   className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                     idx === currentSlideSafe
                       ? 'w-6 bg-[#0878F9] shadow-md shadow-[#0878F9]/50'

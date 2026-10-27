@@ -16,7 +16,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Sparkles,
-  PhoneCall,
+  PhoneCall, MessageCircle,
   CheckCircle2,
   Cpu,
   Camera,
@@ -43,10 +43,9 @@ export default function ProductDetailPage({
   const productId = resolvedParams.id;
 
   const { products, getProductById, isLoading } = useProducts();
-  const { addToCart, toggleWishlist, isInWishlist, totalItems } = useCart();
+  const { addToCart, toggleWishlist, isInWishlist, totalItems, setIsDrawerOpen } = useCart();
 
-  // Find product dynamically from real-time products store
-  const matchedProduct =
+  const product: Product | undefined =
     getProductById(productId) ||
     products.find(
       (p) =>
@@ -55,7 +54,57 @@ export default function ProductDetailPage({
         p.id.toLowerCase() === productId.toLowerCase()
     );
 
-  if (!matchedProduct && !isLoading) {
+  const [selectedImage, setSelectedImage] = useState<string>('');
+  const [selectedStorage, setSelectedStorage] = useState<string>('');
+  const [selectedColor, setSelectedColor] = useState<any>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [isAdded, setIsAdded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'features' | 'specs' | 'warranty' | 'reviews'>('features');
+  const [copiedLink, setCopiedLink] = useState(false);
+  const touchStartX = useRef<number>(0);
+
+  // Sync selected attributes once product is loaded
+  useEffect(() => {
+    if (product) {
+      setSelectedImage(product.image || '');
+      setSelectedStorage(product.storageOptions?.[0] || '256GB');
+      setSelectedColor(product.colorOptions?.[0] || { name: 'Titanium Black', hex: '#222222' });
+    }
+  }, [product?.id]);
+
+  const inWish = product ? isInWishlist(product.id) : false;
+
+  // Gallery Images List (Combines main image, multi-angle pose gallery, and color photos)
+  const allImages = React.useMemo(() => {
+    if (!product) return ['/categories/iphone.svg'];
+    const list: string[] = [];
+    if (product.image) list.push(product.image);
+    if (product.gallery && Array.isArray(product.gallery)) {
+      product.gallery.forEach((img) => {
+        if (img && !list.includes(img)) list.push(img);
+      });
+    }
+    if (product.colorOptions && Array.isArray(product.colorOptions)) {
+      product.colorOptions.forEach((col: any) => {
+        if (col && col.image && !list.includes(col.image)) {
+          list.push(col.image);
+        }
+      });
+    }
+    return list.length > 0 ? list : ['/categories/iphone.svg'];
+  }, [product]);
+
+  const activeImageIndex = Math.max(0, allImages.indexOf(selectedImage || product?.image || ''));
+
+  if (!product) {
+    if (isLoading) {
+      return (
+        <main className="min-h-screen bg-[#F7FBFF] text-[#102A50] flex flex-col justify-center items-center p-4">
+          <div className="w-10 h-10 rounded-full border-4 border-[#0866E8] border-t-transparent animate-spin mb-4" />
+          <p className="text-xs font-bold text-[#647A98]">Loading product details...</p>
+        </main>
+      );
+    }
     return (
       <main className="min-h-screen bg-[#F7FBFF] text-[#102A50] flex flex-col justify-center items-center p-4">
         <div className="max-w-md w-full bg-white rounded-3xl p-8 text-center border border-[#DCEBFA] shadow-sm">
@@ -76,58 +125,6 @@ export default function ProductDetailPage({
       </main>
     );
   }
-
-  const product: Product = matchedProduct || products[0];
-  if (!product) return null;
-
-  const [selectedImage, setSelectedImage] = useState<string>(product.image);
-  const [selectedStorage, setSelectedStorage] = useState<string>(
-    product.storageOptions?.[0] || '256GB'
-  );
-  const [selectedColor, setSelectedColor] = useState<any>(
-    product.colorOptions?.[0] || { name: 'Titanium Black', hex: '#222222' }
-  );
-  const [quantity, setQuantity] = useState<number>(1);
-  const [isAdded, setIsAdded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'features' | 'specs' | 'warranty' | 'reviews'>('features');
-  const [copiedLink, setCopiedLink] = useState(false);
-
-  // Sync selected image if product changes
-  useEffect(() => {
-    if (product) {
-      setSelectedImage(product.image);
-      if (product.storageOptions && product.storageOptions.length > 0) {
-        setSelectedStorage(product.storageOptions[0]);
-      }
-      if (product.colorOptions && product.colorOptions.length > 0) {
-        setSelectedColor(product.colorOptions[0]);
-      }
-    }
-  }, [product.id]);
-
-  const inWish = isInWishlist(product.id);
-
-  // Gallery Images List (Combines main image, multi-angle pose gallery, and color photos)
-  const allImages = React.useMemo(() => {
-    const list: string[] = [];
-    if (product.image) list.push(product.image);
-    if (product.gallery && Array.isArray(product.gallery)) {
-      product.gallery.forEach((img) => {
-        if (img && !list.includes(img)) list.push(img);
-      });
-    }
-    if (product.colorOptions && Array.isArray(product.colorOptions)) {
-      product.colorOptions.forEach((col: any) => {
-        if (col && col.image && !list.includes(col.image)) {
-          list.push(col.image);
-        }
-      });
-    }
-    return list.length > 0 ? list : ['/categories/iphone.svg'];
-  }, [product]);
-
-  const activeImageIndex = Math.max(0, allImages.indexOf(selectedImage));
-  const touchStartX = useRef<number>(0);
 
   const handleNextSlide = () => {
     if (allImages.length <= 1) return;
@@ -166,8 +163,8 @@ export default function ProductDetailPage({
       return;
     }
     const variant = {
-      id: `var-${selectedStorage}-${selectedColor?.name || 'standard'}`,
-      sku: `${product.sku || 'BB'}-${selectedStorage}`,
+      id: `var-${selectedStorage || 'std'}-${selectedColor?.name || 'standard'}`,
+      sku: `${product.sku || 'BB'}-${selectedStorage || 'std'}`,
       storage: selectedStorage,
       color: selectedColor?.name,
       price: product.price,
@@ -175,12 +172,13 @@ export default function ProductDetailPage({
       stock: product.stock,
     };
     addToCart(product, quantity, variant);
+    setIsDrawerOpen(false);
     router.push('/checkout');
   };
 
   const handleWhatsAppOrder = () => {
     const message = encodeURIComponent(
-      `Hello Blue Bell Mobile Shop! I want to order:\n\n*${product.name}*\nStorage: ${selectedStorage}\nColor: ${selectedColor?.name || 'Default'}\nPrice: Rs. ${product.price.toLocaleString()}\nQuantity: ${quantity}\n\nPlease confirm availability and payment details.`
+      `Hello Blue Bell Mobile Shop! I want to order:\n\n*${product.name}*\nStorage: ${selectedStorage || 'Standard'}\nColor: ${selectedColor?.name || 'Default'}\nPrice: Rs. ${product.price.toLocaleString()}\nQuantity: ${quantity}\n\nPlease confirm availability and dispatch details.`
     );
     const phoneNumber = '923005902425';
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
@@ -652,14 +650,17 @@ export default function ProductDetailPage({
                 )}
 
                 {/* WhatsApp Order Button */}
-                <button
-                  type="button"
-                  onClick={handleWhatsAppOrder}
-                  className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                <a
+                  href={`https://wa.me/923005902425?text=${encodeURIComponent(
+                    `Hello Blue Bell Mobile Shop! I want to order:\n\n*${product.name}*\nStorage: ${selectedStorage || 'Standard'}\nColor: ${selectedColor?.name || 'Default'}\nPrice: Rs. ${product.price.toLocaleString()}\nQuantity: ${quantity}\n\nPlease confirm availability and dispatch details.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 px-4 rounded-2xl text-xs sm:text-sm font-black text-white bg-[#25D366] hover:bg-[#20bd5a] flex items-center justify-center gap-2 shadow-md shadow-[#25D366]/20 transition-all cursor-pointer active:scale-98"
                 >
-                  <PhoneCall className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Order directly on WhatsApp</span>
-                </button>
+                  <MessageCircle className="w-4 h-4 fill-white stroke-none" />
+                  <span>Order directly on WhatsApp (0300 5902425)</span>
+                </a>
               </div>
             </div>
           </div>

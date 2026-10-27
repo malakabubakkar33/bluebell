@@ -42,6 +42,7 @@ export default function CheckoutPage() {
   });
 
   const [isEditingAddress, setIsEditingAddress] = useState(!user?.address);
+  const [continueAsGuest, setContinueAsGuest] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -79,9 +80,8 @@ export default function CheckoutPage() {
     e.preventDefault();
     setErrorMessage('');
 
-    // Enforce mandatory customer authentication
-    if (!user) {
-      setErrorMessage('Order place karne ke liye account sign-in hona lazmi hai. Please login or register.');
+    if (!user && !continueAsGuest) {
+      setErrorMessage('Order place karne ke liye account sign-in karein ya Continue as Guest karein.');
       router.push('/auth/login?redirect=/checkout');
       return;
     }
@@ -191,7 +191,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!isLoading && !user) {
+  if (!isLoading && !user && !continueAsGuest) {
     return (
       <main className="min-h-screen flex flex-col bg-[#F7FBFF] text-[#102A50]">
         <div className="hidden md:block">
@@ -203,16 +203,16 @@ export default function CheckoutPage() {
               <Lock className="w-8 h-8" />
             </div>
             <span className="text-[10px] font-black uppercase tracking-wider text-[#0866E8] bg-[#EDF6FF] px-3 py-1 rounded-full inline-block mb-2">
-              Sign-In Required
+              Sign-In or Quick Checkout
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-[#102A50] mb-2">
-              Customer Account Required
+              Complete Your Order
             </h2>
             <p className="text-xs text-[#647A98] mb-6 leading-relaxed">
-              Order place karne ke liye account sign-in hona lazmi hai. Please login karein ya naya account banayein taake aapka order safe book ho aur live tracking aapko mil sake.
+              Order place karne ke liye account sign-in karein ya Quick Cash On Delivery (Guest) ke sath baghair password ke foran order place karein.
             </p>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               <Link
                 href="/auth/login?redirect=/checkout"
                 className="w-full py-3.5 px-6 rounded-2xl bg-[#0866E8] hover:bg-[#0645B5] text-white font-bold text-xs shadow-md shadow-[#0866E8]/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
@@ -226,6 +226,17 @@ export default function CheckoutPage() {
               >
                 <span>Create New Account (Register)</span>
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setContinueAsGuest(true);
+                  setIsEditingAddress(true);
+                }}
+                className="w-full py-3 px-6 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              >
+                <Truck className="w-4 h-4 text-emerald-600" />
+                <span>Continue as Guest (Quick Cash on Delivery)</span>
+              </button>
             </div>
 
             <div className="mt-6 pt-5 border-t border-[#EDF2F7] flex items-center justify-center gap-2 text-[11px] text-[#647A98]">

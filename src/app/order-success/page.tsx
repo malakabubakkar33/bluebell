@@ -51,7 +51,7 @@ function OrderSuccessContent() {
 
           <div className="flex justify-between items-center text-xs pb-3 border-b border-slate-200">
             <span className="font-semibold text-slate-500">Total Payable:</span>
-            <span className="font-black text-slate-900 text-sm">${total}</span>
+            <span className="font-black text-slate-900 text-sm">Rs. {Number(total || 0).toLocaleString()}</span>
           </div>
 
           <div className="flex justify-between items-center text-xs">

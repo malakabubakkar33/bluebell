@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Plus, Minus, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck } from 'lucide-react';
+import { ChevronLeft, Plus, Minus, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck, MessageCircle } from 'lucide-react';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { useCart } from '@/context/CartContext';
 
@@ -15,6 +15,23 @@ export default function CartPage() {
   const isFreeDelivery = subtotal >= 25000 || subtotal === 0;
   const deliveryCharges = isFreeDelivery ? 0 : 500;
   const grandTotal = subtotal + deliveryCharges;
+
+
+  const handleWhatsAppCartOrder = () => {
+    if (!cart || cart.length === 0) return;
+    const itemsList = cart
+      .map(
+        (it, idx) =>
+          `${idx + 1}. *${it.name}*` +
+          (it.selectedStorage ? ` (${it.selectedStorage}` + (it.selectedColor ? `, ${it.selectedColor}` : '') + `)` : '') +
+          ` - Qty: ${it.quantity} - Rs. ${(it.price * it.quantity).toLocaleString()}`
+      )
+      .join('\n');
+    const message = encodeURIComponent(
+      `Hello Blue Bell Mobile Shop! I want to order from my cart:\n\n${itemsList}\n\n*Total Amount: Rs. ${grandTotal.toLocaleString()}*\n\nPlease confirm availability and dispatch.`
+    );
+    window.open(`https://wa.me/923005902425?text=${message}`, '_blank');
+  };
 
   return (
     <main className="min-h-screen bg-[#F7FBFF] text-[#102A50] flex flex-col">
