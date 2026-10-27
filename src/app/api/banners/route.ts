@@ -4,23 +4,21 @@ import { SupabaseDbService } from '@/lib/supabase/service';
 import { serverCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
-    const banners = await serverCache.getOrSet(
-      'banners:list',
-      120, // 2 minutes fresh
-      () => SupabaseDbService.getBanners(),
-      300 // 5 minutes stale grace
-    );
+    // Fetch directly from database for 100% fresh live banners
+    const banners = await SupabaseDbService.getBanners();
 
-    return new NextResponse(
-      JSON.stringify({ success: true, count: banners.length, data: banners }),
+    return NextResponse.json(
+      { success: true, count: banners.length, data: banners },
       {
         status: 200,
         headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       }
     );
@@ -37,13 +35,13 @@ export async function POST(req: NextRequest) {
     const banner = await req.json();
     const data = await SupabaseDbService.createBanner(banner);
 
-    // Invalidate caches
-    serverCache.invalidatePrefix('banners');
-    serverCache.invalidatePrefix('bootstrap');
+    // Invalidate all server caches completely
+    serverCache.clear();
 
     try {
       revalidatePath('/', 'page');
       revalidatePath('/api/banners');
+      revalidatePath('/api/bootstrap');
     } catch (e) {
       console.warn('Revalidation notice:', e);
     }

@@ -183,12 +183,20 @@ export default function AdminPromotionsPage() {
   };
 
   // Broadcast sync helper
-  const broadcastSync = () => {
+  const broadcastSync = (updatedBanners?: any[]) => {
     try {
-      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-        const ch = new BroadcastChannel('bluebell_store_sync');
-        ch.postMessage({ type: 'STORE_SYNC' });
-        ch.close();
+      if (typeof window !== 'undefined') {
+        if ('BroadcastChannel' in window) {
+          const ch = new BroadcastChannel('bluebell_store_sync');
+          ch.postMessage({ type: 'STORE_SYNC' });
+          ch.postMessage({ type: 'CATALOG_UPDATED' });
+          ch.postMessage({ type: 'BANNER_UPDATED' });
+          ch.close();
+        }
+        localStorage.setItem('bluebell_last_catalog_update', Date.now().toString());
+        if (updatedBanners) {
+          localStorage.setItem('bluebell_cached_banners', JSON.stringify(updatedBanners));
+        }
       }
     } catch {}
   };
@@ -336,6 +344,35 @@ export default function AdminPromotionsPage() {
     setIsBannerModalOpen(true);
   };
 
+
+  // Delete Banner
+  const handleDeleteBanner = async (bannerId: string | number) => {
+    if (!confirm('Are you sure you want to delete this banner? It will be removed from the storefront immediately.')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/banners/${encodeURIComponent(bannerId)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to delete banner');
+      }
+
+      setBanners((prev) => {
+        const next = prev.filter((b) => String(b.id) !== String(bannerId));
+        broadcastSync(next);
+        return next;
+      });
+
+      showToast('success', 'Banner removed from storefront successfully!');
+    } catch (err: any) {
+      showToast('error', err.message || 'Failed to delete banner');
+      await fetchPromotionsData(true);
+    }
+  };
+
   // Save Banner
   const handleSaveBanner = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -382,9 +419,21 @@ export default function AdminPromotionsPage() {
         throw new Error(data.error || 'Failed to save banner');
       }
 
-      broadcastSync();
+      setBanners((prev) => {
+        const idx = prev.findIndex((b) => String(b.id) === String(targetId));
+        let next: AdminBanner[];
+        if (idx > -1) {
+          next = [...prev];
+          next[idx] = { ...next[idx], ...payload };
+        } else {
+          next = [{ ...payload, slotNumber: prev.length + 1 }, ...prev];
+        }
+        broadcastSync(next);
+        return next;
+      });
       showToast('success', `Banner for ${targetId} saved and synchronized with live storefront!`);
       setIsBannerModalOpen(false);
+      await fetchPromotionsData(true);
     } catch (err: any) {
       showToast('error', err.message || 'Failed to update banner in database');
       await fetchPromotionsData(true);
@@ -809,14 +858,25 @@ export default function AdminPromotionsPage() {
                   <span className="text-[11px] text-[#647A98] font-medium">
                     ID: <code className="font-mono text-[#102A50]">{b.id}</code>
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEditBanner(b)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#EDF6FF] hover:bg-[#0866E8] text-[#0866E8] hover:text-white text-xs font-bold transition-all cursor-pointer"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Replace / Edit Slot</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditBanner(b)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#EDF6FF] hover:bg-[#0866E8] text-[#0866E8] hover:text-white text-xs font-bold transition-all cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Replace / Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteBanner(b.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white text-xs font-bold transition-all cursor-pointer"
+                      title="Delete Banner"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

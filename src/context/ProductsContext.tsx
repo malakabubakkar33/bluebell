@@ -74,7 +74,15 @@ const ProductsContext = createContext<ProductsContextType | undefined>(undefined
 export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [rawCategories, setRawCategories] = useState<Category[]>([]);
-  const [banners, setBanners] = useState<BannerItem[]>([]);
+  const [banners, setBanners] = useState<BannerItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('bluebell_cached_banners');
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return [];
+  });
   const [deals, setDeals] = useState<PromoDeal[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -117,7 +125,10 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (bootstrapRes && bootstrapRes.success) {
         if (Array.isArray(bootstrapRes.products)) setProducts(bootstrapRes.products);
         if (Array.isArray(bootstrapRes.categories)) setRawCategories(bootstrapRes.categories);
-        if (Array.isArray(bootstrapRes.banners)) setBanners(bootstrapRes.banners);
+        if (Array.isArray(bootstrapRes.banners)) {
+          setBanners(bootstrapRes.banners);
+          try { localStorage.setItem('bluebell_cached_banners', JSON.stringify(bootstrapRes.banners)); } catch {}
+        }
         if (Array.isArray(bootstrapRes.deals)) setDeals(bootstrapRes.deals);
         return;
       }
@@ -138,6 +149,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       if (bansRes.data && Array.isArray(bansRes.data)) {
         setBanners(bansRes.data);
+        try { localStorage.setItem('bluebell_cached_banners', JSON.stringify(bansRes.data)); } catch {}
       }
       if (dealsRes.data && Array.isArray(dealsRes.data)) {
         setDeals(dealsRes.data);
@@ -160,7 +172,8 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         syncChannel = new BroadcastChannel('bluebell_store_sync');
         syncChannel.onmessage = (event) => {
-          if (event.data?.type === 'CATALOG_UPDATED') {
+          const t = event.data?.type;
+          if (t === 'CATALOG_UPDATED' || t === 'STORE_SYNC' || t === 'BANNER_UPDATED') {
             fetchAllData(false);
           }
         };

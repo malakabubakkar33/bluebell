@@ -4,6 +4,7 @@ import { SupabaseDbService } from '@/lib/supabase/service';
 import { serverCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function PATCH(
   req: NextRequest,
@@ -14,12 +15,12 @@ export async function PATCH(
     const updates = await req.json();
     const updated = await SupabaseDbService.updateBanner(id, updates);
 
-    serverCache.invalidatePrefix('banners');
-    serverCache.invalidatePrefix('bootstrap');
+    serverCache.clear();
 
     try {
       revalidatePath('/', 'page');
       revalidatePath('/api/banners');
+      revalidatePath('/api/bootstrap');
     } catch (e) {
       console.warn('Revalidation notice:', e);
     }
@@ -40,12 +41,12 @@ export async function DELETE(
     const { id } = await params;
     await SupabaseDbService.deleteBanner(id);
 
-    serverCache.invalidatePrefix('banners');
-    serverCache.invalidatePrefix('bootstrap');
+    serverCache.clear();
 
     try {
       revalidatePath('/', 'page');
       revalidatePath('/api/banners');
+      revalidatePath('/api/bootstrap');
     } catch (e) {
       console.warn('Revalidation notice:', e);
     }
