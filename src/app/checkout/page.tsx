@@ -25,7 +25,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { cart, subtotal, clearCart } = useCart();
 
   const [formData, setFormData] = useState({
@@ -79,6 +79,13 @@ export default function CheckoutPage() {
     e.preventDefault();
     setErrorMessage('');
 
+    // Enforce mandatory customer authentication
+    if (!user) {
+      setErrorMessage('Order place karne ke liye account sign-in hona lazmi hai. Please login or register.');
+      router.push('/auth/login?redirect=/checkout');
+      return;
+    }
+
     if (cart.length === 0) {
       setErrorMessage('Your cart is empty. Please add items before placing an order.');
       return;
@@ -110,7 +117,7 @@ export default function CheckoutPage() {
           customer_name: formData.fullName,
           customer_phone: formData.phone,
           customer_whatsapp: formData.whatsapp,
-          customer_email: formData.email || 'customer@bluebell.pk',
+          customer_email: user?.email || formData.email || 'customer@bluebell.pk',
           shipping_address: formData.address,
           city: formData.city,
           province: formData.province,
@@ -128,6 +135,21 @@ export default function CheckoutPage() {
 
       if (result.success && result.data) {
         clearCart();
+        // Broadcast new order to Admin Panel & other tabs for instant alert
+        try {
+          const syncChan = new BroadcastChannel('bluebell_store_sync');
+          syncChan.postMessage({
+            type: 'ORDER_UPDATED',
+            orderId: result.data.id,
+            customerName: formData.fullName,
+            total: grandTotal,
+            timestamp: Date.now(),
+          });
+          syncChan.close();
+        } catch (e) {
+          // BroadcastChannel fallback
+        }
+
         router.push(
           `/order-success?id=${result.data.id}&track=${result.data.tracking_number || ''}&name=${encodeURIComponent(
             formData.fullName
@@ -163,6 +185,54 @@ export default function CheckoutPage() {
             <span>Explore Products</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  if (!isLoading && !user) {
+    return (
+      <main className="min-h-screen flex flex-col bg-[#F7FBFF] text-[#102A50]">
+        <div className="hidden md:block">
+          <Header />
+        </div>
+        <div className="max-w-md mx-auto my-auto py-16 px-4 w-full text-center">
+          <div className="bg-white rounded-3xl border border-[#DCEBFA] shadow-xl p-6 sm:p-8">
+            <div className="w-16 h-16 rounded-2xl bg-[#EDF6FF] text-[#0866E8] flex items-center justify-center mx-auto mb-4 border border-[#DCEBFA] shadow-xs">
+              <Lock className="w-8 h-8" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#0866E8] bg-[#EDF6FF] px-3 py-1 rounded-full inline-block mb-2">
+              Sign-In Required
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-[#102A50] mb-2">
+              Customer Account Required
+            </h2>
+            <p className="text-xs text-[#647A98] mb-6 leading-relaxed">
+              Order place karne ke liye account sign-in hona lazmi hai. Please login karein ya naya account banayein taake aapka order safe book ho aur live tracking aapko mil sake.
+            </p>
+
+            <div className="space-y-3">
+              <Link
+                href="/auth/login?redirect=/checkout"
+                className="w-full py-3.5 px-6 rounded-2xl bg-[#0866E8] hover:bg-[#0645B5] text-white font-bold text-xs shadow-md shadow-[#0866E8]/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <span>Sign In to Your Account</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/auth/register?redirect=/checkout"
+                className="w-full py-3.5 px-6 rounded-2xl border border-[#DCEBFA] bg-white hover:bg-[#F7FBFF] text-[#102A50] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+              >
+                <span>Create New Account (Register)</span>
+              </Link>
+            </div>
+
+            <div className="mt-6 pt-5 border-t border-[#EDF2F7] flex items-center justify-center gap-2 text-[11px] text-[#647A98]">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>100% PTA Approved &bull; Official Brand Warranty</span>
+            </div>
+          </div>
         </div>
         <Footer />
       </main>

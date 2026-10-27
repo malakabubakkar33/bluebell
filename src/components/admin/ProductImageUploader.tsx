@@ -222,18 +222,23 @@ export const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
         )}
       </div>
 
-      {/* Gallery Section */}
+      {/* Multi-Pose Gallery Section */}
       {onGalleryChange && (
         <div className="pt-3 border-t border-[#EDF2F7]">
           <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-bold text-[#102A50]">
-              Additional Gallery Images ({gallery.length})
-            </label>
+            <div>
+              <label className="text-xs font-bold text-[#102A50] block">
+                Multi-Pose &amp; Angle Gallery ({gallery.length})
+              </label>
+              <span className="text-[10px] text-[#647A98] block">
+                Upload multiple pose photos (Front, Back, Side, In-Hand) so customers can slide through all views.
+              </span>
+            </div>
             <input
               ref={galleryInputRef}
               type="file"
               multiple
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/jpeg,image/png,image/webp,image/svg+xml"
               onChange={handleGalleryFileSelect}
               className="hidden"
               id="gallery-image-input"
@@ -242,32 +247,35 @@ export const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
               type="button"
               disabled={uploadingGallery}
               onClick={() => galleryInputRef.current?.click()}
-              className="text-[11px] font-bold text-[#0866E8] hover:underline flex items-center gap-1 cursor-pointer"
+              className="px-3 py-1.5 rounded-xl border border-[#DCEBFA] bg-[#EDF6FF] text-[11px] font-bold text-[#0866E8] hover:bg-[#0866E8] hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               {uploadingGallery ? (
-                <span className="animate-pulse">Uploading Photos...</span>
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Uploading Poses...</span>
+                </>
               ) : (
                 <>
-                  <Plus className="w-3 h-3" />
-                  <span>Add Gallery Photos</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Upload Pose Photos</span>
                 </>
               )}
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5 pt-1">
             {gallery.map((url, idx) => (
               <div
                 key={idx}
-                className="relative w-16 h-16 rounded-xl border border-[#DCEBFA] bg-white overflow-hidden group shadow-xs"
+                className="relative w-16 h-16 rounded-xl border border-[#DCEBFA] bg-white overflow-hidden group shadow-xs hover:border-[#0866E8] transition-colors"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                <img src={url} alt={`Pose ${idx + 1}`} className="w-full h-full object-contain p-1" />
                 <button
                   type="button"
                   onClick={() => removeGalleryImage(idx)}
-                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-                  title="Remove from gallery"
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm cursor-pointer"
+                  title="Remove this pose image"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -275,8 +283,8 @@ export const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
             ))}
 
             {gallery.length === 0 && (
-              <p className="text-[11px] text-[#647A98] italic">
-                Optional: Upload extra angles or color variant photos for product detail page.
+              <p className="text-[11px] text-[#647A98] italic py-1">
+                No extra pose photos uploaded yet. Click &quot;Upload Pose Photos&quot; to select multiple files at once.
               </p>
             )}
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, use, useEffect } from 'react';
+import React, { useState, use, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -107,7 +107,7 @@ export default function ProductDetailPage({
 
   const inWish = isInWishlist(product.id);
 
-  // Gallery Images List
+  // Gallery Images List (Combines main image, multi-angle pose gallery, and color photos)
   const allImages = React.useMemo(() => {
     const list: string[] = [];
     if (product.image) list.push(product.image);
@@ -116,10 +116,30 @@ export default function ProductDetailPage({
         if (img && !list.includes(img)) list.push(img);
       });
     }
+    if (product.colorOptions && Array.isArray(product.colorOptions)) {
+      product.colorOptions.forEach((col: any) => {
+        if (col && col.image && !list.includes(col.image)) {
+          list.push(col.image);
+        }
+      });
+    }
     return list.length > 0 ? list : ['/categories/iphone.svg'];
   }, [product]);
 
   const activeImageIndex = Math.max(0, allImages.indexOf(selectedImage));
+  const touchStartX = useRef<number>(0);
+
+  const handleNextSlide = () => {
+    if (allImages.length <= 1) return;
+    const nextIdx = (activeImageIndex + 1) % allImages.length;
+    setSelectedImage(allImages[nextIdx]);
+  };
+
+  const handlePrevSlide = () => {
+    if (allImages.length <= 1) return;
+    const prevIdx = (activeImageIndex - 1 + allImages.length) % allImages.length;
+    setSelectedImage(allImages[prevIdx]);
+  };
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -285,18 +305,74 @@ export default function ProductDetailPage({
                 </div>
               )}
 
-              {/* Main Image Showcase with 1/5 Indicator Badge */}
-              <div className="relative flex-1 aspect-square bg-[#F7FBFF] rounded-2xl border border-[#DCEBFA] p-4 sm:p-8 flex items-center justify-center overflow-hidden">
-                <img
-                  src={selectedImage}
-                  alt={product.name}
-                  className="max-h-[260px] sm:max-h-[380px] w-auto max-w-full object-contain transition-transform duration-300 hover:scale-105"
-                />
+              {/* Main Image Showcase with Slide Navigation & Indicator Badge */}
+              <div className="flex-1 flex flex-col gap-2 min-w-0">
+                <div
+                  className="relative aspect-square bg-[#F7FBFF] rounded-2xl border border-[#DCEBFA] p-4 sm:p-8 flex items-center justify-center overflow-hidden group/showcase cursor-grab active:cursor-grabbing select-none"
+                  onTouchStart={(e) => {
+                    touchStartX.current = e.touches[0].clientX;
+                  }}
+                  onTouchEnd={(e) => {
+                    const diff = touchStartX.current - e.changedTouches[0].clientX;
+                    if (Math.abs(diff) > 40) {
+                      if (diff > 0) handleNextSlide();
+                      else handlePrevSlide();
+                    }
+                  }}
+                >
+                  <img
+                    src={selectedImage}
+                    alt={product.name}
+                    className="max-h-[260px] sm:max-h-[380px] w-auto max-w-full object-contain transition-transform duration-300 hover:scale-105 pointer-events-none"
+                  />
 
-                {/* 1/5 Pill Indicator Matching Screen 4 */}
-                <div className="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-black tracking-wider shadow-sm">
-                  {activeImageIndex + 1}/{allImages.length}
+                  {/* Previous / Next Slide Arrows (Smooth browsing of all angles/poses) */}
+                  {allImages.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handlePrevSlide}
+                        aria-label="Previous angle"
+                        className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#102A50] border border-[#DCEBFA] shadow-md flex items-center justify-center transition-all z-10 cursor-pointer active:scale-95"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleNextSlide}
+                        aria-label="Next angle"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#102A50] border border-[#DCEBFA] shadow-md flex items-center justify-center transition-all z-10 cursor-pointer active:scale-95"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+
+                  {/* 1/5 Pill Indicator */}
+                  <div className="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-black tracking-wider shadow-sm z-10">
+                    {activeImageIndex + 1}/{allImages.length}
+                  </div>
                 </div>
+
+                {/* Mobile Thumbnails Strip */}
+                {allImages.length > 1 && (
+                  <div className="flex sm:hidden gap-2 overflow-x-auto no-scrollbar py-1">
+                    {allImages.map((img, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setSelectedImage(img)}
+                        className={`w-12 h-12 rounded-xl bg-[#F7FBFF] border-2 p-1 shrink-0 flex items-center justify-center ${
+                          selectedImage === img
+                            ? 'border-[#0866E8] ring-2 ring-[#0866E8]/20'
+                            : 'border-[#DCEBFA] opacity-75'
+                        }`}
+                      >
+                        <img src={img} alt={`Pose ${i + 1}`} className="w-full h-full object-contain" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

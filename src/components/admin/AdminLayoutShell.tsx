@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Menu, Store, ShieldCheck } from 'lucide-react';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminLogoutButton } from './AdminLogoutButton';
+import { AdminOrderNotification } from './AdminOrderNotification';
 
 interface AdminLayoutShellProps {
   children: React.ReactNode;
@@ -74,7 +75,7 @@ export const AdminLayoutShell: React.FC<AdminLayoutShellProps> = ({ children, us
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-[#F7FBFF] text-[#102A50] selection:bg-[#0866E8] selection:text-white">
+    <div className="min-h-screen flex bg-[#F7FBFF] text-[#102A50] selection:bg-[#0866E8] selection:text-white print:bg-white print:text-black print:block print:p-0">
       {/* Sidebar (Desktop persistent, Mobile drawer) */}
       <AdminSidebar
         isOpen={sidebarOpen}
@@ -84,9 +85,9 @@ export const AdminLayoutShell: React.FC<AdminLayoutShellProps> = ({ children, us
       />
 
       {/* Main Layout Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 print:w-full print:block">
         {/* Top Professional Admin Bar */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-[#DCEBFA] shadow-xs">
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-[#DCEBFA] shadow-xs print:hidden">
           <div className="px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
             {/* Left: Mobile hamburger & breadcrumb title */}
             <div className="flex items-center gap-3">
@@ -122,6 +123,9 @@ export const AdminLayoutShell: React.FC<AdminLayoutShellProps> = ({ children, us
                 <span className="hidden sm:inline">Storefront</span>
               </Link>
 
+              {/* Live Order Audio & Notification Bell */}
+              <AdminOrderNotification />
+
               {/* Admin Profile Chip */}
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EDF6FF] border border-[#DCEBFA]">
                 <div className="w-6 h-6 rounded-full bg-[#0866E8] text-white flex items-center justify-center text-xs font-black shadow-xs">
@@ -145,12 +149,12 @@ export const AdminLayoutShell: React.FC<AdminLayoutShellProps> = ({ children, us
         </header>
 
         {/* Dashboard Content Container */}
-        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto print:p-0 print:m-0 print:max-w-none print:w-full print:block">
           {children}
         </main>
 
         {/* Professional Footer */}
-        <footer className="border-t border-[#DCEBFA] bg-white py-4 px-4 sm:px-8 text-center text-xs text-[#647A98]">
+        <footer className="border-t border-[#DCEBFA] bg-white py-4 px-4 sm:px-8 text-center text-xs text-[#647A98] print:hidden">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <span>
               &copy; {new Date().getFullYear()} Blue Bells Mobile Shop &bull; Admin Console (Phase 3 Verified)

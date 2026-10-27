@@ -37,6 +37,8 @@ interface Order {
   created_at: string;
   items?: OrderItem[];
   customer_name?: string;
+  customer_phone?: string;
+  city?: string;
   payment_method?: string;
 }
 
@@ -72,7 +74,7 @@ export default function AdminReportsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [timeRange, setTimeRange] = useState<'all' | '30days' | '7days'>('all');
+  const [timeRange, setTimeRange] = useState<'today' | '7days' | '30days' | 'all'>('today');
   const [searchFilter, setSearchFilter] = useState('');
 
   const fetchReportData = useCallback(async (isManual = false) => {
@@ -109,6 +111,18 @@ export default function AdminReportsPage() {
   // Filter orders by time range
   const filteredOrders = useMemo(() => {
     if (timeRange === 'all') return orders;
+
+    if (timeRange === 'today') {
+      const todayDateStr = new Date().toDateString();
+      return orders.filter((o) => {
+        try {
+          return new Date(o.created_at).toDateString() === todayDateStr;
+        } catch {
+          return false;
+        }
+      });
+    }
+
     const now = new Date().getTime();
     const days = timeRange === '7days' ? 7 : 30;
     const threshold = now - days * 24 * 60 * 60 * 1000;
@@ -303,74 +317,93 @@ export default function AdminReportsPage() {
     window.print();
   };
 
+  const handlePrintDailyReport = () => {
+    setTimeRange('today');
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
   return (
-    <div className="space-y-8 animate-fadeIn pb-16 print:p-0">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#DCEBFA] print:hidden">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EDF6FF] border border-[#DCEBFA] text-[#0866E8] text-[11px] font-black uppercase tracking-wider mb-2">
-            <BarChart3 className="w-3.5 h-3.5 text-[#0866E8]" />
-            <span>Analytics &bull; Financial &amp; Profit Reports</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#102A50] tracking-tight">
-            Store Performance &amp; Profit Reports
-          </h1>
-          <p className="text-xs sm:text-sm text-[#647A98] mt-1">
-            Authoritative revenue statements, product profit (monafa) analysis, and inventory valuation.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center bg-[#F7FBFF] p-1 rounded-xl border border-[#DCEBFA]">
-            {(['all', '30days', '7days'] as const).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setTimeRange(r)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  timeRange === r
-                    ? 'bg-[#0866E8] text-white shadow-xs'
-                    : 'text-[#647A98] hover:text-[#102A50]'
-                }`}
-              >
-                {r === 'all' ? 'All Time' : r === '30days' ? 'Last 30 Days' : 'Last 7 Days'}
-              </button>
-            ))}
+    <div className="w-full">
+      {/* SCREEN VIEW ONLY (Hidden during print) */}
+      <div className="print:hidden space-y-8 animate-fadeIn pb-16">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#DCEBFA]">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EDF6FF] border border-[#DCEBFA] text-[#0866E8] text-[11px] font-black uppercase tracking-wider mb-2">
+              <BarChart3 className="w-3.5 h-3.5 text-[#0866E8]" />
+              <span>Analytics &bull; Financial &amp; Profit Reports</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-[#102A50] tracking-tight">
+              Store Performance &amp; Profit Reports
+            </h1>
+            <p className="text-xs sm:text-sm text-[#647A98] mt-1">
+              Authoritative revenue statements, product profit (monafa) analysis, and daily closing statements.
+            </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-[#DCEBFA] hover:bg-[#EDF6FF] text-[#102A50] text-xs font-bold transition-colors shadow-xs"
-          >
-            <Printer className="w-3.5 h-3.5 text-[#0866E8]" />
-            <span>Print Report</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Time Filter Pills */}
+            <div className="flex items-center bg-[#F7FBFF] p-1 rounded-xl border border-[#DCEBFA]">
+              {(
+                [
+                  { id: 'today', label: 'Today (Rozana)' },
+                  { id: '7days', label: '7 Days' },
+                  { id: '30days', label: '30 Days' },
+                  { id: 'all', label: 'All Time' },
+                ] as const
+              ).map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setTimeRange(r.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    timeRange === r.id
+                      ? 'bg-[#0866E8] text-white shadow-xs'
+                      : 'text-[#647A98] hover:text-[#102A50]'
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
 
-          <button
-            type="button"
-            onClick={() => fetchReportData(true)}
-            disabled={loading || refreshing}
-            className="p-2 rounded-xl bg-white border border-[#DCEBFA] hover:bg-[#EDF6FF] text-[#0866E8] transition-colors shadow-xs"
-            title="Refresh Report"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          </button>
+            {/* Dedicated Print Daily Report Button */}
+            <button
+              type="button"
+              onClick={handlePrintDailyReport}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0866E8] hover:bg-[#0645B5] text-white text-xs font-bold transition-all shadow-md shadow-[#0866E8]/20 cursor-pointer"
+              title="Print clean Rozana Daily Closing Report (Data only)"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print Daily Report</span>
+            </button>
+
+            {/* Standard Print Button */}
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-[#DCEBFA] hover:bg-[#EDF6FF] text-[#102A50] text-xs font-bold transition-colors shadow-xs cursor-pointer"
+              title="Print Current Statement"
+            >
+              <Printer className="w-3.5 h-3.5 text-[#647A98]" />
+              <span className="hidden sm:inline">Print Current</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => fetchReportData(true)}
+              disabled={loading || refreshing}
+              className="p-2 rounded-xl bg-white border border-[#DCEBFA] hover:bg-[#EDF6FF] text-[#0866E8] transition-colors shadow-xs cursor-pointer"
+              title="Refresh Report Data"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Printable Report Header */}
-      <div className="hidden print:block border-b-2 border-[#102A50] pb-4 mb-6">
-        <h2 className="text-2xl font-black text-[#102A50]">
-          Blue Bells Mobile Shop &mdash; Official Profit &amp; Sales Statement
-        </h2>
-        <p className="text-xs text-[#647A98] mt-1">
-          Period: {timeRange === 'all' ? 'All Time' : timeRange === '30days' ? 'Last 30 Days' : 'Last 7 Days'} |
-          Generated on {new Date().toLocaleDateString('en-PK', { dateStyle: 'full' })}
-        </p>
-      </div>
-
-      {/* 5 Financial Highlight Cards (Includes Profit Munafa) */}
+        {/* 5 Financial Highlight Cards (Includes Profit Munafa) */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total Sales Revenue */}
         <div className="bg-white rounded-2xl p-5 border border-[#DCEBFA] shadow-xs">
@@ -646,5 +679,255 @@ export default function AdminReportsPage() {
         </div>
       </div>
     </div>
+
+    {/* =========================================================================
+        OFFICIAL PRINT-ONLY REPORT DATA SHEET (A4 Rozana / Daily Report Statement)
+        Only pure tabular financial data, summary metrics, order ledger,
+        and verification signatures are printed.
+        ========================================================================= */}
+    <div className="hidden print:block print:w-full print:m-0 print:p-0 bg-white text-black font-sans">
+      {/* Official Shop Header */}
+      <div className="border-b-2 border-black pb-3 mb-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-black uppercase leading-tight">
+              Blue Bells Mobile Shop
+            </h1>
+            <p className="text-[11px] text-gray-700 font-medium">
+              Main Saddar Road, Peshawar Cantt &bull; Tel: +92 300 1234567 &bull; WhatsApp: +92 300 1234567
+            </p>
+            <div className="inline-block mt-1.5 px-2.5 py-0.5 bg-black text-white text-[11px] font-black uppercase tracking-wider">
+              {timeRange === 'today' ? 'Daily Sales & Profit Closing Statement (Rozana Report)' : 'Official Sales & Profit Statement'}
+            </div>
+          </div>
+          <div className="text-right text-[11px] space-y-0.5">
+            <p className="font-bold text-black">
+              Statement Date: {new Date().toLocaleDateString('en-PK', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
+            </p>
+            <p className="text-gray-700">
+              Print Time: {new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+            <p className="text-gray-700 font-mono">
+              Scope: {timeRange === 'today' ? "Today's Business Hours" : timeRange === '7days' ? 'Last 7 Days' : timeRange === '30days' ? 'Last 30 Days' : 'All-Time Records'}
+            </p>
+            <p className="text-gray-700">
+              Authorized Admin: Store Manager
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 1. Executive Financial Summary */}
+      <div className="mb-4">
+        <h2 className="text-xs font-black uppercase tracking-wider text-black mb-1.5">
+          1. Executive Financial &amp; Profit Summary
+        </h2>
+        <table className="w-full text-xs border border-gray-400">
+          <tbody>
+            <tr className="bg-gray-100 font-bold border-b border-gray-400">
+              <td className="p-2 border-r border-gray-400">Gross Sales Revenue</td>
+              <td className="p-2 border-r border-gray-400">Wholesale Cost (Kharid)</td>
+              <td className="p-2 border-r border-gray-400">Net Store Profit (Monafa)</td>
+              <td className="p-2 border-r border-gray-400">Profit Margin %</td>
+              <td className="p-2 border-r border-gray-400">Total Orders</td>
+              <td className="p-2">Avg Order (AOV)</td>
+            </tr>
+            <tr className="font-semibold text-center">
+              <td className="p-2.5 border-r border-gray-400 font-black text-sm">
+                Rs. {metrics.totalRevenue.toLocaleString('en-PK')}
+              </td>
+              <td className="p-2.5 border-r border-gray-400 text-gray-800">
+                Rs. {metrics.totalCogs.toLocaleString('en-PK')}
+              </td>
+              <td className="p-2.5 border-r border-gray-400 font-black text-sm text-black">
+                Rs. {metrics.totalProfit.toLocaleString('en-PK')}
+              </td>
+              <td className="p-2.5 border-r border-gray-400 font-bold">
+                {metrics.profitMarginPercent}%
+              </td>
+              <td className="p-2.5 border-r border-gray-400 font-bold">
+                {metrics.totalOrders} ({metrics.completedOrdersCount} Delivered)
+              </td>
+              <td className="p-2.5 font-bold">
+                Rs. {metrics.aov.toLocaleString('en-PK')}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* 2. Orders Ledger Table */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <h2 className="text-xs font-black uppercase tracking-wider text-black">
+            2. Transaction Ledger &bull; Orders Booked ({filteredOrders.length})
+          </h2>
+          <span className="text-[10px] text-gray-600">
+            {timeRange === 'today' ? "Today's Customer Orders" : "Orders in Period"}
+          </span>
+        </div>
+
+        <table className="w-full text-[10px] border border-gray-400 border-collapse">
+          <thead>
+            <tr className="bg-gray-100 border-b border-gray-400 font-bold text-left">
+              <th className="p-1.5 border-r border-gray-400 w-8 text-center">#</th>
+              <th className="p-1.5 border-r border-gray-400 w-24">Order ID</th>
+              <th className="p-1.5 border-r border-gray-400 w-16">Time</th>
+              <th className="p-1.5 border-r border-gray-400">Customer &amp; Phone</th>
+              <th className="p-1.5 border-r border-gray-400">City</th>
+              <th className="p-1.5 border-r border-gray-400">Items Purchased</th>
+              <th className="p-1.5 border-r border-gray-400 w-14">Payment</th>
+              <th className="p-1.5 border-r border-gray-400 w-16 text-center">Status</th>
+              <th className="p-1.5 text-right w-24">Total (PKR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredOrders.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="p-4 text-center text-gray-500 italic">
+                  No orders recorded for this period. Register is clear.
+                </td>
+              </tr>
+            ) : (
+              filteredOrders.map((ord, idx) => {
+                const itemsList = Array.isArray(ord.items) && ord.items.length > 0
+                  ? ord.items.map((i) => `${i.name} (x${i.quantity || 1})`).join(', ')
+                  : '1 Mobile Item';
+                const timeStr = ord.created_at
+                  ? new Date(ord.created_at).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' })
+                  : '-';
+
+                return (
+                  <tr key={ord.id || idx} className="border-b border-gray-300">
+                    <td className="p-1.5 border-r border-gray-300 text-center font-mono">{idx + 1}</td>
+                    <td className="p-1.5 border-r border-gray-300 font-mono font-bold">
+                      {ord.id ? ord.id.substring(0, 10) : 'ORD'}
+                    </td>
+                    <td className="p-1.5 border-r border-gray-300 font-mono">{timeStr}</td>
+                    <td className="p-1.5 border-r border-gray-300">
+                      <span className="font-bold block">{ord.customer_name || 'Customer'}</span>
+                      <span className="text-gray-600 font-mono text-[9px]">{ord.customer_phone || '-'}</span>
+                    </td>
+                    <td className="p-1.5 border-r border-gray-300">{ord.city || 'Peshawar'}</td>
+                    <td className="p-1.5 border-r border-gray-300 max-w-[200px] truncate" title={itemsList}>
+                      {itemsList}
+                    </td>
+                    <td className="p-1.5 border-r border-gray-300 uppercase font-mono text-[9px]">
+                      {ord.payment_method || 'COD'}
+                    </td>
+                    <td className="p-1.5 border-r border-gray-300 text-center uppercase font-bold text-[9px]">
+                      {ord.status || 'Pending'}
+                    </td>
+                    <td className="p-1.5 text-right font-black font-mono">
+                      Rs. {Number(ord.total || 0).toLocaleString('en-PK')}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+          {filteredOrders.length > 0 && (
+            <tfoot>
+              <tr className="bg-gray-100 font-black border-t-2 border-black">
+                <td colSpan={8} className="p-2 text-right uppercase">
+                  Grand Total Revenue:
+                </td>
+                <td className="p-2 text-right font-black text-xs font-mono">
+                  Rs. {metrics.totalRevenue.toLocaleString('en-PK')}
+                </td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+
+      {/* 3. Product Sales & Monafa Breakdown Table */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-1.5">
+          <h2 className="text-xs font-black uppercase tracking-wider text-black">
+            3. Inventory Sales &amp; Monafa (Profit) Statement
+          </h2>
+          <span className="text-[10px] text-gray-600">
+            Product-wise Profit Tracking
+          </span>
+        </div>
+
+        <table className="w-full text-[10px] border border-gray-400 border-collapse">
+          <thead>
+            <tr className="bg-gray-100 border-b border-gray-400 font-bold text-left">
+              <th className="p-1.5 border-r border-gray-400 w-8 text-center">#</th>
+              <th className="p-1.5 border-r border-gray-400">Product Model</th>
+              <th className="p-1.5 border-r border-gray-400 w-20">Brand</th>
+              <th className="p-1.5 border-r border-gray-400 w-16 text-center">Units Sold</th>
+              <th className="p-1.5 border-r border-gray-400 text-right w-24">Sale Price</th>
+              <th className="p-1.5 border-r border-gray-400 text-right w-24">Cost (Kharid)</th>
+              <th className="p-1.5 border-r border-gray-400 text-right w-20">Unit Monafa</th>
+              <th className="p-1.5 text-right w-28">Net Profit (Monafa)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {productProfitReport.slice(0, 15).map((item, idx) => (
+              <tr key={item.id} className="border-b border-gray-300">
+                <td className="p-1.5 border-r border-gray-300 text-center font-mono">{idx + 1}</td>
+                <td className="p-1.5 border-r border-gray-300 font-bold">{item.name}</td>
+                <td className="p-1.5 border-r border-gray-300 text-gray-700">{item.brand}</td>
+                <td className="p-1.5 border-r border-gray-300 text-center font-bold">{item.unitsSold}</td>
+                <td className="p-1.5 border-r border-gray-300 text-right font-mono">
+                  Rs. {item.sellingPrice.toLocaleString('en-PK')}
+                </td>
+                <td className="p-1.5 border-r border-gray-300 text-right font-mono text-gray-600">
+                  Rs. {item.costPrice.toLocaleString('en-PK')}
+                </td>
+                <td className="p-1.5 border-r border-gray-300 text-right font-mono font-bold text-gray-800">
+                  Rs. {item.unitProfit.toLocaleString('en-PK')}
+                </td>
+                <td className="p-1.5 text-right font-black font-mono">
+                  Rs. {item.netProfit.toLocaleString('en-PK')}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="bg-gray-100 font-black border-t-2 border-black">
+              <td colSpan={7} className="p-2 text-right uppercase">
+                Total Net Profit (Monafa) for Period:
+              </td>
+              <td className="p-2 text-right font-black text-xs font-mono">
+                Rs. {metrics.totalProfit.toLocaleString('en-PK')}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* 4. Daily Cash Register Reconciliation & Official Stamp */}
+      <div className="border border-gray-400 p-3 bg-gray-50/50 mt-4 print-avoid-break">
+        <h2 className="text-[11px] font-black uppercase tracking-wider text-black mb-2">
+          4. Cash Register Closing &amp; Verification Sign-off
+        </h2>
+        <div className="grid grid-cols-4 gap-3 text-[10px]">
+          <div className="border border-gray-300 p-2 bg-white">
+            <span className="text-gray-600 block text-[9px] font-bold uppercase">1. Cash in Drawer (COD/Counter):</span>
+            <p className="font-mono font-bold mt-2 text-xs">PKR ___________________</p>
+          </div>
+          <div className="border border-gray-300 p-2 bg-white">
+            <span className="text-gray-600 block text-[9px] font-bold uppercase">2. Bank Transfer / EasyPaisa:</span>
+            <p className="font-mono font-bold mt-2 text-xs">PKR ___________________</p>
+          </div>
+          <div className="border border-gray-300 p-2 bg-white">
+            <span className="text-gray-600 block text-[9px] font-bold uppercase">3. Total Reconciled Cash:</span>
+            <p className="font-mono font-bold mt-2 text-xs">PKR ___________________</p>
+          </div>
+          <div className="border border-gray-300 p-2 bg-white">
+            <span className="text-gray-600 block text-[9px] font-bold uppercase">4. Store Manager Stamp &amp; Sign:</span>
+            <p className="font-mono mt-3 text-[9px] text-gray-500">Sign: _________________</p>
+          </div>
+        </div>
+        <div className="text-center text-[9px] text-gray-500 mt-2">
+          Official Computer-Generated Daily Statement &bull; Blue Bells Mobile Shop &bull; All transactions recorded in PostgreSQL database
+        </div>
+      </div>
+    </div>
+  </div>
   );
 }

@@ -38,7 +38,15 @@ function ProductsContent() {
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'rating'>('featured');
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [priceRange, setPriceRange] = useState<number>(500000);
+
+  // Dynamic maximum catalog price to prevent expensive flagships from being cut off
+  const maxCatalogPrice = useMemo(() => {
+    if (!productsList || productsList.length === 0) return 1000000;
+    const max = Math.max(...productsList.map((p) => Number(p.price) || 0));
+    return Math.max(max, 1000000);
+  }, [productsList]);
+
+  const [priceRange, setPriceRange] = useState<number>(1000000);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
 
@@ -50,7 +58,7 @@ function ProductsContent() {
   }, [initialCategory, initialBrand, initialSearch]);
 
   const brands = useMemo(() => {
-    const list = Array.from(new Set(productsList.map((p) => p.brand)));
+    const list = Array.from(new Set(productsList.map((p) => p.brand).filter(Boolean)));
     return ['all', ...list];
   }, [productsList]);
 
@@ -59,44 +67,70 @@ function ProductsContent() {
     if (selectedCategory !== 'all') count++;
     if (selectedBrand !== 'all') count++;
     if (inStockOnly) count++;
-    if (priceRange < 500000) count++;
+    if (priceRange < maxCatalogPrice) count++;
     if (searchQuery.trim().length > 0) count++;
     return count;
-  }, [selectedCategory, selectedBrand, inStockOnly, priceRange, searchQuery]);
+  }, [selectedCategory, selectedBrand, inStockOnly, priceRange, maxCatalogPrice, searchQuery]);
 
   const filteredProducts = useMemo(() => {
     return productsList.filter((p) => {
+      // 1. Flexible Category Matching
       if (selectedCategory !== 'all') {
-        if (!doesProductBelongToCategory(p.categorySlug, p.brand, selectedCategory)) {
+        const catMatch =
+          doesProductBelongToCategory(p.categorySlug, p.brand, selectedCategory) ||
+          doesProductBelongToCategory(p.category, p.brand, selectedCategory) ||
+          (p.categorySlug || '').toLowerCase() === selectedCategory.toLowerCase() ||
+          (p.category || '').toLowerCase() === selectedCategory.toLowerCase() ||
+          (p.categorySlug || '').toLowerCase().includes(selectedCategory.toLowerCase()) ||
+          selectedCategory.toLowerCase().includes((p.categorySlug || '').toLowerCase());
+        if (!catMatch) {
           return false;
         }
       }
-      if (selectedBrand !== 'all' && p.brand.toLowerCase() !== selectedBrand.toLowerCase()) return false;
-      if (inStockOnly && p.stock <= 0) return false;
-      if (p.price > priceRange) return false;
+
+      // 2. Resilient Brand Matching
+      if (selectedBrand !== 'all') {
+        const pBrand = (p.brand || '').trim().toLowerCase();
+        const selBrand = selectedBrand.trim().toLowerCase();
+        if (pBrand !== selBrand && !pBrand.includes(selBrand) && !selBrand.includes(pBrand)) {
+          return false;
+        }
+      }
+
+      // 3. In Stock Only
+      if (inStockOnly && (p.stock <= 0 || p.inStock === false)) return false;
+
+      // 4. Price Slider Check (only applies if user has actively dragged below max price)
+      if (priceRange < maxCatalogPrice && (Number(p.price) || 0) > priceRange) return false;
+
+      // 5. Robust Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        return (
-          p.name.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q) ||
-          p.subtitle.toLowerCase().includes(q)
-        );
+        const nameMatch = (p.name || '').toLowerCase().includes(q);
+        const brandMatch = (p.brand || '').toLowerCase().includes(q);
+        const subMatch = (p.subtitle || '').toLowerCase().includes(q);
+        const descMatch = (p.description || '').toLowerCase().includes(q);
+        const catMatch = (p.categorySlug || p.category || '').toLowerCase().includes(q);
+        const skuMatch = (p.sku || '').toLowerCase().includes(q);
+        if (!nameMatch && !brandMatch && !subMatch && !descMatch && !catMatch && !skuMatch) {
+          return false;
+        }
       }
       return true;
     }).sort((a, b) => {
-      if (sortBy === 'price-low') return a.price - b.price;
-      if (sortBy === 'price-high') return b.price - a.price;
-      if (sortBy === 'rating') return b.rating - a.rating;
+      if (sortBy === 'price-low') return (a.price || 0) - (b.price || 0);
+      if (sortBy === 'price-high') return (b.price || 0) - (a.price || 0);
+      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
       return 0; // featured
     });
-  }, [productsList, selectedCategory, selectedBrand, inStockOnly, priceRange, searchQuery, sortBy]);
+  }, [productsList, selectedCategory, selectedBrand, inStockOnly, priceRange, maxCatalogPrice, searchQuery, sortBy]);
 
   const clearFilters = () => {
     setSelectedCategory('all');
     setSelectedBrand('all');
     setSearchQuery('');
     setInStockOnly(false);
-    setPriceRange(500000);
+    setPriceRange(maxCatalogPrice);
     setSortBy('featured');
   };
 
@@ -379,7 +413,7 @@ function ProductsContent() {
               <input
                 type="range"
                 min="5000"
-                max="500000"
+                max={maxCatalogPrice}
                 step="5000"
                 value={priceRange}
                 onChange={(e) => setPriceRange(Number(e.target.value))}
@@ -526,7 +560,7 @@ function ProductsContent() {
                   <input
                     type="range"
                     min="5000"
-                    max="500000"
+                    max={maxCatalogPrice}
                     step="5000"
                     value={priceRange}
                     onChange={(e) => setPriceRange(Number(e.target.value))}

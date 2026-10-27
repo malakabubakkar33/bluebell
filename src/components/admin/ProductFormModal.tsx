@@ -20,6 +20,8 @@ import {
   Palette,
   Plus,
   Trash2,
+  UploadCloud,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface ProductFormModalProps {
@@ -96,8 +98,47 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [customColorName, setCustomColorName] = useState('');
   const [customColorHex, setCustomColorHex] = useState('#0866E8');
 
+  const [uploadingColorIdx, setUploadingColorIdx] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const handleColorFileUpload = async (file: File, colorIdx: number) => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      setFormError('Only JPEG, PNG, WebP, SVG, and GIF images are allowed for color photos.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('Color image size must be less than 5MB.');
+      return;
+    }
+
+    setUploadingColorIdx(colorIdx);
+    setFormError(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.url) {
+        throw new Error(data.error || 'Failed to upload color image to Supabase storage.');
+      }
+      const uploadedUrl = data.url;
+      const newColors = [...colorOptions];
+      newColors[colorIdx] = { ...newColors[colorIdx], image: uploadedUrl };
+      setColorOptions(newColors);
+
+      // Auto-include this pose in gallery so all views are available to customer
+      setGallery((prev) => (prev.includes(uploadedUrl) ? prev : [...prev, uploadedUrl]));
+    } catch (err: any) {
+      setFormError(err.message || 'Failed to upload color image.');
+    } finally {
+      setUploadingColorIdx(null);
+    }
+  };
 
   // Sync form when product prop changes or modal opens
   useEffect(() => {
@@ -736,60 +777,117 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   {colorOptions.map((opt, idx) => (
                     <div
                       key={idx}
-                      className="p-3 rounded-2xl border border-[#DCEBFA] bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs"
+                      className="p-3.5 rounded-2xl border border-[#DCEBFA] bg-white flex flex-col gap-3 shadow-xs"
                     >
-                      <div className="flex items-center gap-2.5 min-w-[140px]">
-                        <span
-                          className="w-5 h-5 rounded-full border border-black/20 shrink-0 shadow-xs"
-                          style={{ backgroundColor: opt.hex }}
-                        />
-                        <div>
-                          <span className="text-xs font-bold text-[#102A50] block">{opt.name}</span>
-                          <span className="text-[10px] font-mono text-[#647A98]">{opt.hex}</span>
+                      {/* Top Bar: Color info + Actions */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className="w-5 h-5 rounded-full border border-black/20 shrink-0 shadow-xs"
+                            style={{ backgroundColor: opt.hex }}
+                          />
+                          <div>
+                            <span className="text-xs font-bold text-[#102A50] block">{opt.name}</span>
+                            <span className="text-[10px] font-mono text-[#647A98]">{opt.hex}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {opt.image && (
+                            <button
+                              type="button"
+                              onClick={() => setImage(opt.image!)}
+                              title="Set this color's photo as the main product image"
+                              className="px-2.5 py-1 rounded-lg border border-[#DCEBFA] bg-[#EDF6FF] text-[10px] font-bold text-[#0866E8] hover:bg-[#0866E8] hover:text-white transition-all cursor-pointer"
+                            >
+                              Set as Main Image
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setColorOptions(colorOptions.filter((_, i) => i !== idx))}
+                            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Remove this color"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
 
-                      {/* Photo URL for this Color */}
-                      <div className="flex-1 flex items-center gap-2 w-full sm:w-auto">
+                      {/* Photo Upload & Preview Row */}
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#F0F6FD]">
+                        {/* Hidden file input */}
                         <input
-                          type="url"
-                          placeholder="Paste image URL for this specific color..."
-                          value={opt.image || ''}
+                          id={`color-file-input-${idx}`}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                          className="hidden"
                           onChange={(e) => {
-                            const newColors = [...colorOptions];
-                            newColors[idx].image = e.target.value;
-                            setColorOptions(newColors);
+                            const f = e.target.files?.[0];
+                            if (f) {
+                              handleColorFileUpload(f, idx);
+                              e.target.value = '';
+                            }
                           }}
-                          className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-[#DCEBFA] bg-[#F7FBFF] focus:bg-white focus:outline-none focus:border-[#0866E8]"
                         />
-                        {opt.image && (
-                          <div className="w-8 h-8 rounded-lg border border-[#DCEBFA] bg-[#F7FBFF] overflow-hidden shrink-0 flex items-center justify-center">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={opt.image} alt={opt.name} className="w-full h-full object-contain" />
-                          </div>
-                        )}
-                      </div>
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-1.5 self-end sm:self-center">
-                        {opt.image && (
-                          <button
-                            type="button"
-                            onClick={() => setImage(opt.image!)}
-                            title="Set as Main Product Image"
-                            className="px-2 py-1 rounded-lg border border-[#DCEBFA] bg-[#EDF6FF] text-[10px] font-bold text-[#0866E8] hover:bg-[#0866E8] hover:text-white transition-all cursor-pointer"
-                          >
-                            Set Main
-                          </button>
-                        )}
+                        {/* Direct File Upload from Device Button */}
                         <button
                           type="button"
-                          onClick={() => setColorOptions(colorOptions.filter((_, i) => i !== idx))}
-                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
-                          title="Remove color"
+                          disabled={uploadingColorIdx === idx}
+                          onClick={() => document.getElementById(`color-file-input-${idx}`)?.click()}
+                          className="px-3 py-1.5 rounded-xl border border-[#DCEBFA] bg-[#F7FBFF] hover:bg-[#EDF6FF] text-[#0866E8] text-xs font-bold transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          {uploadingColorIdx === idx ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Uploading Photo...</span>
+                            </>
+                          ) : (
+                            <>
+                              <UploadCloud className="w-3.5 h-3.5" />
+                              <span>{opt.image ? 'Change Device Photo' : 'Upload Color Photo'}</span>
+                            </>
+                          )}
                         </button>
+
+                        {/* Fallback URL input */}
+                        <div className="flex-1 min-w-[180px]">
+                          <input
+                            type="url"
+                            placeholder="Or paste image URL for this color..."
+                            value={opt.image || ''}
+                            onChange={(e) => {
+                              const newColors = [...colorOptions];
+                              newColors[idx].image = e.target.value;
+                              setColorOptions(newColors);
+                              if (e.target.value) {
+                                setGallery((prev) => (prev.includes(e.target.value) ? prev : [...prev, e.target.value]));
+                              }
+                            }}
+                            className="w-full px-3 py-1.5 text-xs rounded-xl border border-[#DCEBFA] bg-white focus:outline-none focus:border-[#0866E8]"
+                          />
+                        </div>
+
+                        {/* Thumbnail Preview */}
+                        {opt.image && (
+                          <div className="relative w-9 h-9 rounded-xl border border-[#DCEBFA] bg-[#F7FBFF] overflow-hidden shrink-0 flex items-center justify-center group shadow-xs">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={opt.image} alt={opt.name} className="w-full h-full object-contain p-0.5" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newColors = [...colorOptions];
+                                newColors[idx].image = '';
+                                setColorOptions(newColors);
+                              }}
+                              className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-[9px] font-bold"
+                              title="Clear photo"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
