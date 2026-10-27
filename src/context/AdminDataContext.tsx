@@ -225,7 +225,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // Process Products
         if (prodsRes.status === 'fulfilled' && prodsRes.value.ok) {
           try {
-            const data = await prodsRes.json();
+            const data = await prodsRes.value.json();
             if (data.success && Array.isArray(data.data)) {
               freshProds = data.data;
               setProducts(freshProds);
@@ -238,7 +238,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // Process Categories
         if (catsRes.status === 'fulfilled' && catsRes.value.ok) {
           try {
-            const data = await catsRes.json();
+            const data = await catsRes.value.json();
             if (data.success && Array.isArray(data.data)) {
               freshCats = data.data;
               setCategories(freshCats);
@@ -251,7 +251,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // Process Orders
         if (ordsRes.status === 'fulfilled' && ordsRes.value.ok) {
           try {
-            const data = await ordsRes.json();
+            const data = await ordsRes.value.json();
             if (data.success && Array.isArray(data.data)) {
               freshOrds = data.data;
               setOrders(freshOrds);

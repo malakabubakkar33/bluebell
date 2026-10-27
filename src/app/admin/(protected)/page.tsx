@@ -139,7 +139,7 @@ export default function AdminDashboardPage() {
           </div>
           <button
             type="button"
-            onClick={() => fetchDashboardData(true)}
+            onClick={() => handleRefresh()}
             className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shrink-0"
           >
             Try Again

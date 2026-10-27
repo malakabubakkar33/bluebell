@@ -165,7 +165,7 @@ export default function AdminReportsPage() {
     let totalCogs = 0;
     validOrders.forEach((o) => {
       const items = Array.isArray(o.items) ? o.items : [];
-      items.forEach((it) => {
+      items.forEach((it: any) => {
         const pId = it.productId || it.id;
         const prod = pId ? productMap.get(pId) : undefined;
         const unitPrice = Number(it.price) || 0;
@@ -232,7 +232,7 @@ export default function AdminReportsPage() {
     const validOrders = filteredOrders.filter((o) => o.status?.toLowerCase() !== 'cancelled');
     validOrders.forEach((o) => {
       const items = Array.isArray(o.items) ? o.items : [];
-      items.forEach((it) => {
+      items.forEach((it: any) => {
         const pId = it.productId || it.id;
         if (!pId) return;
 
@@ -779,7 +779,7 @@ export default function AdminReportsPage() {
             ) : (
               filteredOrders.map((ord, idx) => {
                 const itemsList = Array.isArray(ord.items) && ord.items.length > 0
-                  ? ord.items.map((i) => `${i.name} (x${i.quantity || 1})`).join(', ')
+                  ? ord.items.map((i: any) => `${i.name} (x${i.quantity || 1})`).join(', ')
                   : '1 Mobile Item';
                 const timeStr = ord.created_at
                   ? new Date(ord.created_at).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' })
