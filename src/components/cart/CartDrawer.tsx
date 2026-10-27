@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import {
+import { MessageCircle,
   X,
   Plus,
   Minus,
@@ -354,6 +354,15 @@ export const CartDrawer: React.FC = () => {
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
+
+              <button
+                type="button"
+                onClick={handleWhatsAppCartOrder}
+                className="w-full py-3 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#25D366]/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 fill-white stroke-none" />
+                <span>Order via WhatsApp (0300 5902425)</span>
+              </button>
             </div>
           )}
         </div>

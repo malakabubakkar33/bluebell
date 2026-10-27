@@ -206,18 +206,18 @@ export const Footer: React.FC = () => {
             <div className="space-y-2.5 text-xs text-slate-400 font-medium">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[#0878F9] flex-shrink-0 mt-0.5" />
-                <span className="leading-tight">Blue Bell Mobile Shop, Saddar Road, Peshawar, Pakistan</span>
+                <span className="leading-tight">Shop #33, Sattagadai Plaza, 32 The Mall Road, Peshawar Cantt, Pakistan</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#0878F9] flex-shrink-0" />
-                <a href="tel:+923001234567" className="hover:text-[#0878F9] font-mono">
-                  +92 300 1234567
+                <a href="tel:+923005902425" className="hover:text-[#0878F9] font-mono">
+                  +92 300 5902425
                 </a>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#0878F9] flex-shrink-0" />
-                <a href="mailto:info@bluebells.pk" className="hover:text-[#0878F9]">
-                  info@bluebells.pk
+                <a href="mailto:nomanjvd9@gmail.com" className="hover:text-[#0878F9]">
+                  nomanjvd9@gmail.com
                 </a>
               </div>
             </div>

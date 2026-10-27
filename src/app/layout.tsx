@@ -9,6 +9,7 @@ import { QuickViewModal } from '@/components/products/QuickViewModal';
 import { Toast } from '@/components/common/Toast';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
+import { FloatingWhatsApp } from '@/components/common/FloatingWhatsApp';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -99,13 +100,13 @@ const organizationSchema = {
   image: `${siteUrl}/logo.png`,
   '@id': siteUrl,
   url: siteUrl,
-  telephone: '+92-300-1234567',
+  telephone: '+92-300-5902425',
   priceRange: 'PKR',
   currenciesAccepted: 'PKR',
   paymentAccepted: 'Cash, Bank Transfer, Credit Card',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: 'Saddar Road',
+    streetAddress: 'Shop #33, Sattagadai Plaza, 32 The Mall Road, Peshawar Cantt',
     addressLocality: 'Peshawar',
     addressRegion: 'Khyber Pakhtunkhwa',
     postalCode: '25000',
@@ -154,6 +155,7 @@ export default function RootLayout({
               <CartDrawer />
               <QuickViewModal />
               <Toast />
+              <FloatingWhatsApp />
             </CartProvider>
           </AuthProvider>
         </ProductsProvider>

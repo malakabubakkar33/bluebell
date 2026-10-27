@@ -71,7 +71,7 @@ function OrderSuccessContent() {
           </Link>
 
           <a
-            href={`https://wa.me/923001234567?text=${encodeURIComponent(
+            href={`https://wa.me/923005902425?text=${encodeURIComponent(
               `Hi Blue Bells Mobile Shop, I just placed order ${orderId}. Can you please confirm the dispatch timeline?`
             )}`}
             target="_blank"

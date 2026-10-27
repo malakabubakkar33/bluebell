@@ -39,10 +39,10 @@ interface StoreSettings {
 
 const DEFAULT_SETTINGS: StoreSettings = {
   storeName: 'Blue Bells Mobile Shop',
-  contactEmail: 'support@bluebell.pk',
-  supportPhone: '+92 300 1234567',
+  contactEmail: 'nomanjvd9@gmail.com',
+  supportPhone: '+92 300 5902425',
   whatsappNumber: '923001234567',
-  storeAddress: 'Hafeez Centre, Main Boulevard, Gulberg III, Lahore, Pakistan',
+  storeAddress: 'Shop #33, Sattagadai Plaza, 32 The Mall Road, Peshawar Cantt, Pakistan',
   shippingFee: 250,
   freeShippingThreshold: 50000,
   estimatedDeliveryDays: '2 - 4 Business Days',

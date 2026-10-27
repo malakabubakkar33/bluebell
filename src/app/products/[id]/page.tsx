@@ -182,7 +182,7 @@ export default function ProductDetailPage({
     const message = encodeURIComponent(
       `Hello Blue Bell Mobile Shop! I want to order:\n\n*${product.name}*\nStorage: ${selectedStorage}\nColor: ${selectedColor?.name || 'Default'}\nPrice: Rs. ${product.price.toLocaleString()}\nQuantity: ${quantity}\n\nPlease confirm availability and payment details.`
     );
-    const phoneNumber = '923001234567';
+    const phoneNumber = '923005902425';
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
   };
 

@@ -376,11 +376,11 @@ export const Header: React.FC = () => {
                     <span className="w-1.5 h-1.5 rounded-full bg-[#0756C9]/40" />
 
                     <a
-                      href="tel:+923001234567"
+                      href="tel:+923005902425"
                       className="flex items-center gap-1.5 text-[#102A56] hover:text-[#0756C9] transition-colors font-semibold"
                     >
                       <Phone className="w-3.5 h-3.5 text-[#0756C9] flex-shrink-0" />
-                      <span>Official Helpline: +92 300 1234567</span>
+                      <span>Helpline & WhatsApp: 0300 5902425</span>
                     </a>
 
                     <span className="w-1.5 h-1.5 rounded-full bg-[#0756C9]/40" />

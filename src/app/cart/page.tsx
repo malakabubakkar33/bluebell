@@ -197,6 +197,15 @@ export default function CartPage() {
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
+
+              <button
+                type="button"
+                onClick={handleWhatsAppCartOrder}
+                className="w-full py-3.5 px-4 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/25 transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 fill-white stroke-none" />
+                <span>Order via WhatsApp (0300 5902425)</span>
+              </button>
             </div>
           </>
         )}

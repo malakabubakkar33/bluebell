@@ -83,7 +83,7 @@ export default function ContactPage() {
 
               <div className="space-y-4">
                 <a
-                  href="tel:+923001234567"
+                  href="tel:+923005902425"
                   className="flex items-start gap-3.5 p-3.5 rounded-2xl hover:bg-slate-50 transition-colors group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -92,13 +92,13 @@ export default function ContactPage() {
                   <div>
                     <span className="text-xs font-bold text-slate-400 block">Phone Support</span>
                     <span className="text-sm font-extrabold text-slate-900 group-hover:text-brand-600 transition-colors">
-                      +92 300 1234567
+                      +92 300 5902425
                     </span>
                   </div>
                 </a>
 
                 <a
-                  href="https://wa.me/923001234567"
+                  href="https://wa.me/923005902425"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-emerald-50/50 hover:bg-emerald-50 transition-colors group border border-emerald-100"
@@ -115,7 +115,7 @@ export default function ContactPage() {
                 </a>
 
                 <a
-                  href="mailto:support@bluebell.pk"
+                  href="mailto:nomanjvd9@gmail.com"
                   className="flex items-start gap-3.5 p-3.5 rounded-2xl hover:bg-slate-50 transition-colors group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -124,7 +124,7 @@ export default function ContactPage() {
                   <div>
                     <span className="text-xs font-bold text-slate-400 block">Email Inquiries</span>
                     <span className="text-sm font-extrabold text-slate-900 group-hover:text-brand-600 transition-colors">
-                      support@bluebell.pk
+                      nomanjvd9@gmail.com
                     </span>
                   </div>
                 </a>
@@ -136,7 +136,7 @@ export default function ContactPage() {
                   <div>
                     <span className="text-xs font-bold text-slate-400 block">Main Outlet</span>
                     <span className="text-xs font-bold text-slate-800 leading-relaxed block mt-0.5">
-                      Shop #14, Ground Floor, Blue Area Commercial Center, Islamabad, Pakistan
+                      Shop #33, Sattagadai Plaza, 32 The Mall Road, Peshawar Cantt, Pakistan
                     </span>
                   </div>
                 </div>
