@@ -29,11 +29,20 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+import { useAdminData } from '@/context/AdminDataContext';
+
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const {
+    products,
+    categories,
+    refreshProducts,
+    refreshCategories,
+    mutateProducts,
+    isInitialLoading,
+    isRefreshing,
+  } = useAdminData();
+
+  const [localRefreshing, setLocalRefreshing] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Filters & Search
@@ -59,6 +68,9 @@ export default function AdminProductsPage() {
 
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
+  const loading = products.length === 0 && isInitialLoading;
+  const refreshing = isRefreshing || localRefreshing;
+
   // Show auto-dismissing toast
   const showToast = (type: 'success' | 'error', text: string) => {
     setToastMessage({ type, text });
@@ -67,42 +79,11 @@ export default function AdminProductsPage() {
     }, 4500);
   };
 
-  // Fetch products and categories
-  const fetchData = useCallback(async (isManual = false) => {
-    if (isManual) setRefreshing(true);
-    else setLoading(true);
-
-    try {
-      const [prodsRes, catsRes] = await Promise.all([
-        fetch('/api/products?status=all', { cache: 'no-store' }),
-        fetch('/api/categories', { cache: 'no-store' }),
-      ]);
-
-      if (prodsRes.ok) {
-        const prodData = await prodsRes.json();
-        if (prodData.success && Array.isArray(prodData.data)) {
-          setProducts(prodData.data);
-        }
-      }
-
-      if (catsRes.ok) {
-        const catData = await catsRes.json();
-        if (catData.success && Array.isArray(catData.data)) {
-          setCategories(catData.data);
-        }
-      }
-    } catch (err: any) {
-      console.error('Failed to load products/categories:', err);
-      showToast('error', 'Failed to fetch catalog from database.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const handleManualRefresh = async () => {
+    setLocalRefreshing(true);
+    await Promise.all([refreshProducts(), refreshCategories()]);
+    setLocalRefreshing(false);
+  };
 
   // Distinct Brands
   const availableBrands = useMemo(() => {
@@ -182,7 +163,7 @@ export default function AdminProductsPage() {
     const newStatus = !product.inStock;
 
     // Optimistic UI update
-    setProducts((prev) =>
+    mutateProducts((prev) =>
       prev.map((p) => (p.id === product.id ? { ...p, inStock: newStatus } : p))
     );
 
@@ -204,7 +185,7 @@ export default function AdminProductsPage() {
       );
     } catch (err: any) {
       // Revert optimistic update
-      setProducts((prev) =>
+      mutateProducts((prev) =>
         prev.map((p) => (p.id === product.id ? { ...p, inStock: !newStatus } : p))
       );
       showToast('error', err.message || 'Failed to update publication status.');
@@ -227,7 +208,7 @@ export default function AdminProductsPage() {
       }
 
       const updated = data.data as Product;
-      setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? updated : p)));
+      mutateProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? updated : p)));
       showToast('success', `Product "${updated.name}" updated successfully.`);
     } else {
       // Create
@@ -242,7 +223,7 @@ export default function AdminProductsPage() {
       }
 
       const created = data.data as Product;
-      setProducts((prev) => [created, ...prev]);
+      mutateProducts((prev) => [created, ...prev]);
       showToast('success', `Product "${created.name}" created and synced.`);
     }
   };
@@ -257,7 +238,7 @@ export default function AdminProductsPage() {
     }
 
     // Hard deleted from database and state
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
+    mutateProducts((prev) => prev.filter((p) => p.id !== productId));
     showToast('success', data.message || 'Product permanently removed from database.');
   };
 
@@ -300,7 +281,7 @@ export default function AdminProductsPage() {
           {/* Refresh Button */}
           <button
             type="button"
-            onClick={() => fetchData(true)}
+            onClick={handleManualRefresh}
             disabled={loading || refreshing}
             className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white border border-[#DCEBFA] hover:bg-[#EDF6FF] text-[#102A50] hover:text-[#0866E8] text-xs font-bold transition-all shadow-xs disabled:opacity-60 cursor-pointer"
             title="Reload catalog from database"

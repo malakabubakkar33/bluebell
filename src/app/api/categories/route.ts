@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
     // Invalidate caches
     serverCache.invalidatePrefix('categories');
     serverCache.invalidatePrefix('bootstrap');
+    serverCache.invalidatePrefix('admin:dashboard');
 
     // Revalidate affected storefront pages and cache
     try {

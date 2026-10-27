@@ -23,10 +23,11 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { useAdminData } from '@/context/AdminDataContext';
+
 export default function AdminInventoryPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { products, refreshProducts, mutateProducts, isInitialLoading, isRefreshing } = useAdminData();
+  const [localRefreshing, setLocalRefreshing] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -38,39 +39,34 @@ export default function AdminInventoryPage() {
   const [stockFilter, setStockFilter] = useState<'all' | 'in-stock' | 'low-stock' | 'out-of-stock'>('all');
   const [brandFilter, setBrandFilter] = useState('all');
 
+  const loading = products.length === 0 && isInitialLoading;
+  const refreshing = isRefreshing || localRefreshing;
+
   const showToast = (type: 'success' | 'error', text: string) => {
     setToastMessage({ type, text });
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const fetchInventory = useCallback(async (isManual = false) => {
-    if (isManual) setRefreshing(true);
-    else setLoading(true);
-
-    try {
-      const res = await fetch('/api/products?status=all', { cache: 'no-store' });
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        setProducts(data.data);
-        // Initialize drafts
-        const initialDrafts: Record<string, number> = {};
-        data.data.forEach((p: Product) => {
-          initialDrafts[p.id] = p.stock || 0;
-        });
-        setStockDrafts(initialDrafts);
-      }
-    } catch (err: any) {
-      console.error('Failed to load inventory:', err);
-      showToast('error', 'Failed to fetch inventory from database.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
+  // Sync drafts with products
   useEffect(() => {
-    fetchInventory();
-  }, [fetchInventory]);
+    if (products.length > 0) {
+      setStockDrafts((prev) => {
+        const next = { ...prev };
+        products.forEach((p) => {
+          if (next[p.id] === undefined) {
+            next[p.id] = p.stock || 0;
+          }
+        });
+        return next;
+      });
+    }
+  }, [products]);
+
+  const handleManualRefresh = async () => {
+    setLocalRefreshing(true);
+    await refreshProducts();
+    setLocalRefreshing(false);
+  };
 
   // Handle draft change
   const handleStockDraftChange = (productId: string, newValue: number) => {
@@ -86,14 +82,20 @@ export default function AdminInventoryPage() {
     });
   };
 
-  // Save updated stock to Supabase DB
+  // Save updated stock to Supabase DB & optimistic cache
   const handleSaveStock = async (product: Product) => {
     const newStock = stockDrafts[product.id];
     if (newStock === undefined) return;
 
     setSavingId(product.id);
+    const inStock = newStock > 0;
+
+    // Optimistic update
+    mutateProducts((prev) =>
+      prev.map((p) => (p.id === product.id ? { ...p, stock: newStock, inStock } : p))
+    );
+
     try {
-      const inStock = newStock > 0;
       const res = await fetch(`/api/products/${encodeURIComponent(product.id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -108,12 +110,11 @@ export default function AdminInventoryPage() {
         throw new Error(data.error || 'Failed to update stock');
       }
 
-      setProducts((prev) =>
-        prev.map((p) => (p.id === product.id ? { ...p, stock: newStock, inStock } : p))
-      );
       showToast('success', `Stock for "${product.name}" updated to ${newStock} units.`);
     } catch (err: any) {
       showToast('error', err.message || 'Failed to save stock update.');
+      // Revert if error
+      await refreshProducts(true);
     } finally {
       setSavingId(null);
     }
@@ -202,7 +203,7 @@ export default function AdminInventoryPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => fetchInventory(true)}
+            onClick={handleManualRefresh}
             disabled={loading || refreshing}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#DCEBFA] hover:bg-[#EDF6FF] text-[#102A50] hover:text-[#0866E8] text-xs font-bold transition-all shadow-xs disabled:opacity-60 cursor-pointer"
           >

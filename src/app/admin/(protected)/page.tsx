@@ -62,62 +62,29 @@ interface DashboardResponse {
   error?: string;
 }
 
+import { useAdminData } from '@/context/AdminDataContext';
+
 export default function AdminDashboardPage() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const { dashboardData, refreshDashboard, isRefreshing, isInitialLoading, error: contextError } = useAdminData();
+  const [localRefreshing, setLocalRefreshing] = useState<boolean>(false);
 
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [lowStockItems, setLowStockItems] = useState<LowStockProduct[]>([]);
-  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
-  const [salesChartData, setSalesChartData] = useState<DailySalesData[]>([]);
-  const [productProfits, setProductProfits] = useState<ProductProfitStats[]>([]);
+  const metrics = dashboardData?.metrics || null;
+  const lowStockItems = dashboardData?.lowStockItems || [];
+  const recentOrders = dashboardData?.recentOrders || [];
+  const salesChartData = dashboardData?.salesChartData || [];
+  const productProfits = dashboardData?.productProfitList || [];
+  const loading = !dashboardData && isInitialLoading;
+  const refreshing = isRefreshing || localRefreshing;
+  const lastUpdated = dashboardData?.timestamp
+    ? new Date(dashboardData.timestamp).toLocaleTimeString()
+    : null;
+  const error = contextError;
 
-  const fetchDashboardData = useCallback(async (isManualRefresh = false) => {
-    if (isManualRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    setError(null);
-
-    try {
-      const res = await fetch('/api/admin/dashboard/stats', {
-        method: 'GET',
-        cache: 'no-store',
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(
-          errorData.error || `Server responded with status ${res.status}`
-        );
-      }
-
-      const data: DashboardResponse = await res.json();
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch dashboard data');
-      }
-
-      setMetrics(data.metrics);
-      setLowStockItems(data.lowStockItems || []);
-      setRecentOrders(data.recentOrders || []);
-      setSalesChartData(data.salesChartData || []);
-      setProductProfits(data.productProfitList || []);
-      setLastUpdated(new Date().toLocaleTimeString());
-    } catch (err: any) {
-      console.error('[AdminDashboard] Fetch error:', err);
-      setError(err.message || 'An unexpected error occurred while contacting database');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+  const handleRefresh = async () => {
+    setLocalRefreshing(true);
+    await refreshDashboard();
+    setLocalRefreshing(false);
+  };
 
   return (
     <div className="space-y-8 animate-fadeIn pb-12">
@@ -126,13 +93,13 @@ export default function AdminDashboardPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EDF6FF] border border-[#DCEBFA] text-[#0866E8] text-[11px] font-black uppercase tracking-wider mb-2">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Phase 3 Live &bull; Authoritative Database Sync</span>
+            <span>Phase 3 Live &bull; Pre-Warmed Fast Engine Active</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#102A50] tracking-tight">
             Admin Dashboard
           </h1>
           <p className="text-xs sm:text-sm text-[#647A98] mt-1">
-            Real-time e-commerce metrics, net profit analytics, and database synchronization.
+            Real-time e-commerce metrics, net profit analytics, and instant pre-warmed synchronization.
           </p>
         </div>
 
@@ -145,7 +112,7 @@ export default function AdminDashboardPage() {
           )}
           <button
             type="button"
-            onClick={() => fetchDashboardData(true)}
+            onClick={handleRefresh}
             disabled={loading || refreshing}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#DCEBFA] hover:bg-[#EDF6FF] text-[#102A50] hover:text-[#0866E8] text-xs font-bold transition-all shadow-xs disabled:opacity-60 cursor-pointer"
             title="Refresh metrics from authoritative database"

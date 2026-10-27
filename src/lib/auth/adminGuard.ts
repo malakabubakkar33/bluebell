@@ -18,12 +18,44 @@ export interface AdminAuthResult {
   error?: string;
 }
 
+interface CachedAdminSession {
+  result: AdminAuthResult;
+  expiresAt: number;
+}
+
+// Fast in-memory session cache (60s TTL) to prevent repeated remote DB roundtrips on rapid admin navigation
+const adminSessionMemoryCache = new Map<string, CachedAdminSession>();
+
+export function clearAdminSessionCache(userId?: string) {
+  if (userId) {
+    adminSessionMemoryCache.delete(userId);
+  } else {
+    adminSessionMemoryCache.clear();
+  }
+}
+
 /**
  * Server-side helper to verify that the incoming session belongs to a legitimate administrator.
  * Checks both Supabase Auth session and authoritative role in public.app_users table.
  */
 export async function getAdminSession(request?: NextRequest | Request): Promise<AdminAuthResult> {
   try {
+    // 1. Fast path for Bearer Token if present in request headers
+    let bearerTokenKey: string | null = null;
+    if (request) {
+      const authHeader = request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.slice(7).trim();
+        if (token) {
+          bearerTokenKey = `bearer:${token.slice(0, 32)}`;
+          const cachedByToken = adminSessionMemoryCache.get(bearerTokenKey);
+          if (cachedByToken && cachedByToken.expiresAt > Date.now()) {
+            return cachedByToken.result;
+          }
+        }
+      }
+    }
+
     const supabaseServer = await createSupabaseServerClient();
     if (!supabaseServer) {
       return {
@@ -48,13 +80,22 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
       };
     }
 
+    // 2. Check if this verified user already has an active cached admin session (60s TTL)
+    const cachedByUser = adminSessionMemoryCache.get(authUser.id);
+    if (cachedByUser && cachedByUser.expiresAt > Date.now()) {
+      if (bearerTokenKey) {
+        adminSessionMemoryCache.set(bearerTokenKey, cachedByUser);
+      }
+      return cachedByUser.result;
+    }
+
     const adminClient = getSupabaseAdminClient();
     const isAdminEmail = authUser.email.toLowerCase().includes('admin');
     const hasAdminMeta = authUser.user_metadata?.role === 'admin';
 
     if (!adminClient) {
       if (hasAdminMeta || isAdminEmail) {
-        return {
+        const validResult: AdminAuthResult = {
           authenticated: true,
           isAdmin: true,
           user: {
@@ -66,6 +107,17 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
             created_at: authUser.created_at || undefined,
           },
         };
+        adminSessionMemoryCache.set(authUser.id, {
+          result: validResult,
+          expiresAt: Date.now() + 60 * 1000,
+        });
+        if (bearerTokenKey) {
+          adminSessionMemoryCache.set(bearerTokenKey, {
+            result: validResult,
+            expiresAt: Date.now() + 60 * 1000,
+          });
+        }
+        return validResult;
       }
       return {
         authenticated: true,
@@ -84,7 +136,7 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
 
     if (dbError || !dbUser) {
       if (hasAdminMeta || isAdminEmail) {
-        return {
+        const fallbackResult: AdminAuthResult = {
           authenticated: true,
           isAdmin: true,
           user: {
@@ -96,6 +148,17 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
             created_at: authUser.created_at || undefined,
           },
         };
+        adminSessionMemoryCache.set(authUser.id, {
+          result: fallbackResult,
+          expiresAt: Date.now() + 60 * 1000,
+        });
+        if (bearerTokenKey) {
+          adminSessionMemoryCache.set(bearerTokenKey, {
+            result: fallbackResult,
+            expiresAt: Date.now() + 60 * 1000,
+          });
+        }
+        return fallbackResult;
       }
       return {
         authenticated: true,
@@ -123,7 +186,7 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
       };
     }
 
-    return {
+    const verifiedResult: AdminAuthResult = {
       authenticated: true,
       isAdmin: true,
       user: {
@@ -135,6 +198,20 @@ export async function getAdminSession(request?: NextRequest | Request): Promise<
         created_at: dbUser.created_at || undefined,
       },
     };
+
+    // Cache verified admin session for 60 seconds
+    adminSessionMemoryCache.set(authUser.id, {
+      result: verifiedResult,
+      expiresAt: Date.now() + 60 * 1000,
+    });
+    if (bearerTokenKey) {
+      adminSessionMemoryCache.set(bearerTokenKey, {
+        result: verifiedResult,
+        expiresAt: Date.now() + 60 * 1000,
+      });
+    }
+
+    return verifiedResult;
   } catch (err: any) {
     console.error('[getAdminSession] exception:', err);
     return {

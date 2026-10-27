@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight, ShieldCheck, Truck, Award } from 'lucide-react';
@@ -111,27 +111,76 @@ export const HeroBanner: React.FC = () => {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const activeBanners = (banners || []).filter((b) => b.status === 'Active');
-  const displaySlides: HeroSlide[] = activeBanners.length > 0
-    ? activeBanners.map((b, idx) => ({
-        id: typeof b.id === 'number' ? b.id : idx + 1,
-        brandTag: b.tag || b.brand?.toUpperCase() || 'OFFICIAL FLAGSHIP',
-        heading: b.titlePrefix && b.titleHighlight ? `${b.titlePrefix} ${b.titleHighlight}` : b.title,
-        description: b.subtitle || b.tagline || 'Experience peak performance and official warranty.',
-        price: b.price || 'Rs. 249,999',
-        specs: b.specs && b.specs.length > 0 ? b.specs.map(s => ({ label: s.label, value: s.desc })) : [
-          { label: 'Official', value: 'PTA Approved' },
-          { label: 'Warranty', value: '1 Year Brand' },
-          { label: 'Delivery', value: 'Express 24-48h' }
-        ],
-        primaryCtaText: 'Shop Now',
-        primaryCtaLink: b.link || '/products',
-        secondaryCtaText: 'Explore Features',
-        secondaryCtaLink: b.link || '/products',
-        image: b.image,
-        alt: b.title,
-      }))
-    : HERO_SLIDES;
+  // Map slot overrides (banner-1, banner-2, banner-3, banner-4) onto default HERO_SLIDES so live website images match 100%
+  const displaySlides: HeroSlide[] = useMemo(() => {
+    if (!banners || banners.length === 0) {
+      return HERO_SLIDES;
+    }
+
+    const slides: HeroSlide[] = [];
+    const usedCustomIds = new Set<string>();
+
+    // Process 4 default slots
+    HERO_SLIDES.forEach((defaultSlide, idx) => {
+      const slotNum = idx + 1;
+      const matching = (banners || []).find(
+        (b) => String(b.id) === `banner-${slotNum}` || String(b.id) === String(slotNum)
+      );
+
+      if (matching) {
+        usedCustomIds.add(String(matching.id));
+        if (matching.status === 'Active') {
+          slides.push({
+            id: slotNum,
+            brandTag: matching.tag || matching.brand?.toUpperCase() || defaultSlide.brandTag,
+            heading: matching.title || defaultSlide.heading,
+            description: matching.subtitle || matching.tagline || defaultSlide.description,
+            price: matching.price || defaultSlide.price,
+            originalPrice: (matching as any).originalPrice || defaultSlide.originalPrice,
+            specs: matching.specs && matching.specs.length > 0
+              ? matching.specs.map((s: any) => ({ label: s.label, value: s.desc || s.value }))
+              : defaultSlide.specs,
+            primaryCtaText: defaultSlide.primaryCtaText,
+            primaryCtaLink: matching.link || defaultSlide.primaryCtaLink,
+            secondaryCtaText: defaultSlide.secondaryCtaText,
+            secondaryCtaLink: matching.link || defaultSlide.secondaryCtaLink,
+            image: matching.image || defaultSlide.image,
+            alt: matching.title || defaultSlide.alt,
+          });
+        }
+      } else {
+        slides.push(defaultSlide);
+      }
+    });
+
+    // Add any extra active custom banners added by admin
+    (banners || []).forEach((b, idx) => {
+      if (!usedCustomIds.has(String(b.id)) && b.status === 'Active') {
+        slides.push({
+          id: 100 + idx,
+          brandTag: b.tag || b.brand?.toUpperCase() || 'SPECIAL PROMOTION',
+          heading: b.title,
+          description: b.subtitle || b.tagline || 'Experience peak performance and official warranty.',
+          price: b.price || 'Rs. 249,999',
+          specs: b.specs && b.specs.length > 0
+            ? b.specs.map((s: any) => ({ label: s.label, value: s.desc || s.value }))
+            : [
+                { label: 'Official', value: 'PTA Approved' },
+                { label: 'Warranty', value: '1 Year Brand' },
+                { label: 'Delivery', value: 'Express 24-48h' },
+              ],
+          primaryCtaText: 'Shop Now',
+          primaryCtaLink: b.link || '/products',
+          secondaryCtaText: 'Explore Features',
+          secondaryCtaLink: b.link || '/products',
+          image: b.image,
+          alt: b.title,
+        });
+      }
+    });
+
+    return slides.length > 0 ? slides : HERO_SLIDES;
+  }, [banners]);
 
   const totalSlides = displaySlides.length;
 

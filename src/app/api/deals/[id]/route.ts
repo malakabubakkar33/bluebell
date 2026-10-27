@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { SupabaseDbService } from '@/lib/supabase/service';
+import { serverCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,10 @@ export async function PATCH(
     const { id } = await params;
     const updates = await req.json();
     const updated = await SupabaseDbService.updateDeal(id, updates);
+
+    serverCache.invalidatePrefix('deals');
+    serverCache.invalidatePrefix('bootstrap');
+
     try {
       revalidatePath('/', 'page');
       revalidatePath('/api/deals');
@@ -34,6 +39,10 @@ export async function DELETE(
   try {
     const { id } = await params;
     await SupabaseDbService.deleteDeal(id);
+
+    serverCache.invalidatePrefix('deals');
+    serverCache.invalidatePrefix('bootstrap');
+
     try {
       revalidatePath('/', 'page');
       revalidatePath('/api/deals');

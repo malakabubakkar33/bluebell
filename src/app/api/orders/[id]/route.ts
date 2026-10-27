@@ -23,6 +23,7 @@ export async function GET(
 }
 
 import { requireAdminApi } from '@/lib/auth/adminGuard';
+import { serverCache } from '@/lib/cache';
 
 export async function PATCH(
   req: NextRequest,
@@ -46,6 +47,9 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
 
+    serverCache.invalidatePrefix('orders');
+    serverCache.invalidatePrefix('admin:dashboard');
+
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
     return NextResponse.json(
@@ -67,6 +71,10 @@ export async function DELETE(
 
     const { id } = await params;
     await SupabaseDbService.deleteOrder(id);
+
+    serverCache.invalidatePrefix('orders');
+    serverCache.invalidatePrefix('admin:dashboard');
+
     return NextResponse.json({ success: true, message: `Order ${id} removed` });
   } catch (error: any) {
     return NextResponse.json(

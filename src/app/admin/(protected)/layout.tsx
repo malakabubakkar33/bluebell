@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { getAdminSession } from '@/lib/auth/adminGuard';
 import { AdminLayoutShell } from '@/components/admin/AdminLayoutShell';
+import { AdminDataProvider } from '@/context/AdminDataContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,5 +22,9 @@ export default async function AdminProtectedLayout({
     redirect('/admin/login?error=forbidden');
   }
 
-  return <AdminLayoutShell user={session.user}>{children}</AdminLayoutShell>;
+  return (
+    <AdminDataProvider>
+      <AdminLayoutShell user={session.user}>{children}</AdminLayoutShell>
+    </AdminDataProvider>
+  );
 }

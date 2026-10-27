@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { SupabaseDbService } from '@/lib/supabase/service';
+import { serverCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,10 @@ export async function PATCH(
     const { id } = await params;
     const body = await req.json();
     const updated = await SupabaseDbService.updateCategory(id, body);
+
+    serverCache.invalidatePrefix('categories');
+    serverCache.invalidatePrefix('bootstrap');
+    serverCache.invalidatePrefix('admin:dashboard');
 
     try {
       revalidatePath('/', 'page');
@@ -38,6 +43,10 @@ export async function DELETE(
   try {
     const { id } = await params;
     await SupabaseDbService.deleteCategory(id);
+
+    serverCache.invalidatePrefix('categories');
+    serverCache.invalidatePrefix('bootstrap');
+    serverCache.invalidatePrefix('admin:dashboard');
 
     try {
       revalidatePath('/', 'page');

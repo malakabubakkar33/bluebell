@@ -20,10 +20,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+import { useAdminData } from '@/context/AdminDataContext';
+
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { categories, refreshCategories, mutateCategories, isInitialLoading, isRefreshing } = useAdminData();
+  const [localRefreshing, setLocalRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -42,33 +43,19 @@ export default function AdminCategoriesPage() {
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const loading = categories.length === 0 && isInitialLoading;
+  const refreshing = isRefreshing || localRefreshing;
+
   const showToast = (type: 'success' | 'error', text: string) => {
     setToastMessage({ type, text });
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const fetchCategories = useCallback(async (isManual = false) => {
-    if (isManual) setRefreshing(true);
-    else setLoading(true);
-
-    try {
-      const res = await fetch('/api/categories?all=true', { cache: 'no-store' });
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        setCategories(data.data);
-      }
-    } catch (err: any) {
-      console.error('Failed to fetch categories:', err);
-      showToast('error', 'Could not load categories.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+  const handleManualRefresh = async () => {
+    setLocalRefreshing(true);
+    await refreshCategories();
+    setLocalRefreshing(false);
+  };
 
   // Open Add modal
   const handleOpenAdd = () => {
@@ -157,7 +144,7 @@ export default function AdminCategoriesPage() {
       }
 
       setIsModalOpen(false);
-      fetchCategories(true);
+      await refreshCategories();
     } catch (err: any) {
       setFormError(err.message || 'Operation failed.');
     } finally {
@@ -165,9 +152,13 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  // Toggle active status
+  // Toggle active status with optimistic update
   const handleToggleStatus = async (c: Category) => {
     const newStatus = c.isActive === false;
+    mutateCategories((prev) =>
+      prev.map((item) => (item.id === c.id ? { ...item, isActive: newStatus } : item))
+    );
+
     try {
       const res = await fetch(`/api/categories/${c.id}`, {
         method: 'PATCH',
@@ -175,20 +166,22 @@ export default function AdminCategoriesPage() {
         body: JSON.stringify({ isActive: newStatus }),
       });
       if (res.ok) {
-        setCategories((prev) =>
-          prev.map((item) => (item.id === c.id ? { ...item, isActive: newStatus } : item))
-        );
         showToast('success', `Category marked as ${newStatus ? 'Active' : 'Hidden'}.`);
+      } else {
+        await refreshCategories(true);
       }
     } catch (err) {
       showToast('error', 'Failed to toggle category status.');
+      await refreshCategories(true);
     }
   };
 
-  // Delete category
+  // Delete category with optimistic update
   const handleDeleteConfirm = async () => {
     if (!deletingCategory) return;
     setIsDeleting(true);
+    mutateCategories((prev) => prev.filter((item) => item.id !== deletingCategory.id));
+
     try {
       const res = await fetch(`/api/categories/${deletingCategory.id}`, {
         method: 'DELETE',
@@ -196,11 +189,11 @@ export default function AdminCategoriesPage() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Failed to delete category');
 
-      setCategories((prev) => prev.filter((item) => item.id !== deletingCategory.id));
       showToast('success', `Category "${deletingCategory.name}" deleted.`);
       setDeletingCategory(null);
     } catch (err: any) {
       showToast('error', err.message || 'Failed to delete category.');
+      await refreshCategories(true);
     } finally {
       setIsDeleting(false);
     }
@@ -256,7 +249,7 @@ export default function AdminCategoriesPage() {
         <div className="flex items-center gap-2.5">
           <button
             type="button"
-            onClick={() => fetchCategories(true)}
+            onClick={handleManualRefresh}
             disabled={refreshing || loading}
             className="p-2.5 rounded-xl border border-[#DCEBFA] bg-white text-[#102A50] hover:bg-[#EDF6FF] transition-colors disabled:opacity-50 cursor-pointer"
             title="Refresh categories"

@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
     // Invalidate product & bootstrap caches so new product is immediately live
     serverCache.invalidatePrefix('products');
     serverCache.invalidatePrefix('bootstrap');
+    serverCache.invalidatePrefix('admin:dashboard');
 
     return NextResponse.json({ success: true, data: created }, { status: 201 });
   } catch (error: any) {

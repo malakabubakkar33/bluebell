@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseDbService } from '@/lib/supabase/service';
-
 import { requireAdminApi } from '@/lib/auth/adminGuard';
+import { serverCache } from '@/lib/cache';
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,7 +16,16 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const orders = await SupabaseDbService.getOrders(email);
+    const cacheKey = `orders:${email || 'all'}`;
+    const orders = await serverCache.getOrSet(
+      cacheKey,
+      15, // 15s fresh TTL
+      async () => {
+        return await SupabaseDbService.getOrders(email);
+      },
+      60 // 60s stale SWR
+    );
+
     return NextResponse.json({ success: true, count: orders.length, data: orders });
   } catch (error: any) {
     return NextResponse.json(
@@ -53,6 +62,11 @@ export async function POST(req: NextRequest) {
       total: body.total,
       notes: body.notes,
     });
+
+    // Invalidate caches so admin dashboard, orders, and stats are refreshed
+    serverCache.invalidatePrefix('orders');
+    serverCache.invalidatePrefix('admin:dashboard');
+    serverCache.invalidatePrefix('bootstrap');
 
     return NextResponse.json({ success: true, data: order }, { status: 201 });
   } catch (error: any) {

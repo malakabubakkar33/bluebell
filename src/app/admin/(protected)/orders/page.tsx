@@ -56,47 +56,34 @@ interface Order {
   created_at: string;
 }
 
+import { useAdminData, AdminOrder } from '@/context/AdminDataContext';
+
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { orders, refreshOrders, mutateOrders, isInitialLoading, isRefreshing } = useAdminData();
+  const [localRefreshing, setLocalRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'delivered' | 'cancelled'>('all');
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Details Modal
-  const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<AdminOrder | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const loading = orders.length === 0 && isInitialLoading;
+  const refreshing = isRefreshing || localRefreshing;
 
   const showToast = (type: 'success' | 'error', text: string) => {
     setToastMessage({ type, text });
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const fetchOrders = useCallback(async (isManual = false, isSilent = false) => {
-    if (isManual) setRefreshing(true);
-    else if (!isSilent) setLoading(true);
-
-    try {
-      const res = await fetch('/api/orders', { cache: 'no-store' });
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        setOrders(data.data);
-      }
-    } catch (err: any) {
-      if (!isSilent) {
-        console.error('Failed to fetch orders:', err);
-        showToast('error', 'Could not load orders from database.');
-      }
-    } finally {
-      if (!isSilent) setLoading(false);
-      if (isManual) setRefreshing(false);
-    }
-  }, []);
+  const handleManualRefresh = async () => {
+    setLocalRefreshing(true);
+    await refreshOrders();
+    setLocalRefreshing(false);
+  };
 
   useEffect(() => {
-    fetchOrders();
-
     // Real-Time Orders BroadcastChannel Listener
     let channel: BroadcastChannel | null = null;
     try {
@@ -104,26 +91,35 @@ export default function AdminOrdersPage() {
         channel = new BroadcastChannel('bluebell_store_sync');
         channel.onmessage = (event) => {
           if (event.data?.type === 'ORDER_UPDATED') {
-            fetchOrders(false, true);
+            refreshOrders(true);
           }
         };
       }
     } catch {}
 
-    // Auto-sync polling every 12 seconds in background for real-time incoming orders
+    // Auto-sync polling every 20 seconds in background for real-time incoming orders
     const timer = setInterval(() => {
-      fetchOrders(false, true);
-    }, 12000);
+      refreshOrders(true);
+    }, 20000);
 
     return () => {
       if (channel) channel.close();
       clearInterval(timer);
     };
-  }, [fetchOrders]);
+  }, [refreshOrders]);
 
-  // Update order status
+  // Update order status with instant optimistic update
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId);
+
+    // Optimistic cache update
+    mutateOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus as any } : o))
+    );
+    if (viewingOrder && viewingOrder.id === orderId) {
+      setViewingOrder({ ...viewingOrder, status: newStatus as any });
+    }
+
     try {
       const res = await fetch(`/api/orders/${orderId}`, {
         method: 'PATCH',
@@ -132,13 +128,6 @@ export default function AdminOrdersPage() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Failed to update order');
-
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus as any } : o))
-      );
-      if (viewingOrder && viewingOrder.id === orderId) {
-        setViewingOrder({ ...viewingOrder, status: newStatus as any });
-      }
 
       // Broadcast update to all other open admin windows/tabs
       try {
@@ -152,6 +141,7 @@ export default function AdminOrdersPage() {
       showToast('success', `Order #${orderId.substring(0, 8)} status set to ${newStatus}.`);
     } catch (err: any) {
       showToast('error', err.message || 'Status update failed.');
+      await refreshOrders(true);
     } finally {
       setUpdatingId(null);
     }
@@ -257,7 +247,7 @@ export default function AdminOrdersPage() {
         <div className="flex items-center gap-2.5">
           <button
             type="button"
-            onClick={() => fetchOrders(true)}
+            onClick={handleManualRefresh}
             disabled={refreshing || loading}
             className="p-2.5 rounded-xl border border-[#DCEBFA] bg-white text-[#102A50] hover:bg-[#EDF6FF] transition-colors disabled:opacity-50 cursor-pointer"
             title="Refresh orders"

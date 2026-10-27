@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '@/lib/supabase/admin';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireAdminApi } from '@/lib/auth/adminGuard';
+import { serverCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,24 +29,28 @@ export async function GET(req: NextRequest) {
       return auth.response;
     }
 
-    // 2. Obtain database client with resilient fallback
-    let dbClient = getSupabaseAdminClient();
-    if (!dbClient) {
-      dbClient = (await createSupabaseServerClient()) as any;
+    const isRefresh = req.nextUrl.searchParams.get('refresh') === 'true';
+    const cacheKey = 'admin:dashboard:stats';
+
+    if (isRefresh) {
+      serverCache.delete(cacheKey);
     }
 
-    if (!dbClient) {
-      console.warn('[Dashboard Stats API] Direct client unavailable, attempting server fallback');
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unable to connect to database. Please check Supabase configuration.',
-        },
-        { status: 500 }
-      );
-    }
+    const payload = await serverCache.getOrSet(
+      cacheKey,
+      30, // 30s fresh TTL
+      async () => {
+        // 2. Obtain database client with resilient fallback
+        let dbClient = getSupabaseAdminClient();
+        if (!dbClient) {
+          dbClient = (await createSupabaseServerClient()) as any;
+        }
 
-    const LOW_STOCK_THRESHOLD = 15;
+        if (!dbClient) {
+          throw new Error('Unable to connect to database. Please check Supabase configuration.');
+        }
+
+        const LOW_STOCK_THRESHOLD = 15;
 
     // 3. Fetch authoritative database counts and records concurrently
     const [
@@ -248,30 +253,35 @@ export async function GET(req: NextRequest) {
 
     const salesChartData = Array.from(daysMap.values());
 
-    return NextResponse.json({
-      success: true,
-      timestamp: new Date().toISOString(),
-      metrics: {
-        totalProducts: totalProductsRes.count ?? allProducts.length,
-        publishedProducts: publishedProductsRes.count ?? allProducts.filter((p: any) => p.in_stock).length,
-        totalCategories: categoriesCountRes.count ?? 0,
-        registeredCustomers: customersCountRes.count ?? 0,
-        totalOrders: totalOrdersCountRes.count ?? validOrders.length,
-        pendingOrders: pendingOrdersCountRes.count ?? 0,
-        completedOrders: completedOrdersCountRes.count ?? 0,
-        cancelledOrders: cancelledOrdersCountRes.count ?? 0,
-        lowStockProductsCount: lowStockCountRes.count ?? 0,
-        lowStockThreshold: LOW_STOCK_THRESHOLD,
-        totalRevenue,
-        totalCost,
-        totalProfit, // Net Profit (Munafa)
-        profitMarginPercent,
+        return {
+          success: true,
+          timestamp: new Date().toISOString(),
+          metrics: {
+            totalProducts: totalProductsRes.count ?? allProducts.length,
+            publishedProducts: publishedProductsRes.count ?? allProducts.filter((p: any) => p.in_stock).length,
+            totalCategories: categoriesCountRes.count ?? 0,
+            registeredCustomers: customersCountRes.count ?? 0,
+            totalOrders: totalOrdersCountRes.count ?? validOrders.length,
+            pendingOrders: pendingOrdersCountRes.count ?? 0,
+            completedOrders: completedOrdersCountRes.count ?? 0,
+            cancelledOrders: cancelledOrdersCountRes.count ?? 0,
+            lowStockProductsCount: lowStockCountRes.count ?? 0,
+            lowStockThreshold: LOW_STOCK_THRESHOLD,
+            totalRevenue,
+            totalCost,
+            totalProfit, // Net Profit (Munafa)
+            profitMarginPercent,
+          },
+          productProfitList, // Individual product profit & margin breakdown
+          lowStockItems: Array.isArray(lowStockItemsRes.data) ? lowStockItemsRes.data : [],
+          recentOrders: Array.isArray(recentOrdersRes.data) ? recentOrdersRes.data : [],
+          salesChartData,
+        };
       },
-      productProfitList, // Individual product profit & margin breakdown
-      lowStockItems: Array.isArray(lowStockItemsRes.data) ? lowStockItemsRes.data : [],
-      recentOrders: Array.isArray(recentOrdersRes.data) ? recentOrdersRes.data : [],
-      salesChartData,
-    });
+      180 // 3 min stale TTL (SWR)
+    );
+
+    return NextResponse.json(payload);
   } catch (error: any) {
     console.error('[GET /api/admin/dashboard/stats] error:', error);
     return NextResponse.json(

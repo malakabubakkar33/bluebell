@@ -204,6 +204,19 @@ export const PromoBanner: React.FC = () => {
                     {currentDeal.discount}
                   </p>
 
+                  {(currentDeal as any).price && (
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="font-mono font-black text-emerald-600 text-sm">
+                        Rs. {Number((currentDeal as any).price).toLocaleString('en-PK')}
+                      </span>
+                      {(currentDeal as any).originalPrice && Number((currentDeal as any).originalPrice) > Number((currentDeal as any).price) && (
+                        <span className="font-mono text-xs text-gray-400 line-through">
+                          Rs. {Number((currentDeal as any).originalPrice).toLocaleString('en-PK')}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <p className="text-xs text-[#52749D] font-medium leading-relaxed">
                     {currentDeal.subtitle}
                   </p>
@@ -275,6 +288,19 @@ export const PromoBanner: React.FC = () => {
                 <p className="text-base font-extrabold text-[#0756C9] mb-1">
                   {deal.discount}
                 </p>
+
+                {(deal as any).price && (
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-mono font-black text-emerald-600 text-sm">
+                      Rs. {Number((deal as any).price).toLocaleString('en-PK')}
+                    </span>
+                    {(deal as any).originalPrice && Number((deal as any).originalPrice) > Number((deal as any).price) && (
+                      <span className="font-mono text-xs text-gray-400 line-through">
+                        Rs. {Number((deal as any).originalPrice).toLocaleString('en-PK')}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <p className="text-xs text-[#52749D] font-medium leading-relaxed">
                   {deal.subtitle}

@@ -114,6 +114,7 @@ export async function PATCH(
     // Invalidate product & bootstrap caches so changes are immediately live
     serverCache.invalidatePrefix('products');
     serverCache.invalidatePrefix('bootstrap');
+    serverCache.invalidatePrefix('admin:dashboard');
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
@@ -142,6 +143,7 @@ export async function DELETE(
     // Invalidate product & bootstrap caches so removal is immediately live
     serverCache.invalidatePrefix('products');
     serverCache.invalidatePrefix('bootstrap');
+    serverCache.invalidatePrefix('admin:dashboard');
 
     return NextResponse.json({
       success: true,

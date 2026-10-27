@@ -69,44 +69,32 @@ export interface ProductProfitReportItem {
   marginPercent: number;
 }
 
+import { useAdminData } from '@/context/AdminDataContext';
+
 export default function AdminReportsPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const {
+    orders: contextOrders,
+    products: contextProducts,
+    refreshOrders,
+    refreshProducts,
+    isInitialLoading,
+    isRefreshing,
+  } = useAdminData();
+
+  const [localRefreshing, setLocalRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState<'today' | '7days' | '30days' | 'all'>('today');
   const [searchFilter, setSearchFilter] = useState('');
 
-  const fetchReportData = useCallback(async (isManual = false) => {
-    if (isManual) setRefreshing(true);
-    else setLoading(true);
+  const orders = contextOrders as any[];
+  const products = contextProducts as any[];
+  const loading = orders.length === 0 && isInitialLoading;
+  const refreshing = isRefreshing || localRefreshing;
 
-    try {
-      const [ordersRes, prodsRes] = await Promise.all([
-        fetch('/api/orders', { cache: 'no-store' }),
-        fetch('/api/products?status=all', { cache: 'no-store' }),
-      ]);
-
-      const ordersData = await ordersRes.json();
-      const prodsData = await prodsRes.json();
-
-      if (ordersData.success && Array.isArray(ordersData.data)) {
-        setOrders(ordersData.data);
-      }
-      if (prodsData.success && Array.isArray(prodsData.data)) {
-        setProducts(prodsData.data);
-      }
-    } catch (err: any) {
-      console.error('Failed to load reports data:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchReportData();
-  }, [fetchReportData]);
+  const handleManualRefresh = async () => {
+    setLocalRefreshing(true);
+    await Promise.all([refreshOrders(), refreshProducts()]);
+    setLocalRefreshing(false);
+  };
 
   // Filter orders by time range
   const filteredOrders = useMemo(() => {
@@ -393,7 +381,7 @@ export default function AdminReportsPage() {
 
             <button
               type="button"
-              onClick={() => fetchReportData(true)}
+              onClick={handleManualRefresh}
               disabled={loading || refreshing}
               className="p-2 rounded-xl bg-white border border-[#DCEBFA] hover:bg-[#EDF6FF] text-[#0866E8] transition-colors shadow-xs cursor-pointer"
               title="Refresh Report Data"
