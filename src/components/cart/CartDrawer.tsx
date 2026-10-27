@@ -13,8 +13,11 @@ import {
   CheckCircle2,
   Tag,
   MessageCircle,
+  Loader2,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { AnimatedSuccessTick } from '@/components/common/AnimatedSuccessTick';
+import { playOrderSuccessSound } from '@/lib/sound';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -32,7 +35,9 @@ export const CartDrawer: React.FC = () => {
   const [appliedDiscount, setAppliedDiscount] = useState<number>(0);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
+  const [placedOrder, setPlacedOrder] = useState<any | null>(null);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   // Free shipping threshold in PKR: Rs. 25,000
   const freeShippingThreshold = 25000;
@@ -50,12 +55,78 @@ export const CartDrawer: React.FC = () => {
     }
   };
 
-  const handleCheckoutSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCheckoutSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const orderNumber = `BB-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
-    setOrderSuccess(orderNumber);
-    clearCart();
-    setIsCheckingOut(false);
+    setOrderError(null);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const name = String(formData.get('name') || '').trim();
+    const phone = String(formData.get('phone') || '').trim();
+    const address = String(formData.get('address') || '').trim();
+
+    if (!name || !phone || !address) {
+      setOrderError('Name, phone number aur delivery address darj karein.');
+      return;
+    }
+
+    if (cart.length === 0) {
+      setOrderError('Aapka cart khali hai.');
+      return;
+    }
+
+    setIsSubmittingOrder(true);
+
+    try {
+      const shippingCharge = amountNeeded === 0 ? 0 : 500;
+      const finalTotal = subtotal - appliedDiscount + shippingCharge;
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_name: name,
+          customer_phone: phone,
+          customer_whatsapp: phone,
+          customer_email: `${phone.replace(/[^0-9]/g, '') || 'guest'}@bluebell.pk`,
+          shipping_address: address,
+          city: 'Peshawar',
+          province: 'Khyber Pakhtunkhwa',
+          payment_method: 'cod',
+          items: cart,
+          subtotal: subtotal - appliedDiscount,
+          shipping_fee: shippingCharge,
+          total: finalTotal,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (result.success && result.data) {
+        clearCart();
+        setIsCheckingOut(false);
+        setPlacedOrder(result.data);
+        playOrderSuccessSound();
+
+        // Broadcast to admin dashboard
+        try {
+          const chan = new BroadcastChannel('bluebell_store_sync');
+          chan.postMessage({
+            type: 'ORDER_UPDATED',
+            orderId: result.data.id,
+            customerName: name,
+            total: finalTotal,
+            timestamp: Date.now(),
+          });
+          chan.close();
+        } catch {}
+      } else {
+        throw new Error(result.error || 'Order place karne me masla hua. Dobara koshish karein.');
+      }
+    } catch (err: any) {
+      setOrderError(err.message || 'Network error occurred while booking order.');
+    } finally {
+      setIsSubmittingOrder(false);
+    }
   };
 
   const handleWhatsAppCartOrder = () => {
@@ -83,7 +154,7 @@ export const CartDrawer: React.FC = () => {
       <div
         onClick={() => {
           setIsDrawerOpen(false);
-          setOrderSuccess(null);
+          setPlacedOrder(null);
         }}
         className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fadeIn"
       />
@@ -99,16 +170,16 @@ export const CartDrawer: React.FC = () => {
             <button
               onClick={() => {
                 setIsDrawerOpen(false);
-                setOrderSuccess(null);
+                setPlacedOrder(null);
               }}
-              className="w-8 h-8 rounded-full hover:bg-slate-200/60 flex items-center justify-center text-slate-500 transition-colors"
+              className="w-8 h-8 rounded-full hover:bg-slate-200/60 flex items-center justify-center text-slate-500 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Free Shipping Progress */}
-          {cart.length > 0 && !orderSuccess && (
+          {cart.length > 0 && !placedOrder && (
             <div className="px-5 py-3 bg-brand-50/40 border-b border-brand-100/40">
               <div className="flex justify-between items-center text-xs mb-1.5 font-medium">
                 <span className="text-slate-600">
@@ -135,28 +206,19 @@ export const CartDrawer: React.FC = () => {
 
           {/* Cart Items List / Checkout / Success View */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
-            {orderSuccess ? (
-              <div className="py-16 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <h4 className="text-xl font-bold text-slate-900">Order Placed Successfully!</h4>
-                <p className="text-xs text-slate-500 max-w-xs mx-auto">
-                  Thank you for shopping at Blue Bell. Your order code is{' '}
-                  <strong className="text-slate-800 font-mono">{orderSuccess}</strong>.
-                </p>
-                <div className="pt-4 flex flex-col gap-2">
-                  <Link
-                    href="/"
-                    onClick={() => {
-                      setIsDrawerOpen(false);
-                      setOrderSuccess(null);
-                    }}
-                    className="w-full py-3 rounded-full bg-brand-500 text-white font-bold text-xs"
-                  >
-                    Continue Shopping
-                  </Link>
-                </div>
+            {placedOrder ? (
+              <div className="py-2 animate-fadeIn">
+                <AnimatedSuccessTick
+                  orderId={placedOrder.id}
+                  trackingNumber={placedOrder.tracking_number}
+                  customerName={placedOrder.customer_name}
+                  total={placedOrder.total}
+                  onContinueShopping={() => {
+                    setIsDrawerOpen(false);
+                    setPlacedOrder(null);
+                  }}
+                  showContinueButton={true}
+                />
               </div>
             ) : isCheckingOut ? (
               <form onSubmit={handleCheckoutSubmit} className="space-y-4">
@@ -165,42 +227,48 @@ export const CartDrawer: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsCheckingOut(false)}
-                    className="text-xs text-brand-600 hover:underline"
+                    className="text-xs text-brand-600 hover:underline cursor-pointer"
                   >
                     Back to Cart
                   </button>
                 </div>
 
+                {orderError && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-[#E5485B] text-xs font-bold animate-fadeIn">
+                    {orderError}
+                  </div>
+                )}
+
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">Full Name</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Full Name *</label>
                   <input
                     type="text"
                     name="name"
                     required
-                    placeholder="Abubakar Khan"
-                    className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 focus:outline-none"
+                    placeholder="e.g. Malik Abubakar"
+                    className="w-full text-base sm:text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">WhatsApp / Phone Number</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">WhatsApp / Phone Number *</label>
                   <input
                     type="tel"
                     name="phone"
                     required
                     placeholder="0300 1234567"
-                    className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 focus:outline-none"
+                    className="w-full text-base sm:text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">Delivery Address</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Delivery Address *</label>
                   <textarea
                     name="address"
                     required
                     rows={3}
-                    placeholder="House/Apartment, Street, Area, City"
-                    className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 focus:outline-none"
+                    placeholder="House/Apartment #, Street, Area, City"
+                    className="w-full text-base sm:text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 focus:outline-none"
                   />
                 </div>
 
@@ -211,9 +279,21 @@ export const CartDrawer: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-full bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm shadow-md transition-all"
+                  disabled={isSubmittingOrder}
+                  className={`w-full py-3.5 rounded-full font-bold text-sm text-white shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    isSubmittingOrder
+                      ? 'bg-brand-400 cursor-wait'
+                      : 'bg-brand-500 hover:bg-brand-600 active:scale-98'
+                  }`}
                 >
-                  Confirm Order (Rs. {(subtotal - appliedDiscount).toLocaleString()})
+                  {isSubmittingOrder ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Booking Your Order...</span>
+                    </>
+                  ) : (
+                    <span>Confirm Order (Rs. {(subtotal - appliedDiscount + (amountNeeded === 0 ? 0 : 500)).toLocaleString()})</span>
+                  )}
                 </button>
               </form>
             ) : cart.length === 0 ? (
@@ -293,7 +373,7 @@ export const CartDrawer: React.FC = () => {
           </div>
 
           {/* Footer Subtotal & Action */}
-          {!orderSuccess && !isCheckingOut && cart.length > 0 && (
+          {!placedOrder && !isCheckingOut && cart.length > 0 && (
             <div className="p-5 border-t border-slate-100 bg-white space-y-4">
               {/* Promo input */}
               <form onSubmit={handleApplyCoupon} className="flex gap-2">

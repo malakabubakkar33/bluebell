@@ -72,8 +72,24 @@ interface ProductsContextType {
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
 
 export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [rawCategories, setRawCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('bluebell_cached_products');
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return [];
+  });
+  const [rawCategories, setRawCategories] = useState<Category[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('bluebell_cached_categories');
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return [];
+  });
   const [banners, setBanners] = useState<BannerItem[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -83,8 +99,21 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     return [];
   });
-  const [deals, setDeals] = useState<PromoDeal[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [deals, setDeals] = useState<PromoDeal[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('bluebell_cached_deals');
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('bluebell_cached_products');
+    }
+    return true;
+  });
 
   // Dynamic Categories calculation:
   // Every category's itemCount is computed from the ACTUAL published products in the database!
@@ -115,21 +144,31 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Resilient Data Fetch from Supabase APIs with unified bootstrap acceleration
   const fetchAllData = async (showLoading = true) => {
-    if (showLoading) setIsLoading(true);
+    // Only show loading if we have zero cached products to display
+    if (showLoading && products.length === 0) setIsLoading(true);
     try {
       // 1. Ultra-fast path: single unified bootstrap call powered by server-side SingleFlight cache
-      const bootstrapRes = await fetch('/api/bootstrap', { cache: 'no-store' })
+      const bootstrapRes = await fetch('/api/bootstrap')
         .then((r) => r.json())
         .catch(() => null);
 
       if (bootstrapRes && bootstrapRes.success) {
-        if (Array.isArray(bootstrapRes.products)) setProducts(bootstrapRes.products);
-        if (Array.isArray(bootstrapRes.categories)) setRawCategories(bootstrapRes.categories);
+        if (Array.isArray(bootstrapRes.products)) {
+          setProducts(bootstrapRes.products);
+          try { localStorage.setItem('bluebell_cached_products', JSON.stringify(bootstrapRes.products)); } catch {}
+        }
+        if (Array.isArray(bootstrapRes.categories)) {
+          setRawCategories(bootstrapRes.categories);
+          try { localStorage.setItem('bluebell_cached_categories', JSON.stringify(bootstrapRes.categories)); } catch {}
+        }
         if (Array.isArray(bootstrapRes.banners)) {
           setBanners(bootstrapRes.banners);
           try { localStorage.setItem('bluebell_cached_banners', JSON.stringify(bootstrapRes.banners)); } catch {}
         }
-        if (Array.isArray(bootstrapRes.deals)) setDeals(bootstrapRes.deals);
+        if (Array.isArray(bootstrapRes.deals)) {
+          setDeals(bootstrapRes.deals);
+          try { localStorage.setItem('bluebell_cached_deals', JSON.stringify(bootstrapRes.deals)); } catch {}
+        }
         return;
       }
 
@@ -143,9 +182,11 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (prodsRes.data && Array.isArray(prodsRes.data)) {
         setProducts(prodsRes.data);
+        try { localStorage.setItem('bluebell_cached_products', JSON.stringify(prodsRes.data)); } catch {}
       }
       if (catsRes.data && Array.isArray(catsRes.data)) {
         setRawCategories(catsRes.data);
+        try { localStorage.setItem('bluebell_cached_categories', JSON.stringify(catsRes.data)); } catch {}
       }
       if (bansRes.data && Array.isArray(bansRes.data)) {
         setBanners(bansRes.data);
@@ -153,6 +194,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       if (dealsRes.data && Array.isArray(dealsRes.data)) {
         setDeals(dealsRes.data);
+        try { localStorage.setItem('bluebell_cached_deals', JSON.stringify(dealsRes.data)); } catch {}
       }
     } catch (e) {
       console.error('Failed to fetch data from Supabase backend:', e);

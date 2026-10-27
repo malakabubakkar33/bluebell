@@ -106,6 +106,26 @@ body {
   animation: blueDotPulse 0.96s ease-in-out infinite;
 }
 
+@keyframes drawCheckmark {
+  0% {
+    stroke-dashoffset: 50;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.animate-checkmark {
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: drawCheckmark 0.65s cubic-bezier(0.65, 0, 0.45, 1) 0.15s forwards;
+}
+
 /* =========================================================================
    MOBILE INPUT AUTO-ZOOM PREVENTION (iOS Safari & Mobile Browsers)
    iOS Safari automatically zooms the page when focusing any input with
